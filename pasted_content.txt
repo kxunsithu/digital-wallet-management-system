@@ -1,0 +1,223 @@
+Digital Wallet Management System
+
+Role & Money Flow Explanation Note
+
+1. System Overview
+
+Digital Wallet Management System သည် အသုံးပြုသူများအကြား ငွေလွှဲခြင်း၊ ငွေသွင်းခြင်း၊ ငွေထုတ်ခြင်းနှင့် Wallet Balance စီမံခန့်ခွဲခြင်းများကို ပြုလုပ်နိုင်သော System ဖြစ်သည်။
+
+System တွင် အဓိက Role (၃) ခု ပါဝင်သည်။
+
+1. Customer
+2. Agent
+3. Administrator
+
+---
+
+2. Customer Role
+
+Customer သည် Digital Wallet ကို အသုံးပြုသူဖြစ်သည်။
+
+Main Features
+
+Account Management
+
+- Register ပြုလုပ်ခြင်း
+- Login / Logout ပြုလုပ်ခြင်း
+- OTP ဖြင့် Account Verification ပြုလုပ်ခြင်း
+- Profile Update ပြုလုပ်ခြင်း
+
+Wallet Management
+
+- Wallet Balance ကြည့်ခြင်း
+- Wallet Information ကြည့်ခြင်း
+
+Money Transfer
+
+Customer တစ်ယောက်မှ အခြား Customer တစ်ယောက်သို့ ငွေလွှဲနိုင်သည်။
+
+Example:
+
+Customer A → Customer B
+
+Flow:
+
+1. Customer A က Receiver ကို ရွေးသည်။
+2. Transfer Amount ထည့်သည်။
+3. PIN/OTP ဖြင့် Confirm လုပ်သည်။
+4. System မှ Balance စစ်ဆေးသည်။
+5. ငွေလွှဲပြီး Transaction Record သိမ်းသည်။
+
+QR Transfer
+
+Customer များသည် QR Code အသုံးပြုပြီး ငွေလွှဲနိုင်သည်။
+
+Flow:
+
+Customer A Generate QR
+↓
+Customer B Scan QR
+↓
+Amount ထည့်
+↓
+Confirm
+↓
+Transfer Complete
+
+---
+
+3. Agent Role
+
+Agent သည် Customer များအတွက် Cash In နှင့် Cash Out ဝန်ဆောင်မှုပေးသူ ဖြစ်သည်။
+
+Cash In Flow
+
+Agent → Customer Wallet
+
+Example:
+Customer က Agent ကို ငွေသားပေးပြီး Wallet ထဲသို့ ငွေထည့်သည်။
+
+Flow:
+
+Customer ပေးသော Cash
+↓
+Agent က System တွင် Cash In ပြုလုပ်
+↓
+Customer Wallet Balance တိုးလာ
+
+---
+
+Cash Out Flow
+
+Customer → Agent
+
+Example:
+Customer က Wallet ထဲရှိငွေကို ထုတ်ယူသည်။
+
+Flow:
+
+Customer Cash Out Request
+↓
+Agent Verify လုပ်သည်
+↓
+System က Customer Balance လျော့သည်
+↓
+Agent က Customer ကို Cash ပေးသည်
+
+---
+
+4. Administrator Role
+
+Administrator သည် System တစ်ခုလုံးကို စီမံခန့်ခွဲသူ ဖြစ်သည်။
+
+Main Features
+
+User Management
+
+- Customer Account စီမံခြင်း
+- Agent Account စီမံခြင်း
+- User Status Control ပြုလုပ်ခြင်း
+
+Transaction Monitoring
+
+- Transaction အားလုံး ကြည့်ရှုခြင်း
+- Transaction History စစ်ဆေးခြင်း
+
+Agent Wallet Top-up
+
+Admin သည် Agent Wallet ကို Balance ဖြည့်ပေးနိုင်သည်။
+
+Flow:
+
+Admin
+↓
+Agent Wallet Top-up
+↓
+Agent Balance တိုးလာ
+↓
+Agent Cash In / Cash Out Service ပေးနိုင်
+
+---
+
+5. Admin Bonus / Adjustment
+
+Admin သည် Special Transaction အနေဖြင့် Customer ကို Bonus သို့မဟုတ် Adjustment ပေးနိုင်သည်။
+
+Example:
+
+- Welcome Bonus
+- Promotion Reward
+- Compensation
+
+Flow:
+
+Admin
+↓
+Bonus Amount ထည့်
+↓
+Customer Wallet Balance တိုးလာ
+
+---
+
+6. Overall Money Flow Summary
+
+1. Customer to Customer Transfer
+
+Customer A
+↓
+Customer B
+
+အသုံးပြုမှု:
+
+- Personal Transfer
+- QR Transfer
+
+2. Agent Cash In
+
+Agent
+↓
+Customer Wallet
+
+အသုံးပြုမှု:
+
+- Wallet ထဲ ငွေသွင်းခြင်း
+
+3. Customer Cash Out
+
+Customer Wallet
+↓
+Agent
+
+အသုံးပြုမှု:
+
+- Wallet မှ ငွေထုတ်ခြင်း
+
+4. Admin Agent Top-up
+
+Administrator
+↓
+Agent Wallet
+
+အသုံးပြုမှု:
+
+- Agent Service Balance ဖြည့်ခြင်း
+
+5. Admin Customer Bonus
+
+Administrator
+↓
+Customer Wallet
+
+အသုံးပြုမှု:
+
+- Reward / Adjustment ပေးခြင်း
+
+---
+
+System Design Principle
+
+- Customer သည် ငွေအသုံးပြုသူ ဖြစ်သည်။
+- Agent သည် Cash Service Provider ဖြစ်သည်။
+- Administrator သည် System Controller ဖြစ်သည်။
+- Transaction တစ်ခုချင်းစီကို Database တွင် Record သိမ်းဆည်းရမည်။
+- Balance ပြောင်းလဲမှုတိုင်းကို Transaction History ဖြင့် Track လုပ်ရမည်။
