@@ -55,13 +55,13 @@ Customers can transfer money using QR Code.
 Flow:
 
 Customer A Generates QR
-↓
+→
 Customer B Scans QR
-↓
+→
 Enters Amount
-↓
+→
 Confirms
-↓
+→
 Transfer Complete
 
 ---
@@ -80,9 +80,9 @@ A Customer gives cash to an Agent to deposit money into their Wallet.
 Flow:
 
 Cash given by Customer
-↓
+→
 Agent performs Cash In in the System
-↓
+→
 Customer Wallet Balance increases
 
 ---
@@ -97,11 +97,11 @@ A Customer withdraws money from their Wallet.
 Flow:
 
 Customer Cash Out Request
-↓
+→
 Agent Verifies
-↓
+→
 System reduces Customer Balance
-↓
+→
 Agent gives Cash to Customer
 
 ---
@@ -130,11 +130,11 @@ Admin can top up the Agent Wallet Balance.
 Flow:
 
 Admin
-↓
+→
 Agent Wallet Top-up
-↓
+→
 Agent Balance increases
-↓
+→
 Agent can provide Cash In / Cash Out Service
 
 ---
@@ -152,9 +152,9 @@ Example:
 Flow:
 
 Admin
-↓
+→
 Enters Bonus Amount
-↓
+→
 Customer Wallet Balance increases
 
 ---
@@ -164,7 +164,7 @@ Customer Wallet Balance increases
 1. Customer to Customer Transfer
 
 Customer A
-↓
+→
 Customer B
 
 Usage:
@@ -175,7 +175,7 @@ Usage:
 2. Agent Cash In
 
 Agent
-↓
+→
 Customer Wallet
 
 Usage:
@@ -185,7 +185,7 @@ Usage:
 3. Customer Cash Out
 
 Customer Wallet
-↓
+→
 Agent
 
 Usage:
@@ -195,7 +195,7 @@ Usage:
 4. Admin Agent Top-up
 
 Administrator
-↓
+→
 Agent Wallet
 
 Usage:
@@ -205,7 +205,7 @@ Usage:
 5. Admin Customer Bonus
 
 Administrator
-↓
+→
 Customer Wallet
 
 Usage:
