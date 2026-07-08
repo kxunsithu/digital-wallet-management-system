@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: digital-wallet-system
+    runtime: docker
+    repo: https://github.com/kxunsithu/digital-wallet-management-system.git
+    rootDir: digital-wallet-system
+    branch: main
+    plan: starter
+    region: oregon
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: digital-wallet-db
+          property: connectionString
+      - key: DATABASE_USERNAME
+        fromDatabase:
+          name: digital-wallet-db
+          property: user
+      - key: DATABASE_PASSWORD
+        fromDatabase:
+          name: digital-wallet-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: "8080"
+
+databases:
+  - name: digital-wallet-db
+    databaseName: digitalwallet
+    user: digitalwallet
+    plan: free
