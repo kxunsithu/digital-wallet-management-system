@@ -221,3 +221,33 @@ System Design Principle
 - An Administrator is a System Controller.
 - Each transaction must be recorded in the Database.
 - Every balance change must be tracked with Transaction History.
+
+---
+
+7. Flow Chart Diagram with Database
+
+```mermaid
+flowchart TD
+    C[Customer] -->|register/login| AU[Authentication Service]
+    C -->|transfer / QR pay| WS[Wallet Service]
+    A[Agent] -->|cash in / cash out| WS
+    AD[Administrator] -->|manage users / bonuses| AS[Admin Service]
+
+    AU --> UDB[(Users Table)]
+    WS --> WDB[(Wallets Table)]
+    WS --> TDB[(Transactions Table)]
+    AS --> UDB
+    AS --> TDB
+
+    WS -->|debit/credit balance| WDB
+    WS -->|record transaction| TDB
+    TDB -->|history / audit| H[Transaction History]
+    WDB -->|current balance| B[Wallet Balance]
+```
+
+Database Notes
+
+- Users Table stores customer, agent, and administrator account data.
+- Wallets Table stores current balance and wallet status.
+- Transactions Table stores transfers, cash-in, cash-out, bonuses, and adjustments.
+- Transaction History is generated from the Transactions Table for auditing and reporting.
