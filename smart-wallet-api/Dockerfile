@@ -29,37 +29,54 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Create user
+
+# Create application user
 RUN useradd -G www-data,root -u ${uid} -m ${user}
 
-# Set working directory
+
+# Working directory
 WORKDIR /var/www
 
-# Copy application
+
+# Copy project files
 COPY --chown=${user}:${user} . .
 
-# Install dependencies
+
+# Install PHP dependencies
 RUN composer install \
     --no-dev \
     --optimize-autoloader \
     --no-interaction
 
-# Create required directories
-RUN mkdir -p storage/framework/{cache,sessions,views} \
-    && mkdir -p bootstrap/cache
 
-# Set permissions
+# Create Laravel directories
+RUN mkdir -p storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    bootstrap/cache
+
+
+# Permission
 RUN chown -R ${user}:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
+
 USER ${user}
 
-# Render provides PORT automatically
+
 ENV PORT=10000
 
 EXPOSE 10000
 
-CMD php artisan serve --host=0.0.0.0 --port=${PORT}
+
+# Run migrations before starting server
+CMD php artisan storage:link || true && \
+    php artisan migrate --force && \
+    php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan view:cache && \
+    php artisan serve --host=0.0.0.0 --port=${PORT}
