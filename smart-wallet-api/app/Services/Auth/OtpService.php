@@ -41,8 +41,12 @@ class OtpService
             'expires_at' => now()->addMinutes(5),
         ]);
 
-        // Dispatch SMS sending job (queued, never synchronous)
-        SendOtpSmsJob::dispatch($formattedPhone, $otpCode, $otp->id);
+        // Dispatch SMS sending job. Use sync dispatch when queue driver is sync.
+        if (config('queue.default') === 'sync') {
+            SendOtpSmsJob::dispatchSync($formattedPhone, $otpCode, $otp->id);
+        } else {
+            SendOtpSmsJob::dispatch($formattedPhone, $otpCode, $otp->id);
+        }
 
         return [
             'otp_code' => $otpCode, // Only used internally — never returned in API response

@@ -13,9 +13,9 @@ class InfinireachSmsService
 
     public function __construct()
     {
-        $this->apiKey = config('services.infinireach.api_key', '');
-        $this->senderNumber = config('services.infinireach.sender_number', '+959944074981');
-        $this->baseUrl = config('services.infinireach.base_url', 'https://api.infinireach.io/api/v1');
+        $this->apiKey = config('services.infinireach.api_key') ?: env('INFINIREACH_API_KEY', '');
+        $this->senderNumber = config('services.infinireach.sender_number') ?: env('INFINIREACH_SENDER_NUMBER', '+959944074981');
+        $this->baseUrl = config('services.infinireach.base_url') ?: env('INFINIREACH_BASE_URL', 'https://api.infinireach.io/api/v1');
     }
 
     /**
@@ -28,15 +28,17 @@ class InfinireachSmsService
         $phoneNumber = $this->formatPhoneNumber($phoneNumber);
 
         try {
-            $response = Http::withHeaders([
-                'Content-Type' => 'application/json',
-                'X-API-Key' => $this->apiKey,
-            ])->post("{$this->baseUrl}/messages", [
-                'channel' => 'sms',
-                'to' => $phoneNumber,
-                'from' => $this->senderNumber,
-                'message' => $message,
-            ]);
+            $response = Http::timeout(60)
+                ->retry(2, 200)
+                ->withHeaders([
+                    'Content-Type' => 'application/json',
+                    'X-API-Key' => $this->apiKey,
+                ])->post("{$this->baseUrl}/messages", [
+                    'channel' => 'sms',
+                    'to' => $phoneNumber,
+                    'from' => $this->senderNumber,
+                    'message' => $message,
+                ]);
 
             if ($response->successful()) {
                 Log::info('SMS sent successfully', [
