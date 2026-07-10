@@ -114,4 +114,16 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Seeded Admin Phone
+    |--------------------------------------------------------------------------
+    |
+    | Phone number of the single seeded admin account that is allowed to use
+    | the admin authentication flow. This value should be set in the
+    | environment as `AUTH_SEEDED_ADMIN_PHONE` in production.
+    |
+    */
+    'seeded_admin_phone_number' => env('AUTH_SEEDED_ADMIN_PHONE', '+959944074981'),
+
 ];
