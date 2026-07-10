@@ -1,4 +1,4 @@
-FROM php:8.3-fpm
+FROM php:8.3-cli
 
 # Arguments
 ARG user=www
@@ -8,14 +8,13 @@ ARG uid=1000
 RUN apt-get update && apt-get install -y \
     git \
     curl \
+    unzip \
+    zip \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
     libpq-dev \
     libzip-dev \
-    zip \
-    unzip \
-    supervisor \
     && docker-php-ext-install \
         pdo_pgsql \
         pgsql \
@@ -31,27 +30,36 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Create system user
-RUN useradd -G www-data,root -u $uid -d /home/$user $user \
-    && mkdir -p /home/$user/.composer \
-    && chown -R $user:$user /home/$user
+# Create user
+RUN useradd -G www-data,root -u ${uid} -m ${user}
 
 # Set working directory
 WORKDIR /var/www
 
-# Copy project files
-COPY --chown=$user:$user . /var/www
+# Copy application
+COPY --chown=${user}:${user} . .
 
 # Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --no-interaction
+
+# Create required directories
+RUN mkdir -p storage/framework/{cache,sessions,views} \
+    && mkdir -p bootstrap/cache
 
 # Set permissions
-RUN chown -R $user:$user /var/www/storage /var/www/bootstrap/cache \
-    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+RUN chown -R ${user}:www-data storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
-USER $user
+USER ${user}
 
-EXPOSE 9000
-CMD ["php-fpm"]
+# Render provides PORT automatically
+ENV PORT=10000
+
+EXPOSE 10000
+
+CMD php artisan serve --host=0.0.0.0 --port=${PORT}
