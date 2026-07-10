@@ -2,9 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\OtpVerification;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Auth\AuthService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AuthRegistrationTest extends TestCase
@@ -40,6 +43,27 @@ class AuthRegistrationTest extends TestCase
             'nrc_number' => '12/ABC(N)123456',
             'is_pin_created' => true,
         ]);
+    }
+
+    public function test_verify_otp_creates_a_new_user_when_default_roles_are_missing(): void
+    {
+        $phoneNumber = '+959111111111';
+
+        OtpVerification::create([
+            'phone_number' => $phoneNumber,
+            'otp_code' => Hash::make('123456'),
+            'purpose' => 'register',
+            'status' => 'pending',
+            'attempt_count' => 0,
+            'expires_at' => now()->addMinutes(5),
+        ]);
+
+        $service = app(AuthService::class);
+        $result = $service->verifyOtp($phoneNumber, '123456');
+
+        $this->assertTrue($result['success']);
+        $this->assertTrue($result['data']['requires_pin_creation']);
+        $this->assertDatabaseHas('users', ['phone_number' => $phoneNumber]);
     }
 
     public function test_registration_fails_when_nrc_number_is_already_used(): void

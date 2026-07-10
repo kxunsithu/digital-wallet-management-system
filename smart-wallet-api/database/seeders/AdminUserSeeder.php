@@ -12,6 +12,10 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
+        Role::firstOrCreate(['name' => 'admin'], ['description' => 'System administrator with full access']);
+        Role::firstOrCreate(['name' => 'agent'], ['description' => 'Cash-in/cash-out agent']);
+        Role::firstOrCreate(['name' => 'customer'], ['description' => 'Regular wallet user']);
+
         $adminRole = Role::where('name', 'admin')->first();
 
         $admin = User::firstOrCreate(

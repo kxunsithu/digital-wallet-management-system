@@ -115,7 +115,10 @@ class AuthService
 
         // If new user — create user record
         if (!$user) {
-            $customerRole = Role::where('name', 'customer')->first();
+            $customerRole = Role::firstOrCreate(
+                ['name' => 'customer'],
+                ['description' => 'Regular wallet user']
+            );
 
             $user = $this->userRepository->create([
                 'phone_number' => $formattedPhone,
