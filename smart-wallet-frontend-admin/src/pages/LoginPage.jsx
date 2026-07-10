@@ -9,6 +9,8 @@ export default function LoginPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
+  const allowedAdminPhone = import.meta.env.VITE_SEEDED_ADMIN_PHONE || '+959944074981';
+
   const [phase, setPhase] = useState('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpCode, setOtpCode] = useState('');
@@ -28,6 +30,12 @@ export default function LoginPage() {
     event.preventDefault();
     resetFeedback();
     setLoading(true);
+    // Enforce admin-only login from the frontend: only the seeded admin phone is allowed
+    if (phoneNumber !== allowedAdminPhone) {
+      setError(`Admin console restricted to ${allowedAdminPhone}`);
+      setLoading(false);
+      return;
+    }
     try {
       const { data } = await api.post('/auth/request-otp', { phone_number: phoneNumber });
       setPendingPhone(data.data.phone_number || phoneNumber);
@@ -95,6 +103,7 @@ export default function LoginPage() {
           <p className="eyebrow">{t('liveBackend')}</p>
           <h1>{t('loginTitle')}</h1>
           <p>{t('loginSubtitle')}</p>
+          <p style={{ fontSize: '0.9rem', color: '#6b7280', marginTop: 6 }}>Admin phone: {allowedAdminPhone}</p>
         </div>
 
         {phase === 'phone' && (

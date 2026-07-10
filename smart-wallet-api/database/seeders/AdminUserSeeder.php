@@ -17,9 +17,10 @@ class AdminUserSeeder extends Seeder
         Role::firstOrCreate(['name' => 'customer'], ['description' => 'Regular wallet user']);
 
         $adminRole = Role::where('name', 'admin')->first();
+        $adminPhoneNumber = config('auth.seeded_admin_phone_number', '+959944074981');
 
         $admin = User::firstOrCreate(
-            ['phone_number' => '+959000000001'],
+            ['phone_number' => $adminPhoneNumber],
             [
                 'role_id' => $adminRole->id,
                 'full_name' => 'System Admin',

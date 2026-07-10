@@ -45,6 +45,35 @@ class AuthRegistrationTest extends TestCase
         ]);
     }
 
+    public function test_only_the_seeded_admin_account_can_use_admin_login_flow(): void
+    {
+        $adminRole = Role::firstOrCreate(['name' => 'admin'], ['description' => 'Admin']);
+        $seededAdmin = User::create([
+            'phone_number' => '+959944074981',
+            'role_id' => $adminRole->id,
+            'status' => 'active',
+            'is_phone_verified' => true,
+            'is_pin_created' => true,
+        ]);
+
+        $otherAdmin = User::create([
+            'phone_number' => '+959999999999',
+            'role_id' => $adminRole->id,
+            'status' => 'active',
+            'is_phone_verified' => true,
+            'is_pin_created' => true,
+        ]);
+
+        $service = app(AuthService::class);
+
+        $allowedResult = $service->requestOtp($seededAdmin->phone_number);
+        $blockedResult = $service->requestOtp($otherAdmin->phone_number);
+
+        $this->assertTrue($allowedResult['success']);
+        $this->assertFalse($blockedResult['success']);
+        $this->assertSame('Only the seeded admin account can log in.', $blockedResult['message']);
+    }
+
     public function test_verify_otp_creates_a_new_user_when_default_roles_are_missing(): void
     {
         $phoneNumber = '+959111111111';

@@ -30,6 +30,11 @@ class AuthService
         $formattedPhone = $this->smsService->formatPhoneNumber($phoneNumber);
         $user = $this->userRepository->findByPhone($formattedPhone);
 
+        $adminRestriction = $this->enforceSeededAdminAccess($formattedPhone, $user);
+        if ($adminRestriction) {
+            return $adminRestriction;
+        }
+
         if (!$user) {
             // Case 1: New user — register flow
             $result = $this->otpService->generateAndSend($formattedPhone, 'register');
@@ -97,6 +102,11 @@ class AuthService
 
         // Try to find the OTP — check both register and login purposes
         $user = $this->userRepository->findByPhone($formattedPhone);
+
+        $adminRestriction = $this->enforceSeededAdminAccess($formattedPhone, $user);
+        if ($adminRestriction) {
+            return $adminRestriction;
+        }
 
         $purpose = 'register';
         if ($user && $user->is_pin_created) {
@@ -262,6 +272,11 @@ class AuthService
     {
         $user = $this->userRepository->findById($userId, ['wallet', 'role']);
 
+        $adminRestriction = $this->enforceSeededAdminAccess($user?->phone_number, $user);
+        if ($adminRestriction) {
+            return $adminRestriction;
+        }
+
         if (!$user) {
             return [
                 'success' => false,
@@ -413,6 +428,33 @@ class AuthService
     /**
      * Create a wallet for the user.
      */
+    protected function enforceSeededAdminAccess(?string $phoneNumber, ?User $user = null): ?array
+    {
+        $allowedPhoneNumber = config('auth.seeded_admin_phone_number', '+959944074981');
+
+        if (!$user && $phoneNumber) {
+            $user = $this->userRepository->findByPhone($phoneNumber);
+        }
+
+        if ($user && $user->hasRole('admin') && $user->phone_number !== $allowedPhoneNumber) {
+            return [
+                'success' => false,
+                'message' => 'Only the seeded admin account can log in.',
+                'data' => [],
+            ];
+        }
+
+        if (!$user && $phoneNumber && $phoneNumber === $allowedPhoneNumber) {
+            return [
+                'success' => false,
+                'message' => 'Only the seeded admin account can log in.',
+                'data' => [],
+            ];
+        }
+
+        return null;
+    }
+
     protected function createWalletForUser(User $user): Wallet
     {
         return Wallet::create([
