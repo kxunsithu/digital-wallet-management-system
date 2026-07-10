@@ -81,7 +81,10 @@ export default function LoginPage() {
         device_id: 'web-admin',
         device_name: 'Admin Console',
       });
-      if (data.data.user.role !== 'admin') {
+      const returnedUser = data.data.user || {};
+      const role = returnedUser.role;
+      const isAdmin = role === 'admin' || (role && typeof role === 'object' && (role.name === 'admin' || role.slug === 'admin')) || (Array.isArray(returnedUser.roles) && returnedUser.roles.includes('admin'));
+      if (!isAdmin) {
         setError('This account is not an admin account.');
         setLoading(false);
         return;
