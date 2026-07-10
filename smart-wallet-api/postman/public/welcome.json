@@ -1,0 +1,665 @@
+{
+  "info": {
+    "name": "Smart Wallet API",
+    "description": "Complete Postman collection for the Smart Wallet API with request fields for each endpoint.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "smart-wallet-api-collection"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost/api", "type": "string" },
+    { "key": "accessToken", "value": "", "type": "string" },
+    { "key": "phoneNumber", "value": "09912345678", "type": "string" },
+    { "key": "userId", "value": "1", "type": "string" },
+    { "key": "fullName", "value": "Aye Aye", "type": "string" },
+    { "key": "nrcNumber", "value": "12/ABC(N)123456", "type": "string" },
+    { "key": "walletNumber", "value": "WALLET-001", "type": "string" },
+    { "key": "qrCodeValue", "value": "sample-qr-code", "type": "string" },
+    { "key": "otpCode", "value": "123456", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Welcome",
+      "item": [
+        {
+          "name": "GET /v1/welcome",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/v1/welcome",
+            "description": "Public welcome endpoint."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /v1/endpoint",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/v1/endpoint",
+            "description": "Public endpoint example."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /auth/request-otp",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{phoneNumber}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/request-otp",
+            "description": "Request OTP for login or registration. Required field: phone_number."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/verify-otp",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{phoneNumber}}\",\n  \"otp_code\": \"{{otpCode}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/verify-otp",
+            "description": "Verify OTP code. Required fields: phone_number, otp_code."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/create-pin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": {{userId}},\n  \"full_name\": \"{{fullName}}\",\n  \"nrc_number\": \"{{nrcNumber}}\",\n  \"pin\": \"1234\",\n  \"pin_confirmation\": \"1234\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/create-pin",
+            "description": "Create PIN for a user. Required fields: user_id, full_name, nrc_number, pin, pin_confirmation."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/verify-pin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": {{userId}},\n  \"pin\": \"1234\",\n  \"device_id\": \"device-001\",\n  \"device_name\": \"Chrome\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/verify-pin",
+            "description": "Verify PIN for login. Required fields: user_id, pin. Optional: device_id, device_name."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/resend-otp",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{phoneNumber}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/resend-otp",
+            "description": "Resend OTP to the provided phone number."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/forgot-pin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{phoneNumber}}\",\n  \"otp_code\": \"{{otpCode}}\",\n  \"new_pin\": \"5678\",\n  \"new_pin_confirmation\": \"5678\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/forgot-pin",
+            "description": "Forgot PIN flow. Required fields: phone_number, otp_code, new_pin, new_pin_confirmation."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/reset-pin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone_number\": \"{{phoneNumber}}\",\n  \"otp_code\": \"{{otpCode}}\",\n  \"new_pin\": \"5678\",\n  \"new_pin_confirmation\": \"5678\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/auth/reset-pin",
+            "description": "Reset PIN after forgot PIN. Required fields: phone_number, otp_code, new_pin, new_pin_confirmation."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/auth/logout",
+            "description": "Logout the authenticated user and revoke the current token."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "GET /profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/profile",
+            "description": "Get authenticated user's profile."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"{{fullName}}\",\n  \"email\": \"aye@example.com\",\n  \"nrc_number\": \"{{nrcNumber}}\",\n  \"profile_image\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/profile",
+            "description": "Update profile fields: full_name, email, nrc_number, profile_image."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /profile/nrc/upload",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "nrc_front_image",
+                  "value": "",
+                  "type": "file",
+                  "disabled": false
+                },
+                {
+                  "key": "nrc_back_image",
+                  "value": "",
+                  "type": "file",
+                  "disabled": false
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/profile/nrc/upload",
+            "description": "Upload NRC images (front and/or back). At least one image required. Accepted formats: JPEG, PNG, GIF. Max 5MB per image. Customer only."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /profile/nrc/status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/profile/nrc/status",
+            "description": "Get NRC verification status. Shows pending, approved, or rejected status with details. Customer only."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Wallet",
+      "item": [
+        {
+          "name": "GET /wallet",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/wallet",
+            "description": "Get wallet balance and effective limits."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /wallet/transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiver_wallet_number\": \"{{walletNumber}}\",\n  \"amount\": 1000,\n  \"pin\": \"1234\",\n  \"description\": \"Test transfer\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/wallet/transfer",
+            "description": "Transfer money to another wallet. Required fields: receiver_wallet_number, amount, pin. Optional: description."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /wallet/transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/wallet/transactions?type=transfer&status=success&date_from=2026-01-01&date_to=2026-12-31&per_page=15",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallet", "transactions"],
+              "query": [
+                { "key": "type", "value": "transfer" },
+                { "key": "status", "value": "success" },
+                { "key": "date_from", "value": "2026-01-01" },
+                { "key": "date_to", "value": "2026-12-31" },
+                { "key": "per_page", "value": "15" }
+              ]
+            },
+            "description": "List wallet transactions with optional filters: type, status, date_from, date_to, per_page."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "QR",
+      "item": [
+        {
+          "name": "POST /qr/generate",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qr_type\": \"dynamic\",\n  \"amount\": 2500\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/qr/generate",
+            "description": "Generate a QR code. Required field: qr_type. Optional amount for dynamic QR."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /qr/scan",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qr_code_value\": \"{{qrCodeValue}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/qr/scan",
+            "description": "Scan or resolve a QR code. Required field: qr_code_value."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /qr/pay",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qr_code_value\": \"{{qrCodeValue}}\",\n  \"amount\": 2500,\n  \"pin\": \"1234\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/qr/pay",
+            "description": "Pay using a QR code. Required fields: qr_code_value, amount, pin."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Agent",
+      "item": [
+        {
+          "name": "POST /agent/cash-in",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_wallet_number\": \"{{walletNumber}}\",\n  \"amount\": 1000\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/agent/cash-in",
+            "description": "Cash in to a customer's wallet. Required fields: customer_wallet_number, amount."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /agent/cash-out",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customer_wallet_number\": \"{{walletNumber}}\",\n  \"amount\": 1000,\n  \"customer_pin\": \"1234\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/agent/cash-out",
+            "description": "Cash out from a customer's wallet. Required fields: customer_wallet_number, amount, customer_pin."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /agent/transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/agent/transactions?type=cash_in&date_from=2026-01-01&date_to=2026-12-31&per_page=15",
+              "host": ["{{baseUrl}}"],
+              "path": ["agent", "transactions"],
+              "query": [
+                { "key": "type", "value": "cash_in" },
+                { "key": "date_from", "value": "2026-01-01" },
+                { "key": "date_to", "value": "2026-12-31" },
+                { "key": "per_page", "value": "15" }
+              ]
+            },
+            "description": "Get agent transactions. Optional filters: type, date_from, date_to, per_page."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /agent/profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/agent/profile",
+            "description": "Retrieve the authenticated agent profile."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "GET /admin/users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users?role=customer&status=active&search=ali&per_page=15",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "users"],
+              "query": [
+                { "key": "role", "value": "customer" },
+                { "key": "status", "value": "active" },
+                { "key": "search", "value": "ali" },
+                { "key": "per_page", "value": "15" }
+              ]
+            },
+            "description": "List users with optional filters: role, status, search, per_page."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /admin/users/{id}/status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/admin/users/1/status",
+            "description": "Update a user's status. Required field: status."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /admin/agents/{id}/approve",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/agents/1/approve",
+            "description": "Approve an agent account."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/customer-level-configs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/customer-level-configs",
+            "description": "Retrieve customer level configurations."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /admin/customer-level-configs/{id}",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"daily_transfer_limit\": 5000000,\n  \"monthly_transfer_limit\": 100000000,\n  \"max_wallet_balance\": 50000000,\n  \"daily_cash_out_limit\": 2000000,\n  \"max_transaction_count_daily\": 10,\n  \"can_use_qr_payment\": true,\n  \"can_receive_from_agent\": true,\n  \"requires_kyc\": false,\n  \"is_active\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/admin/customer-level-configs/1",
+            "description": "Update customer level configuration. Optional fields: daily_transfer_limit, monthly_transfer_limit, max_wallet_balance, daily_cash_out_limit, max_transaction_count_daily, can_use_qr_payment, can_receive_from_agent, requires_kyc, is_active."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/agent-level-configs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/admin/agent-level-configs",
+            "description": "Retrieve agent level configurations."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /admin/agent-level-configs/{id}",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"daily_cash_limit\": 10000000,\n  \"default_commission_rate\": 2.5,\n  \"min_float_required\": 500000,\n  \"can_recruit_sub_agent\": true,\n  \"is_active\": true\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/admin/agent-level-configs/1",
+            "description": "Update agent level configuration. Optional fields: daily_cash_limit, default_commission_rate, min_float_required, can_recruit_sub_agent, is_active."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/audit-logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/audit-logs?user_id=1&action=update&target_table=users&date_from=2026-01-01&date_to=2026-12-31&per_page=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "audit-logs"],
+              "query": [
+                { "key": "user_id", "value": "1" },
+                { "key": "action", "value": "update" },
+                { "key": "target_table", "value": "users" },
+                { "key": "date_from", "value": "2026-01-01" },
+                { "key": "date_to", "value": "2026-12-31" },
+                { "key": "per_page", "value": "20" }
+              ]
+            },
+            "description": "Retrieve audit logs with optional filters: user_id, action, target_table, date_from, date_to, per_page."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/nrc-verifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/nrc-verifications?status=pending&per_page=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "nrc-verifications"],
+              "query": [
+                { "key": "status", "value": "pending" },
+                { "key": "per_page", "value": "20" }
+              ]
+            },
+            "description": "List NRC verifications. Optional filters: status (pending, approved, rejected), per_page. Admin only."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /admin/nrc-verifications/{nrcVerificationId}",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\"\n}\n\nOR (for rejection):\n\n{\n  \"status\": \"rejected\",\n  \"rejection_reason\": \"Image quality is too low\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/admin/nrc-verifications/1",
+            "description": "Approve or reject NRC verification. Required field: status (approved or rejected). Required if rejected: rejection_reason (max 500 chars). Upon approval, customer level automatically upgrades. Admin only."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

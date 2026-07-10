@@ -1,0 +1,48 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Role;
+use App\Models\User;
+use App\Models\Wallet;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+
+class AdminUserSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $adminRole = Role::where('name', 'admin')->first();
+
+        $admin = User::firstOrCreate(
+            ['phone_number' => '+959000000001'],
+            [
+                'role_id' => $adminRole->id,
+                'full_name' => 'System Admin',
+                'email' => 'admin@smartwallet.com',
+                'status' => 'active',
+                'is_phone_verified' => true,
+                'is_pin_created' => true,
+            ]
+        );
+
+        // Create admin PIN (default: 123456)
+        if (!$admin->pin) {
+            $admin->pin()->create([
+                'pin_hash' => Hash::make('123456'),
+                'last_changed_at' => now(),
+            ]);
+        }
+
+        // Create admin wallet
+        if (!$admin->wallet) {
+            Wallet::create([
+                'user_id' => $admin->id,
+                'wallet_number' => 'W' . str_pad($admin->id, 10, '0', STR_PAD_LEFT),
+                'balance' => 0,
+                'currency' => 'MMK',
+                'status' => 'active',
+            ]);
+        }
+    }
+}
