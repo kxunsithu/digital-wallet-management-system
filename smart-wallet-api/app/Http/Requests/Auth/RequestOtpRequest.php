@@ -14,7 +14,8 @@ class RequestOtpRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'phone_number' => ['required', 'string', 'regex:/^(\+?959|09)\d{7,9}$/'],
+            'role' => ['nullable', 'string', 'in:admin,agent,customer'],
+            'phone_number' => ['required_unless:role,admin', 'nullable', 'string', 'regex:/^(\+?959|09)\d{7,9}$/'],
         ];
     }
 

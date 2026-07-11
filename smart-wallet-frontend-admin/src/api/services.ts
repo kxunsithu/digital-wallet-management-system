@@ -2,8 +2,8 @@ import apiClient from './client'
 
 // ── Auth ──
 export const authApi = {
-  requestOtp: (phone_number: string) =>
-    apiClient.post('/auth/request-otp', { phone_number }),
+  requestOtp: (phone_number?: string, role?: string) =>
+    apiClient.post('/auth/request-otp', { phone_number, role }),
 
   verifyOtp: (phone_number: string, otp_code: string) =>
     apiClient.post('/auth/verify-otp', { phone_number, otp_code }),

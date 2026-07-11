@@ -14,11 +14,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 
 type Step = 'phone' | 'otp' | 'pin'
 
-const phoneSchema = z.object({ phone_number: z.string().min(9, 'Invalid phone number') })
 const otpSchema = z.object({ otp_code: z.string().length(6, 'OTP must be 6 digits') })
 const pinSchema = z.object({ pin: z.string().min(4, 'PIN must be at least 4 digits') })
 
-type PhoneForm = z.infer<typeof phoneSchema>
 type OtpForm = z.infer<typeof otpSchema>
 type PinForm = z.infer<typeof pinSchema>
 
@@ -39,16 +37,16 @@ export default function LoginPage() {
     localStorage.setItem('language', newLang)
   }
 
-  const phoneForm = useForm<PhoneForm>({ resolver: zodResolver(phoneSchema) })
   const otpForm = useForm<OtpForm>({ resolver: zodResolver(otpSchema) })
   const pinForm = useForm<PinForm>({ resolver: zodResolver(pinSchema) })
 
-  const handlePhoneSubmit = async (data: PhoneForm) => {
+  const handleSendOtp = async () => {
     setIsLoading(true)
     setError('')
     try {
-      await authApi.requestOtp(data.phone_number)
-      setPhoneNumber(data.phone_number)
+      const res = await authApi.requestOtp(undefined, 'admin')
+      const resData = res.data?.data
+      setPhoneNumber(resData?.phone_number)
       setStep('otp')
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
@@ -150,24 +148,15 @@ export default function LoginPage() {
 
           {/* Step 1: Phone */}
           {step === 'phone' && (
-            <form onSubmit={phoneForm.handleSubmit(handlePhoneSubmit)} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="phone">{t('login.phoneLabel')}</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder={t('login.phonePlaceholder')}
-                  {...phoneForm.register('phone_number')}
-                />
-                {phoneForm.formState.errors.phone_number && (
-                  <p className="text-xs text-red-500">{phoneForm.formState.errors.phone_number.message}</p>
-                )}
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+            <div className="space-y-4">
+              <p className="text-sm text-slate-600">
+                {t('login.adminLoginHint')}
+              </p>
+              <Button type="button" className="w-full" onClick={handleSendOtp} disabled={isLoading}>
                 {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 {t('login.sendOtp')}
               </Button>
-            </form>
+            </div>
           )}
 
           {/* Step 2: OTP */}

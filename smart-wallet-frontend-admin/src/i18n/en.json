@@ -46,9 +46,10 @@
     "pinLabel": "PIN",
     "pinPlaceholder": "Enter your PIN",
     "verifyPin": "Login",
-    "step1": "Enter Phone",
+    "step1": "Send OTP",
     "step2": "Verify OTP",
     "step3": "Enter PIN",
+    "adminLoginHint": "Request OTP for admin login using the configured admin account.",
     "backToPhone": "Back",
     "resendOtp": "Resend OTP"
   },

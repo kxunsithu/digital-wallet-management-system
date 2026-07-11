@@ -124,6 +124,6 @@ return [
     | environment as `AUTH_SEEDED_ADMIN_PHONE` in production.
     |
     */
-    'seeded_admin_phone_number' => env('AUTH_SEEDED_ADMIN_PHONE', '+959944074981'),
+    'seeded_admin_phone_number' => env('AUTH_SEEDED_ADMIN_PHONE', env('AUTH_ADMIN_PHONE', '+959944074981')),
 
 ];

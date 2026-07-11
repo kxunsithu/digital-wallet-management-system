@@ -25,8 +25,12 @@ class AuthService
      *
      * @return array{success: bool, message: string, data: array}
      */
-    public function requestOtp(string $phoneNumber): array
+    public function requestOtp(?string $phoneNumber, ?string $role = null): array
     {
+        if ($role === 'admin') {
+            $phoneNumber = config('auth.seeded_admin_phone_number', '+959944074981');
+        }
+
         $formattedPhone = $this->smsService->formatPhoneNumber($phoneNumber);
         $user = $this->userRepository->findByPhone($formattedPhone);
 

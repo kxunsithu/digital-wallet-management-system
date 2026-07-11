@@ -46,9 +46,10 @@
     "pinLabel": "PIN",
     "pinPlaceholder": "PIN ထည့်ပါ",
     "verifyPin": "ဝင်ရောက်မည်",
-    "step1": "ဖုန်းနံပါတ်ထည့်ပါ",
+    "step1": "OTP ပို့ပါ",
     "step2": "OTP အတည်ပြုပါ",
     "step3": "PIN ထည့်ပါ",
+    "adminLoginHint": "သတ်မှတ်ထားသည့် admin အကောင့်ဖြင့် OTP ကို တောင်းမည်။",
     "backToPhone": "နောက်သို့",
     "resendOtp": "OTP ပြန်ပို့မည်"
   },

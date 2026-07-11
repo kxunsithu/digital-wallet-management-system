@@ -74,6 +74,25 @@ class AuthRegistrationTest extends TestCase
         $this->assertSame('Only the seeded admin account can log in.', $blockedResult['message']);
     }
 
+    public function test_admin_role_request_otp_uses_configured_admin_phone(): void
+    {
+        $adminRole = Role::firstOrCreate(['name' => 'admin'], ['description' => 'Admin']);
+        User::create([
+            'phone_number' => '+959944074981',
+            'role_id' => $adminRole->id,
+            'status' => 'active',
+            'is_phone_verified' => true,
+            'is_pin_created' => true,
+        ]);
+
+        $service = app(AuthService::class);
+        $result = $service->requestOtp(null, 'admin');
+
+        $this->assertTrue($result['success']);
+        $this->assertSame('+959944074981', $result['data']['phone_number']);
+        $this->assertSame('login', $result['data']['purpose']);
+    }
+
     public function test_verify_otp_creates_a_new_user_when_default_roles_are_missing(): void
     {
         $phoneNumber = '+959111111111';
