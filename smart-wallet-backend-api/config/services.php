@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'infinireach' => [
+        'api_key' => env('INFINIREACH_API_KEY'),
+        'sender_number' => env('INFINIREACH_SENDER_NUMBER', '+959944074981'),
+        'base_url' => env('INFINIREACH_BASE_URL', 'https://api.infinireach.io/api/v1'),
+        'test_mode' => filter_var(env('INFINIREACH_TEST_MODE', false), FILTER_VALIDATE_BOOLEAN),
+    ],
+
 ];

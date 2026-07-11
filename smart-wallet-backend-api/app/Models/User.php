@@ -3,19 +3,23 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\AgentProfile;
+use App\Models\CustomerProfile;
+use App\Models\NrcVerification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'phone_number', 'role_id', 'full_name', 'nrc_number', 'status', 'is_phone_verified', 'is_pin_created', 'profile_image', 'last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasApiTokens, Notifiable;
 
     /**
      * Get the attributes that should be cast.
@@ -28,5 +32,25 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function customerProfile()
+    {
+        return $this->hasOne(CustomerProfile::class);
+    }
+
+    public function agentProfile()
+    {
+        return $this->hasOne(AgentProfile::class);
+    }
+
+    public function nrcVerification()
+    {
+        return $this->hasOne(NrcVerification::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(Image::class);
     }
 }

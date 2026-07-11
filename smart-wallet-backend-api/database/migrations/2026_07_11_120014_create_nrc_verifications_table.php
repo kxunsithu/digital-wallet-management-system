@@ -11,8 +11,6 @@ return new class extends Migration
         Schema::create('nrc_verifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('nrc_front_image_path')->nullable();
-            $table->string('nrc_back_image_path')->nullable();
             $table->string('status')->default('pending');
             $table->text('rejection_reason')->nullable();
             $table->foreignId('verified_by')->nullable()->constrained('users')->nullOnDelete();

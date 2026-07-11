@@ -1,0 +1,62 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
+
+class AgentResource extends JsonResource
+{
+    public function toArray($request): array
+    {
+        $user = $this->whenLoaded('user') ? $this->user : null;
+        $images = $user && $user->relationLoaded('images') ? $user->images : ($user ? $user->loadMissing('images')->images : collect());
+        $formattedImages = $images->map(function ($image) {
+            $imagePath = $image->image_path;
+
+            return [
+                'id' => $image->id,
+                'image_type' => $image->image_type,
+                'image_path' => $imagePath,
+                'image_url' => $imagePath ? Storage::disk('public')->url($imagePath) : null,
+                'original_name' => $image->original_name,
+                'image_size' => $image->image_size,
+            ];
+        })->values();
+
+        return [
+            'id' => $this->id,
+            'user_id' => $this->user_id,
+            'agent_code' => $this->agent_code,
+            'level' => $this->level,
+            'custom_commission_override' => $this->custom_commission_override !== null ? (float) $this->custom_commission_override : null,
+            'shop_name' => $this->shop_name,
+            'shop_address' => $this->shop_address,
+            'township' => $this->township,
+            'float_balance' => $this->float_balance,
+            'parent_agent_id' => $this->parent_agent_id,
+            'total_volume_monthly' => $this->total_volume_monthly,
+            'created_by_manager_id' => $this->created_by_manager_id,
+            'approved_by' => $this->approved_by,
+            'status' => $this->status,
+            'created_at' => optional($this->created_at)?->toISOString(),
+            'updated_at' => optional($this->updated_at)?->toISOString(),
+            'user' => $this->whenLoaded('user', function () use ($formattedImages) {
+                return [
+                    'id' => $this->user->id,
+                    'phone_number' => $this->user->phone_number,
+                    'full_name' => $this->user->full_name,
+                    'images' => $formattedImages,
+                    'nrc_images' => $formattedImages->filter(fn ($image) => in_array($image['image_type'], ['nrc_front_image', 'nrc_back_image'], true))->values(),
+                ];
+            }),
+            'parent' => $this->whenLoaded('parent', function () {
+                return [
+                    'id' => $this->parent->id,
+                    'agent_code' => $this->parent->agent_code,
+                    'shop_name' => $this->parent->shop_name,
+                ];
+            }),
+        ];
+    }
+}

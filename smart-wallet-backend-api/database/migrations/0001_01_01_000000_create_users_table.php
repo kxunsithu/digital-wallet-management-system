@@ -21,7 +21,6 @@ return new class extends Migration
             $table->string('status')->default('active');
             $table->boolean('is_phone_verified')->default(false);
             $table->boolean('is_pin_created')->default(false);
-            $table->string('profile_image')->nullable();
             $table->timestamp('last_login_at')->nullable();
             $table->timestamps();
         });
