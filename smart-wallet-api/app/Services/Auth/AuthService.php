@@ -218,9 +218,12 @@ class AuthService
 
         // If new user — create user record
         if (!$user) {
+            $roleName = $isAdminPhone ? 'admin' : 'customer';
+            $roleDescription = $isAdminPhone ? 'System administrator with full access' : 'Regular wallet user';
+
             $role = Role::firstOrCreate(
-                ['name' => $isAdminPhone ? 'admin' : 'customer'],
-                ['description' => $isAdminPhone ? 'System administrator with full access' : 'Regular wallet user']
+                ['name' => $roleName],
+                ['description' => $roleDescription]
             );
 
             $user = $this->userRepository->create([

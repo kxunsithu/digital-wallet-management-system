@@ -17,13 +17,13 @@ class RequestOtpRequest extends FormRequest
         
         if ($role === 'admin') {
             return [
-                'role' => ['required', 'string', 'in:admin,agent,customer'],
+                'role' => ['required', 'string', 'in:admin,agent,agent_manager,customer'],
                 'phone_number' => ['required', 'string', 'regex:/^(\+?959|09)\d{7,9}$/'],
             ];
         }
 
         return [
-            'role' => ['nullable', 'string', 'in:admin,agent,customer'],
+            'role' => ['nullable', 'string', 'in:admin,agent,agent_manager,customer'],
             'phone_number' => ['required', 'string', 'regex:/^(\+?959|09)\d{7,9}$/'],
         ];
     }

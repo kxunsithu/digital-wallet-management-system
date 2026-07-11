@@ -67,6 +67,11 @@ class User extends Authenticatable
         return $this->hasOne(AgentProfile::class);
     }
 
+    public function agentManagerProfile(): HasOne
+    {
+        return $this->hasOne(AgentManagerProfile::class);
+    }
+
     public function otpVerifications(): HasMany
     {
         return $this->hasMany(OtpVerification::class);
@@ -102,6 +107,11 @@ class User extends Authenticatable
     public function isAgent(): bool
     {
         return $this->role->name === 'agent';
+    }
+
+    public function isAgentManager(): bool
+    {
+        return $this->role->name === 'agent_manager';
     }
 
     public function isCustomer(): bool

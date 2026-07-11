@@ -19,6 +19,10 @@ class RoleSeeder extends Seeder
                 'description' => 'Cash-in/cash-out agent',
             ],
             [
+                'name' => 'agent_manager',
+                'description' => 'Agent manager who can create and manage agents',
+            ],
+            [
                 'name' => 'customer',
                 'description' => 'Regular wallet user',
             ],

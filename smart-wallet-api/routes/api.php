@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AgentController;
+use App\Http\Controllers\Api\AgentManagerController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\QrController;
 use App\Http\Controllers\Api\UserProfileController;
@@ -101,6 +102,21 @@ Route::prefix('agent')->middleware(['auth:sanctum', 'role:agent'])->group(functi
         ->name('agent.profile');
 });
 
+// ── Agent manager (authenticated agent managers only) ──
+Route::prefix('agent-manager')->middleware(['auth:sanctum', 'role:agent_manager'])->group(function () {
+    Route::get('/agents', [AgentManagerController::class, 'index'])
+        ->name('agent-manager.agents.index');
+
+    Route::post('/agents', [AgentManagerController::class, 'createAgent'])
+        ->name('agent-manager.agents.create');
+
+    Route::patch('/agents/{id}', [AgentManagerController::class, 'updateAgent'])
+        ->name('agent-manager.agents.update');
+
+    Route::delete('/agents/{id}', [AgentManagerController::class, 'destroyAgent'])
+        ->name('agent-manager.agents.destroy');
+});
+
 // ── Admin (authenticated admins only) ──
 Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/users', [AdminController::class, 'users'])
@@ -111,6 +127,15 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'role:admin'])->group(functi
 
     Route::patch('/agents/{id}/approve', [AdminController::class, 'approveAgent'])
         ->name('admin.agents.approve');
+
+    Route::get('/agent-managers', [AdminController::class, 'agentManagers'])
+        ->name('admin.agent-managers.index');
+
+    Route::post('/agent-managers', [AdminController::class, 'createAgentManager'])
+        ->name('admin.agent-managers.store');
+
+    Route::patch('/agent-managers/{id}/status', [AdminController::class, 'updateAgentManagerStatus'])
+        ->name('admin.agent-managers.update-status');
 
     Route::get('/customer-level-configs', [AdminController::class, 'customerLevelConfigs'])
         ->name('admin.customer-level-configs.index');

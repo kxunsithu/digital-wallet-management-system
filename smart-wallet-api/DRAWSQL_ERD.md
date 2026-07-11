@@ -4,11 +4,12 @@ This document describes the database design for the digital wallet management sy
 
 ## Overview
 The system supports:
-- User roles such as admin, agent, and customer
+- User roles such as admin, agent_manager, agent, and customer
 - Wallet management
 - QR code payments
 - Transactions and money flow
-- Agent and customer profiles
+- Customer, agent, and agent-manager profiles
+- Agent manager-led agent onboarding flow
 - OTP verification and PIN security
 - Audit and NRC verification tracking
 
@@ -36,30 +37,37 @@ Defines commission and operational rules for agent levels.
 Stores customer-specific profile information and KYC status.
 
 ### 8. agent_profiles
-Stores agent-specific profile information such as shop details and commission rules.
+Stores agent-specific profile information such as shop details, commission rules, and the agent manager who created the agent.
 
-### 9. wallets
+### 9. agent_manager_profiles
+Stores agent-manager-specific profile information such as region, township, approval limits, and manager hierarchy.
+
+### 10. wallets
 Represents each user's wallet account.
 
-### 10. qr_codes
+### 11. qr_codes
 Stores static and dynamic QR code data associated with wallets.
 
-### 11. transactions
+### 12. transactions
 Records money transfer and payment activities.
 
-### 12. user_devices
+### 13. user_devices
 Tracks user login devices and session history.
 
-### 13. audit_logs
+### 14. audit_logs
 Stores administrative and system action logs.
 
-### 14. nrc_verifications
+### 15. nrc_verifications
 Tracks NRC document submission and approval/rejection status.
 
 ## Relationships
 - A role has many users.
 - A user has one wallet.
-- A user may have one customer profile and one agent profile.
+- A user may have one customer profile, one agent profile, or one agent manager profile.
+- An admin creates one or many agent manager accounts.
+- An agent manager creates one or many agent accounts.
+- An agent profile is linked to the agent manager who created it through the created_by_manager_id field.
+- An agent manager profile may belong to a parent manager and have many sub-managers.
 - A wallet has many QR codes and many transactions.
 - A transaction may involve sender and receiver wallets.
 - A QR code may be used in many transactions.
@@ -171,8 +179,23 @@ Table agent_profiles {
   float_balance decimal
   parent_agent_id bigint [ref: > agent_profiles.id]
   total_volume_monthly decimal
+  created_by_manager_id bigint [ref: > users.id]
   approved_by bigint [ref: > users.id]
   status varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table agent_manager_profiles {
+  id bigint [pk]
+  user_id bigint [unique, ref: > users.id]
+  manager_code varchar [unique]
+  region varchar
+  township varchar
+  status varchar
+  approval_limit decimal
+  parent_manager_id bigint [ref: > agent_manager_profiles.id]
+  approved_by bigint [ref: > users.id]
   created_at timestamp
   updated_at timestamp
 }
