@@ -13,9 +13,18 @@ class RequestOtpRequest extends FormRequest
 
     public function rules(): array
     {
+        $role = $this->input('role');
+        
+        if ($role === 'admin') {
+            return [
+                'role' => ['required', 'string', 'in:admin,agent,customer'],
+                'phone_number' => ['required', 'string', 'regex:/^(\+?959|09)\d{7,9}$/'],
+            ];
+        }
+
         return [
             'role' => ['nullable', 'string', 'in:admin,agent,customer'],
-            'phone_number' => ['required_unless:role,admin', 'nullable', 'string', 'regex:/^(\+?959|09)\d{7,9}$/'],
+            'phone_number' => ['required', 'string', 'regex:/^(\+?959|09)\d{7,9}$/'],
         ];
     }
 

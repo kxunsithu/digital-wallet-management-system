@@ -45,11 +45,12 @@ class AuthRegistrationTest extends TestCase
         ]);
     }
 
-    public function test_only_the_seeded_admin_account_can_use_admin_login_flow(): void
+    public function test_only_the_configured_admin_phone_can_use_admin_login_flow(): void
     {
         $adminRole = Role::firstOrCreate(['name' => 'admin'], ['description' => 'Admin']);
+        $adminPhone = config('auth.admin_phone_number', '+959944074981');
         $seededAdmin = User::create([
-            'phone_number' => '+959944074981',
+            'phone_number' => $adminPhone,
             'role_id' => $adminRole->id,
             'status' => 'active',
             'is_phone_verified' => true,
@@ -66,19 +67,20 @@ class AuthRegistrationTest extends TestCase
 
         $service = app(AuthService::class);
 
-        $allowedResult = $service->requestOtp($seededAdmin->phone_number);
-        $blockedResult = $service->requestOtp($otherAdmin->phone_number);
+        $allowedResult = $service->requestOtp($seededAdmin->phone_number, 'admin');
+        $blockedResult = $service->requestOtp($otherAdmin->phone_number, 'admin');
 
         $this->assertTrue($allowedResult['success']);
         $this->assertFalse($blockedResult['success']);
-        $this->assertSame('Only the seeded admin account can log in.', $blockedResult['message']);
+        $this->assertSame('Only the configured admin phone number can request admin OTP.', $blockedResult['message']);
     }
 
     public function test_admin_role_request_otp_uses_configured_admin_phone(): void
     {
         $adminRole = Role::firstOrCreate(['name' => 'admin'], ['description' => 'Admin']);
+        $adminPhone = config('auth.admin_phone_number', '+959944074981');
         User::create([
-            'phone_number' => '+959944074981',
+            'phone_number' => $adminPhone,
             'role_id' => $adminRole->id,
             'status' => 'active',
             'is_phone_verified' => true,
@@ -86,10 +88,10 @@ class AuthRegistrationTest extends TestCase
         ]);
 
         $service = app(AuthService::class);
-        $result = $service->requestOtp(null, 'admin');
+        $result = $service->requestOtp($adminPhone, 'admin');
 
         $this->assertTrue($result['success']);
-        $this->assertSame('+959944074981', $result['data']['phone_number']);
+        $this->assertSame($adminPhone, $result['data']['phone_number']);
         $this->assertSame('login', $result['data']['purpose']);
     }
 

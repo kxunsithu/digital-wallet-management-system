@@ -28,7 +28,88 @@ class AuthService
     public function requestOtp(?string $phoneNumber, ?string $role = null): array
     {
         if ($role === 'admin') {
-            $phoneNumber = config('auth.seeded_admin_phone_number', '+959944074981');
+            if (empty($phoneNumber)) {
+                return [
+                    'success' => false,
+                    'message' => 'Phone number is required.',
+                    'data' => [],
+                ];
+            }
+
+            $allowedPhoneNumber = config('auth.admin_phone_number', '+959944074981');
+            $formattedPhone = $this->smsService->formatPhoneNumber($phoneNumber);
+
+            if ($formattedPhone !== $allowedPhoneNumber) {
+                return [
+                    'success' => false,
+                    'message' => 'Only the configured admin phone number can request admin OTP.',
+                    'data' => [],
+                ];
+            }
+
+            $user = $this->userRepository->findByPhone($formattedPhone);
+
+            if (!$user) {
+                // New admin user - generate and send OTP
+                $this->otpService->generateAndSend($formattedPhone, 'login');
+
+                return [
+                    'success' => true,
+                    'message' => 'OTP sent successfully.',
+                    'data' => [
+                        'phone_number' => $formattedPhone,
+                        'purpose' => 'login',
+                        'is_new_user' => true,
+                        'expires_in' => 300,
+                    ],
+                ];
+            }
+
+            if (!$user->is_pin_created) {
+                // Admin user exists but hasn't created PIN yet
+                $this->otpService->generateAndSend($formattedPhone, 'register', $user->id);
+
+                return [
+                    'success' => true,
+                    'message' => 'OTP sent successfully. Please complete your registration.',
+                    'data' => [
+                        'phone_number' => $formattedPhone,
+                        'purpose' => 'register',
+                        'is_new_user' => false,
+                        'requires_pin_creation' => true,
+                        'expires_in' => 300,
+                    ],
+                ];
+            }
+
+            if ($user->status === 'blocked' || $user->status === 'suspended') {
+                return [
+                    'success' => false,
+                    'message' => "Your account is {$user->status}. Please contact support.",
+                    'data' => [],
+                ];
+            }
+
+            $this->otpService->generateAndSend($formattedPhone, 'login', $user->id);
+
+            return [
+                'success' => true,
+                'message' => 'OTP sent successfully.',
+                'data' => [
+                    'phone_number' => $formattedPhone,
+                    'purpose' => 'login',
+                    'is_new_user' => false,
+                    'expires_in' => 300,
+                ],
+            ];
+        }
+
+        if (empty($phoneNumber)) {
+            return [
+                'success' => false,
+                'message' => 'Phone number is required.',
+                'data' => [],
+            ];
         }
 
         $formattedPhone = $this->smsService->formatPhoneNumber($phoneNumber);
@@ -112,9 +193,17 @@ class AuthService
             return $adminRestriction;
         }
 
-        $purpose = 'register';
-        if ($user && $user->is_pin_created) {
+        // Determine OTP purpose:
+        // - Admin phone (with or without existing user) → 'login'
+        // - Existing user with PIN created → 'login'
+        // - Otherwise → 'register'
+        $adminPhoneNumber = config('auth.admin_phone_number', '+959944074981');
+        $isAdminPhone = $formattedPhone === $adminPhoneNumber;
+
+        if ($isAdminPhone) {
             $purpose = 'login';
+        } else {
+            $purpose = ($user && $user->is_pin_created) ? 'login' : 'register';
         }
 
         $result = $this->otpService->verify($formattedPhone, $otpCode, $purpose);
@@ -129,15 +218,15 @@ class AuthService
 
         // If new user — create user record
         if (!$user) {
-            $customerRole = Role::firstOrCreate(
-                ['name' => 'customer'],
-                ['description' => 'Regular wallet user']
+            $role = Role::firstOrCreate(
+                ['name' => $isAdminPhone ? 'admin' : 'customer'],
+                ['description' => $isAdminPhone ? 'System administrator with full access' : 'Regular wallet user']
             );
 
             $user = $this->userRepository->create([
                 'phone_number' => $formattedPhone,
-                'role_id' => $customerRole->id,
-                'status' => 'pending',
+                'role_id' => $role->id,
+                'status' => $isAdminPhone ? 'active' : 'pending',
                 'is_phone_verified' => true,
             ]);
 
@@ -434,7 +523,7 @@ class AuthService
      */
     protected function enforceSeededAdminAccess(?string $phoneNumber, ?User $user = null): ?array
     {
-        $allowedPhoneNumber = config('auth.seeded_admin_phone_number', '+959944074981');
+        $allowedPhoneNumber = config('auth.admin_phone_number', '+959944074981');
 
         if (!$user && $phoneNumber) {
             $user = $this->userRepository->findByPhone($phoneNumber);
@@ -443,15 +532,7 @@ class AuthService
         if ($user && $user->hasRole('admin') && $user->phone_number !== $allowedPhoneNumber) {
             return [
                 'success' => false,
-                'message' => 'Only the seeded admin account can log in.',
-                'data' => [],
-            ];
-        }
-
-        if (!$user && $phoneNumber && $phoneNumber === $allowedPhoneNumber) {
-            return [
-                'success' => false,
-                'message' => 'Only the seeded admin account can log in.',
+                'message' => 'Only the configured admin account can log in.',
                 'data' => [],
             ];
         }

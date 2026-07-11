@@ -13,13 +13,26 @@ class CreatePinRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $user = \App\Models\User::find($this->input('user_id'));
+        $isAdmin = $user && $user->role && $user->role->name === 'admin';
+
+        $rules = [
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'full_name' => ['required', 'string', 'max:255'],
-            'nrc_number' => ['required', 'string', 'max:255', 'unique:users,nrc_number'],
             'pin' => ['required', 'string', 'regex:/^\d{4,6}$/'],
             'pin_confirmation' => ['required', 'same:pin'],
         ];
+
+        // For admin users, full_name and nrc_number are optional (auto-set during registration)
+        // For non-admin users, full_name is required for registration
+        if ($isAdmin) {
+            $rules['full_name'] = ['nullable', 'string', 'max:255'];
+            $rules['nrc_number'] = ['nullable', 'string', 'max:255'];
+        } else {
+            $rules['full_name'] = ['nullable', 'string', 'max:255'];
+            $rules['nrc_number'] = ['required', 'string', 'max:255', 'unique:users,nrc_number'];
+        }
+
+        return $rules;
     }
 
     public function messages(): array
@@ -31,5 +44,15 @@ class CreatePinRequest extends FormRequest
             'pin.regex' => 'PIN must be 4 to 6 digits.',
             'pin_confirmation.same' => 'PIN confirmation does not match.',
         ];
+    }
+
+    protected function passedValidation(): void
+    {
+        $user = \App\Models\User::find($this->input('user_id'));
+        if ($user && $user->role && $user->role->name === 'admin') {
+            $this->merge([
+                'full_name' => 'System Admin',
+            ]);
+        }
     }
 }

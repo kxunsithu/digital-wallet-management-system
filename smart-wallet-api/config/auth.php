@@ -116,14 +116,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Seeded Admin Phone
+    | Admin Phone
     |--------------------------------------------------------------------------
     |
-    | Phone number of the single seeded admin account that is allowed to use
+    | Phone number of the single admin account that is allowed to use
     | the admin authentication flow. This value should be set in the
-    | environment as `AUTH_SEEDED_ADMIN_PHONE` in production.
+    | environment as `AUTH_ADMIN_PHONE`.
     |
     */
-    'seeded_admin_phone_number' => env('AUTH_SEEDED_ADMIN_PHONE', env('AUTH_ADMIN_PHONE', '+959944074981')),
+    'admin_phone_number' => env('AUTH_ADMIN_PHONE', '+959944074981'),
 
 ];

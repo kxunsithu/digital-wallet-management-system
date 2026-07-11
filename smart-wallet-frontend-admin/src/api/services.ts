@@ -2,11 +2,20 @@ import apiClient from './client'
 
 // ── Auth ──
 export const authApi = {
-  requestOtp: (phone_number?: string, role?: string) =>
+  requestOtp: (phone_number: string, role?: string) =>
     apiClient.post('/auth/request-otp', { phone_number, role }),
 
   verifyOtp: (phone_number: string, otp_code: string) =>
     apiClient.post('/auth/verify-otp', { phone_number, otp_code }),
+
+  createPin: (user_id: number, pin: string, full_name?: string, nrc_number?: string) =>
+    apiClient.post('/auth/create-pin', { 
+      user_id, 
+      pin,
+      pin_confirmation: pin,
+      full_name: full_name || '',
+      nrc_number: nrc_number || '',
+    }),
 
   verifyPin: (user_id: number, pin: string, device_id?: string, device_name?: string) =>
     apiClient.post('/auth/verify-pin', {

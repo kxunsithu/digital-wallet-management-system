@@ -15,7 +15,6 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             CustomerLevelConfigSeeder::class,
             AgentLevelConfigSeeder::class,
-            AdminUserSeeder::class,
         ]);
     }
 }

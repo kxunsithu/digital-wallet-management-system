@@ -25,8 +25,7 @@ class AuthController extends Controller
      */
     public function requestOtp(RequestOtpRequest $request): JsonResponse
     {
-        $phoneNumber = $request->role === 'admin' ? null : $request->phone_number;
-        $result = $this->authService->requestOtp($phoneNumber, $request->role);
+        $result = $this->authService->requestOtp($request->phone_number, $request->role);
 
         if (!$result['success']) {
             return ApiResponse::error($result['message'], null, 422);

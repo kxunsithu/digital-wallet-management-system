@@ -69,7 +69,7 @@ USER ${user}
 
 
 ENV PORT=10000
-ENV AUTH_SEEDED_ADMIN_PHONE=+959944074981
+ENV AUTH_ADMIN_PHONE=+959944074981
 ENV RUN_SEEDERS=true
 
 EXPOSE 10000
@@ -80,7 +80,6 @@ CMD php artisan storage:link || true && \
     php artisan migrate --force && \
     if [ "${RUN_SEEDERS}" = "true" ]; then \
         php artisan db:seed --class=RoleSeeder --force || true; \
-        php artisan db:seed --class=AdminUserSeeder --force || true; \
     fi && \
     php artisan config:cache && \
     php artisan route:cache && \
