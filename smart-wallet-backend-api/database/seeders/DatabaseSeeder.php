@@ -20,13 +20,16 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         $this->call([
+            RolesSeeder::class,
             CustomerLevelConfigSeeder::class,
             AgentLevelConfigSeeder::class,
         ]);
 
         User::factory()->create([
-            'name' => 'Test User',
+            'full_name' => 'Test User',
+            'phone_number' => '09123456789',
             'email' => 'test@example.com',
+            'status' => 'active',
         ]);
     }
 }
