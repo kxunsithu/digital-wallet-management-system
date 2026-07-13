@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\MoneyTransferController;
 use App\Http\Controllers\Api\NrcVerificationController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Api\WalletController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -88,4 +89,10 @@ Route::prefix('transfers')->group(function () {
     Route::post('/manager', [MoneyTransferController::class, 'managerTransfer'])->middleware(['auth:sanctum', 'ensure.agent_manager']);
     Route::post('/agent', [MoneyTransferController::class, 'agentTransfer'])->middleware(['auth:sanctum', 'ensure.agent']);
     Route::post('/customer', [MoneyTransferController::class, 'customerTransfer'])->middleware('auth:sanctum');
+});
+
+Route::prefix('wallets')->group(function () {
+    Route::get('/', [WalletController::class, 'index']);
+    Route::get('/{id}', [WalletController::class, 'show']);
+    Route::post('/{id}/toggle-status', [WalletController::class, 'toggleStatus'])->middleware(['auth:sanctum', 'ensure.admin']);
 });

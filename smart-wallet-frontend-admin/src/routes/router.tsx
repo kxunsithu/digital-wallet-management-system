@@ -13,6 +13,8 @@ import AgentDetail from "../pages/agents/AgentDetail";
 import CustomersPage from "../pages/customers";
 import CustomerDetail from "../pages/customers/CustomerDetail";
 import ManageLocations from "../pages/locations/ManageLocations";
+import SystemWalletPage from "../pages/system-wallet";
+import WalletsPage from "../pages/wallets";
 
 const router = createBrowserRouter([
   {
@@ -96,6 +98,30 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ManageLocations />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/system-wallet",
+    element: (
+      <ProtectedRoute>
+        <SystemWalletPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/wallets",
+    element: (
+      <ProtectedRoute>
+        <WalletsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/wallets/:id",
+    element: (
+      <ProtectedRoute>
+        <WalletsPage />
       </ProtectedRoute>
     ),
   },

@@ -278,4 +278,52 @@ class LevelManagementTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonPath('message', 'Daily transfer limit exceeded for your level.');
     }
+
+    public function test_customer_transfer_is_rejected_when_sender_wallet_is_inactive(): void
+    {
+        DB::table('roles')->insert([
+            'id' => 1,
+            'name' => 'customer',
+            'description' => 'Customer',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $sender = User::create([
+            'phone_number' => '09444444446',
+            'role_id' => 1,
+            'status' => 'active',
+        ]);
+
+        $receiver = User::create([
+            'phone_number' => '09444444447',
+            'role_id' => 1,
+            'status' => 'active',
+        ]);
+
+        DB::table('wallets')->insert([
+            ['user_id' => $sender->id, 'wallet_number' => 'WAL-003', 'balance' => 5000, 'currency' => 'MMK', 'status' => 'inactive', 'created_at' => now(), 'updated_at' => now()],
+            ['user_id' => $receiver->id, 'wallet_number' => 'WAL-004', 'balance' => 1000, 'currency' => 'MMK', 'status' => 'active', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        DB::table('pins')->insert([
+            'user_id' => $sender->id,
+            'pin_hash' => bcrypt('1234'),
+            'failed_attempts' => 0,
+            'is_locked' => false,
+            'locked_until' => null,
+            'last_changed_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->actingAs($sender, 'sanctum')->postJson('/api/transfers/customer', [
+            'receiver_user_id' => $receiver->id,
+            'amount' => 100,
+            'pin' => '1234',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonPath('message', 'Sender wallet is inactive.');
+    }
 }

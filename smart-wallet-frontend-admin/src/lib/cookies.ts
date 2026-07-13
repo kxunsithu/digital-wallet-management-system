@@ -21,3 +21,13 @@ export const getCookie = (name: string) => {
 export const deleteCookie = (name: string) => {
   document.cookie = `${encodeURIComponent(name)}=; path=/; max-age=0; samesite=lax`;
 };
+
+export const clearAdminSession = () => {
+  deleteCookie("admin_access_token");
+  deleteCookie("admin_user");
+
+  if (typeof window !== "undefined") {
+    window.localStorage.removeItem("admin_access_token");
+    window.localStorage.removeItem("admin_user");
+  }
+};

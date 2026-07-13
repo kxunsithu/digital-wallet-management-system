@@ -1,12 +1,19 @@
 import { type ReactNode, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
   Wallet,
   LogOut,
   MapPin,
+  Banknote,
+  Users,
+  UserCog,
+  UserRound,
+  ReceiptText,
 } from "lucide-react";
+import { clearAdminSession } from "@/lib/cookies";
+import { logout as logoutService } from "@/services/auth.service";
 
 const navItems = [
   {
@@ -20,24 +27,29 @@ const navItems = [
     icon: Wallet,
   },
   {
+    to: "/system-wallet",
+    label: "System Wallet",
+    icon: Banknote,
+  },
+  {
     to: "/agent-managers",
     label: "Agent Manager",
-    icon: LayoutDashboard,
+    icon: UserCog,
   },
   {
     to: "/agents",
     label: "Agents",
-    icon: LayoutDashboard,
+    icon: Users,
   },
   {
     to: "/customers",
     label: "Customers",
-    icon: LayoutDashboard,
+    icon: UserRound,
   },
   {
     to: "/transactions",
     label: "Transactions",
-    icon: LayoutDashboard,
+    icon: ReceiptText,
   },
   {
     to: "/locations",
@@ -54,8 +66,20 @@ type Props = {
 
 const MainLayout = ({ children, title = "Admin Portal" }: Props) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const pathname = location.pathname;
   const [collapsed, setCollapsed] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await logoutService();
+    } catch {
+      // ignore backend errors and clear the client session anyway
+    }
+
+    clearAdminSession();
+    navigate("/login");
+  };
 
 
   const sidebarWidth = collapsed ? "w-20" : "w-72";
@@ -110,7 +134,7 @@ const MainLayout = ({ children, title = "Admin Portal" }: Props) => {
               <Button
                 variant="secondary"
                 className={`w-full justify-center ${collapsed ? "px-0" : "px-3"}`}
-                onClick={() => window.location.assign("/login")}
+                onClick={() => void handleLogout()}
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 {!collapsed ? "Logout" : null}

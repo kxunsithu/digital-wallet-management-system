@@ -10,6 +10,7 @@ use App\Http\Requests\Auth\VerifyOtpRequest;
 use App\Http\Requests\Auth\VerifyPinRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Models\Wallet;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -186,6 +187,24 @@ class AuthController extends Controller
 
         $user->update($userData);
 
+        // Auto-create wallet for the user when PIN is created
+        if (! Wallet::where('user_id', $user->id)->exists()) {
+            $initialBalance = 0;
+            if (strtolower((string) $roleName) === 'admin') {
+                $initialBalance = (float) env('ADMIN_INITIAL_WALLET_BALANCE', 0);
+            }
+
+            $walletNumber = 'WAL-' . strtoupper(bin2hex(random_bytes(4)));
+
+            Wallet::create([
+                'user_id' => $user->id,
+                'wallet_number' => $walletNumber,
+                'balance' => $initialBalance,
+                'currency' => env('DEFAULT_CURRENCY', 'MMK'),
+                'status' => 'active',
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'PIN created successfully.',
@@ -229,6 +248,24 @@ class AuthController extends Controller
         }
 
         $user->load('images');
+
+        // Ensure wallet exists for the user (safety net)
+        if (! Wallet::where('user_id', $user->id)->exists()) {
+            $initialBalance = 0;
+            if (strtolower((string) $roleName) === 'admin') {
+                $initialBalance = (float) env('ADMIN_INITIAL_WALLET_BALANCE', 0);
+            }
+
+            $walletNumber = 'WAL-' . strtoupper(bin2hex(random_bytes(4)));
+
+            Wallet::create([
+                'user_id' => $user->id,
+                'wallet_number' => $walletNumber,
+                'balance' => $initialBalance,
+                'currency' => env('DEFAULT_CURRENCY', 'MMK'),
+                'status' => 'active',
+            ]);
+        }
 
         return response()->json([
             'success' => true,

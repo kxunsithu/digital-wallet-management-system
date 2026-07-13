@@ -407,6 +407,14 @@ class MoneyTransferController extends Controller
                 return response()->json(['success' => false, 'message' => 'Wallet not found for sender or receiver.'], 422);
             }
 
+            if (($senderWallet->status ?? 'active') !== 'active') {
+                return response()->json(['success' => false, 'message' => 'Sender wallet is inactive.'], 422);
+            }
+
+            if (($receiverWallet->status ?? 'active') !== 'active') {
+                return response()->json(['success' => false, 'message' => 'Receiver wallet is inactive.'], 422);
+            }
+
             $customerLimitError = $this->validateCustomerLevelLimits($senderUserId, $amount, $senderWallet->id);
             if ($customerLimitError) {
                 return $customerLimitError;
