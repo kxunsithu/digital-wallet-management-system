@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register custom middleware aliases
         $middleware->alias([
             'ensure.admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'ensure.customer' => \App\Http\Middleware\EnsureCustomer::class,
             'ensure.agent_manager' => \App\Http\Middleware\EnsureAgentManager::class,
             'ensure.agent' => \App\Http\Middleware\EnsureAgent::class,
         ]);

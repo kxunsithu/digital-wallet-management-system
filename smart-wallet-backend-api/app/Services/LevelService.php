@@ -47,7 +47,7 @@ class LevelService
 
         $profile->update([
             'level' => $targetLevel,
-            'kyc_status' => $hasVerifiedNrc ? 'approved' : $profile->kyc_status,
+            'kyc_status' => $hasVerifiedNrc ? 'verified' : $profile->kyc_status,
         ]);
     }
 

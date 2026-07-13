@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\MoneyTransferController;
 use App\Http\Controllers\Api\NrcVerificationController;
 use App\Http\Controllers\Api\UserProfileController;
+use App\Http\Controllers\Api\LocationController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -20,6 +21,18 @@ Route::prefix('auth')->group(function () {
     Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
     Route::post('/forgot-pin', [AuthController::class, 'forgotPin']);
     Route::post('/reset-pin', [AuthController::class, 'resetPin']);
+});
+
+Route::prefix('locations')->group(function () {
+    Route::get('/state-regions', [LocationController::class, 'getStateRegions']);
+    Route::post('/state-regions', [LocationController::class, 'storeStateRegion'])->middleware(['auth:sanctum', 'ensure.admin']);
+    Route::put('/state-regions/{id}', [LocationController::class, 'updateStateRegion'])->middleware(['auth:sanctum', 'ensure.admin']);
+    Route::delete('/state-regions/{id}', [LocationController::class, 'deleteStateRegion'])->middleware(['auth:sanctum', 'ensure.admin']);
+
+    Route::get('/townships', [LocationController::class, 'getTownships']);
+    Route::post('/townships', [LocationController::class, 'storeTownship'])->middleware(['auth:sanctum', 'ensure.admin']);
+    Route::put('/townships/{id}', [LocationController::class, 'updateTownship'])->middleware(['auth:sanctum', 'ensure.admin']);
+    Route::delete('/townships/{id}', [LocationController::class, 'deleteTownship'])->middleware(['auth:sanctum', 'ensure.admin']);
 });
 
 Route::prefix('agent-managers')->group(function () {
@@ -35,8 +48,9 @@ Route::prefix('agents')->group(function () {
     Route::get('/', [AgentController::class, 'index']);
     Route::post('/', [AgentController::class, 'store'])->middleware(['auth:sanctum', 'ensure.agent_manager']);
     Route::get('/{id}', [AgentController::class, 'show']);
-    Route::put('/{id}', [AgentController::class, 'update'])->middleware('auth:sanctum');
-    Route::delete('/{id}', [AgentController::class, 'destroy'])->middleware('auth:sanctum');
+    Route::put('/{id}', [AgentController::class, 'update']);
+    Route::delete('/{id}', [AgentController::class, 'destroy']);
+    Route::post('/{id}/toggle-status', [AgentController::class, 'toggleStatus'])->middleware(['auth:sanctum', 'ensure.admin']);
 });
 
 Route::prefix('customers')->group(function () {
@@ -66,6 +80,7 @@ Route::prefix('customer/nrc-verifications')->middleware(['auth:sanctum', 'ensure
 Route::prefix('admin/nrc-verifications')->middleware(['auth:sanctum', 'ensure.admin'])->group(function () {
     Route::get('/', [NrcVerificationController::class, 'index']);
     Route::post('/{id}/verify', [NrcVerificationController::class, 'verify']);
+    Route::post('/{id}/reject', [NrcVerificationController::class, 'reject']);
 });
 
 Route::prefix('transfers')->group(function () {

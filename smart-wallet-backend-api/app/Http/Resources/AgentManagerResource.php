@@ -34,8 +34,8 @@ class AgentManagerResource extends JsonResource
             'id' => $this->id,
             'user_id' => $this->user_id,
             'manager_code' => $this->manager_code,
-            'region' => $this->region,
-            'township' => $this->township,
+            'state_region_id' => $this->state_region_id,
+            'township_id' => $this->township_id,
             'status' => $this->status,
             'approval_limit' => $this->approval_limit,
             'parent_manager_id' => $this->parent_manager_id,
@@ -47,6 +47,8 @@ class AgentManagerResource extends JsonResource
                     'id' => $this->user->id,
                     'phone_number' => $this->user->phone_number,
                     'full_name' => $this->user->full_name,
+                    'email' => $this->user->email,
+                    'nrc_number' => $this->user->nrc_number,
                     'images' => $formattedImages,
                     'nrc_images' => $formattedImages->filter(fn ($image) => in_array($image['image_type'], ['nrc_front_image', 'nrc_back_image'], true))->values(),
                 ];
@@ -55,6 +57,18 @@ class AgentManagerResource extends JsonResource
                 return [
                     'id' => $this->parent->id,
                     'manager_code' => $this->parent->manager_code,
+                ];
+            }),
+            'state_region' => $this->whenLoaded('stateRegion', function () {
+                return [
+                    'id' => $this->stateRegion->id,
+                    'name' => $this->stateRegion->name,
+                ];
+            }),
+            'township' => $this->whenLoaded('township', function () {
+                return [
+                    'id' => $this->township->id,
+                    'name' => $this->township->name,
                 ];
             }),
         ];

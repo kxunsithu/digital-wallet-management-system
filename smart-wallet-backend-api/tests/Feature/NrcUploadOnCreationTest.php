@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\NrcVerification;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -22,6 +22,19 @@ class NrcUploadOnCreationTest extends TestCase
             'updated_at' => now(),
         ]);
 
+        $stateRegionId = DB::table('state_regions')->insertGetId([
+            'name' => 'Yangon',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $townshipId = DB::table('townships')->insertGetId([
+            'state_region_id' => $stateRegionId,
+            'name' => 'Mayangone',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         $admin = User::create([
             'phone_number' => '09111111111',
             'role_id' => 1,
@@ -29,22 +42,29 @@ class NrcUploadOnCreationTest extends TestCase
         ]);
 
         $response = $this->actingAs($admin, 'sanctum')->postJson('/api/agent-managers', [
-            'user_id' => $admin->id,
-            'manager_code' => 'MGR-001',
-            'region' => 'Yangon',
-            'township' => 'Mayangone',
+            'phone_number' => '09200000001',
+            'full_name' => 'Agent Manager User',
+            'email' => 'agent-manager@example.com',
+            'nrc_number' => '12/ABCDE(N)123456',
+            'state_region_id' => $stateRegionId,
+            'township_id' => $townshipId,
             'status' => 'pending',
             'approval_limit' => 5000000,
-            'nrc_front_image_path' => '/uploads/nrc/front.jpg',
-            'nrc_back_image_path' => '/uploads/nrc/back.jpg',
+            'nrc_front_image' => UploadedFile::fake()->create('front.jpg', 100, 'image/jpeg'),
+            'nrc_back_image' => UploadedFile::fake()->create('back.jpg', 100, 'image/jpeg'),
         ]);
 
         $response->assertStatus(201);
-        $this->assertDatabaseHas('nrc_verifications', [
-            'user_id' => $admin->id,
-            'status' => 'pending',
-            'nrc_front_image_path' => '/uploads/nrc/front.jpg',
-            'nrc_back_image_path' => '/uploads/nrc/back.jpg',
+
+        $createdUserId = DB::table('users')->where('email', 'agent-manager@example.com')->value('id');
+
+        $this->assertDatabaseHas('images', [
+            'user_id' => $createdUserId,
+            'image_type' => 'nrc_front_image',
+        ]);
+        $this->assertDatabaseHas('images', [
+            'user_id' => $createdUserId,
+            'image_type' => 'nrc_back_image',
         ]);
     }
 
@@ -58,6 +78,19 @@ class NrcUploadOnCreationTest extends TestCase
             'updated_at' => now(),
         ]);
 
+        $stateRegionId = DB::table('state_regions')->insertGetId([
+            'name' => 'Yangon',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $townshipId = DB::table('townships')->insertGetId([
+            'state_region_id' => $stateRegionId,
+            'name' => 'Mayangone',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         $manager = User::create([
             'phone_number' => '09122222222',
             'role_id' => 2,
@@ -67,8 +100,8 @@ class NrcUploadOnCreationTest extends TestCase
         DB::table('agent_manager_profiles')->insert([
             'user_id' => $manager->id,
             'manager_code' => 'MGR-002',
-            'region' => 'Yangon',
-            'township' => 'Mayangone',
+            'state_region_id' => $stateRegionId,
+            'township_id' => $townshipId,
             'status' => 'active',
             'approval_limit' => 1000000,
             'created_at' => now(),
@@ -76,23 +109,30 @@ class NrcUploadOnCreationTest extends TestCase
         ]);
 
         $response = $this->actingAs($manager, 'sanctum')->postJson('/api/agents', [
-            'user_id' => $manager->id,
-            'agent_code' => 'AGT-001',
-            'level' => 'starter',
+            'phone_number' => '09200000002',
+            'full_name' => 'Agent User',
+            'email' => 'agent@example.com',
+            'nrc_number' => '13/ABCDE(N)123457',
             'shop_name' => 'Test Shop',
             'shop_address' => 'Main Street',
-            'township' => 'Mayangone',
+            'state_region_id' => $stateRegionId,
+            'township_id' => $townshipId,
             'status' => 'pending',
-            'nrc_front_image_path' => '/uploads/nrc/front-agent.jpg',
-            'nrc_back_image_path' => '/uploads/nrc/back-agent.jpg',
+            'nrc_front_image' => UploadedFile::fake()->create('front-agent.jpg', 100, 'image/jpeg'),
+            'nrc_back_image' => UploadedFile::fake()->create('back-agent.jpg', 100, 'image/jpeg'),
         ]);
 
         $response->assertStatus(201);
-        $this->assertDatabaseHas('nrc_verifications', [
-            'user_id' => $manager->id,
-            'status' => 'pending',
-            'nrc_front_image_path' => '/uploads/nrc/front-agent.jpg',
-            'nrc_back_image_path' => '/uploads/nrc/back-agent.jpg',
+
+        $createdUserId = DB::table('users')->where('email', 'agent@example.com')->value('id');
+
+        $this->assertDatabaseHas('images', [
+            'user_id' => $createdUserId,
+            'image_type' => 'nrc_front_image',
+        ]);
+        $this->assertDatabaseHas('images', [
+            'user_id' => $createdUserId,
+            'image_type' => 'nrc_back_image',
         ]);
     }
 }

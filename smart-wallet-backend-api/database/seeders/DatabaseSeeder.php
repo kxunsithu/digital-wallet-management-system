@@ -23,6 +23,10 @@ class DatabaseSeeder extends Seeder
             RolesSeeder::class,
             CustomerLevelConfigSeeder::class,
             AgentLevelConfigSeeder::class,
+            MyanmarLocationsSeeder::class,
+            AgentManagerSeeder::class,
+            AgentSeeder::class,
+            CustomerSeeder::class,
         ]);
 
         User::factory()->create([

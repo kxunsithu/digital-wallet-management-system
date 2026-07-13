@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Wallet,
   LogOut,
+  MapPin,
 } from "lucide-react";
 
 const navItems = [
@@ -19,7 +20,7 @@ const navItems = [
     icon: Wallet,
   },
   {
-    to: "/agent-manager",
+    to: "/agent-managers",
     label: "Agent Manager",
     icon: LayoutDashboard,
   },
@@ -33,10 +34,15 @@ const navItems = [
     label: "Customers",
     icon: LayoutDashboard,
   },
-    {
+  {
     to: "/transactions",
     label: "Transactions",
     icon: LayoutDashboard,
+  },
+  {
+    to: "/locations",
+    label: "Locations",
+    icon: MapPin,
   },
 ];
 
@@ -50,6 +56,7 @@ const MainLayout = ({ children, title = "Admin Portal" }: Props) => {
   const location = useLocation();
   const pathname = location.pathname;
   const [collapsed, setCollapsed] = useState(false);
+
 
   const sidebarWidth = collapsed ? "w-20" : "w-72";
 
@@ -65,7 +72,7 @@ const MainLayout = ({ children, title = "Admin Portal" }: Props) => {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <div className="flex min-h-screen w-full">
-        <aside className={`${sidebarWidth} shrink-0 border-r border-slate-200 bg-white shadow-sm transition-all duration-200`}>
+        <aside className={`${sidebarWidth} shrink-0 sticky top-0 h-screen border-r border-slate-200 bg-white shadow-sm transition-all duration-200 overflow-y-auto`}>
           <div className="flex h-full flex-col px-4 py-6">
             <div className="mb-6 flex items-center gap-3 border-b border-slate-200 pb-6">
               <div className="grid h-11 w-11 place-items-center rounded bg-slate-900 text-white">
@@ -88,9 +95,8 @@ const MainLayout = ({ children, title = "Admin Portal" }: Props) => {
                     <Link
                       key={item.to}
                       to={item.to}
-                      className={`flex items-center gap-3 rounded px-3 py-3 text-sm transition-colors ${
-                        item.active ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
-                      } ${collapsed ? "justify-center" : "border border-slate-200"} `}
+                      className={`flex items-center gap-3 rounded px-3 py-3 text-sm transition-colors ${item.active ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
+                        } ${collapsed ? "justify-center" : "border border-slate-200"} `}
                     >
                       <Icon className="h-4 w-4" />
                       {!collapsed ? item.label : null}
@@ -122,15 +128,9 @@ const MainLayout = ({ children, title = "Admin Portal" }: Props) => {
 
         <main className="flex-1 bg-slate-50 transition-all duration-200">
           <div className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur-sm">
-            <div className="flex flex-col gap-2 px-6 py-5 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-2 p-6 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Admin Portal</p>
-                <h1 className="text-2xl font-semibold text-slate-950">{title}</h1>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => setCollapsed((value) => !value)}>
-                  Toggle sidebar
-                </Button>
+                <span className="font-semibold tracking-tight text-2xl block" style={{ color: "rgb(15 23 42)" }}>{title}</span>
               </div>
             </div>
           </div>

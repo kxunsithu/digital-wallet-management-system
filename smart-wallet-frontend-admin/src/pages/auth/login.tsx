@@ -222,16 +222,11 @@ const LoginPage = () => {
     try {
       const response = await verifyPin(userId, pin);
       if (response.data?.success) {
-        const token = response.data?.data?.access_token;
+        const adminData = response.data?.data ?? {};
+        const token = adminData?.access_token;
         if (token) {
           setCookie("admin_access_token", token);
-          setCookie(
-            "admin_user",
-            JSON.stringify({
-              userId: response.data?.data?.user_id,
-              role: response.data?.data?.role,
-            }),
-          );
+          setCookie("admin_user", JSON.stringify(adminData));
         }
         toast.success("Welcome back, admin.");
         setStep("dashboard");

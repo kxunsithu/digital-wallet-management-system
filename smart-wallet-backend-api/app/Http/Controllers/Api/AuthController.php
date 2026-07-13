@@ -8,6 +8,7 @@ use App\Http\Requests\Auth\ForgotPinRequest;
 use App\Http\Requests\Auth\RequestOtpRequest;
 use App\Http\Requests\Auth\VerifyOtpRequest;
 use App\Http\Requests\Auth\VerifyPinRequest;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -227,16 +228,19 @@ class AuthController extends Controller
             $roleName = DB::table('roles')->where('id', $user->role_id)->value('name');
         }
 
+        $user->load('images');
+
         return response()->json([
             'success' => true,
             'message' => 'PIN verified successfully.',
-            'data' => [
-                'user_id' => $user->id,
-                'role_id' => $user->role_id,
-                'role' => $roleName,
-                'access_token' => $token,
-                'token_type' => 'Bearer',
-            ],
+            'data' => array_merge(
+                (new UserResource($user))->resolve(),
+                [
+                    'role'         => $roleName,
+                    'access_token' => $token,
+                    'token_type'   => 'Bearer',
+                ]
+            ),
         ], 200);
     }
 

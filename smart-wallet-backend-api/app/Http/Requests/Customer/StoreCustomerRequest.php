@@ -20,6 +20,8 @@ class StoreCustomerRequest extends FormRequest
             'kyc_status' => ['nullable', 'string', 'in:pending,verified,rejected'],
             'referral_code' => ['nullable', 'string', 'max:100', 'unique:customer_profiles,referral_code'],
             'referred_by' => ['nullable', 'integer', 'exists:users,id'],
+            'state_region_id' => ['nullable', 'integer', 'exists:state_regions,id'],
+            'township_id' => ['nullable', 'integer', 'exists:townships,id'],
         ];
     }
 }

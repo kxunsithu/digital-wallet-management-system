@@ -8,8 +8,6 @@ class NrcVerification extends Model
 {
     protected $fillable = [
         'user_id',
-        'nrc_front_image_path',
-        'nrc_back_image_path',
         'status',
         'rejection_reason',
         'verified_by',

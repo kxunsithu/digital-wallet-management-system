@@ -18,7 +18,8 @@ class AgentProfile extends Model
         'custom_commission_override',
         'shop_name',
         'shop_address',
-        'township',
+        'state_region_id',
+        'township_id',
         'float_balance',
         'parent_agent_id',
         'total_volume_monthly',
@@ -35,5 +36,15 @@ class AgentProfile extends Model
     public function parent()
     {
         return $this->belongsTo(self::class, 'parent_agent_id');
+    }
+
+    public function stateRegion()
+    {
+        return $this->belongsTo(StateRegion::class);
+    }
+
+    public function township()
+    {
+        return $this->belongsTo(Township::class);
     }
 }

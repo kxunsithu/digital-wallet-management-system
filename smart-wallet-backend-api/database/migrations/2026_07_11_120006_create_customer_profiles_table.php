@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('kyc_status')->default('pending');
             $table->string('referral_code')->nullable()->unique();
             $table->foreignId('referred_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('state_region_id')->nullable()->constrained('state_regions')->nullOnDelete();
+            $table->foreignId('township_id')->nullable()->constrained('townships')->nullOnDelete();
             $table->timestamps();
         });
     }

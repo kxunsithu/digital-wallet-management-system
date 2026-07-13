@@ -14,8 +14,8 @@ class AgentManagerProfile extends Model
     protected $fillable = [
         'user_id',
         'manager_code',
-        'region',
-        'township',
+        'state_region_id',
+        'township_id',
         'status',
         'approval_limit',
         'parent_manager_id',
@@ -30,6 +30,16 @@ class AgentManagerProfile extends Model
     public function parent()
     {
         return $this->belongsTo(self::class, 'parent_manager_id');
+    }
+
+    public function stateRegion()
+    {
+        return $this->belongsTo(StateRegion::class);
+    }
+
+    public function township()
+    {
+        return $this->belongsTo(Township::class);
     }
 
 }
