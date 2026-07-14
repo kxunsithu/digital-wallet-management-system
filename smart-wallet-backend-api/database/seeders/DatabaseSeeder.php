@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Database\Seeders\AgentLevelConfigSeeder;
 use Database\Seeders\CustomerLevelConfigSeeder;
 
@@ -27,13 +28,17 @@ class DatabaseSeeder extends Seeder
             AgentManagerSeeder::class,
             AgentSeeder::class,
             CustomerSeeder::class,
+            WalletSeeder::class,
         ]);
 
-        User::factory()->create([
-            'full_name' => 'Test User',
-            'phone_number' => '09123456789',
-            'email' => 'test@example.com',
-            'status' => 'active',
-        ]);
+        User::updateOrCreate(
+            ['phone_number' => '09123456789'],
+            [
+                'full_name' => 'Test User',
+                'email' => 'test@example.com',
+                'status' => 'active',
+                'role_id' => DB::table('roles')->where('name', 'customer')->value('id'),
+            ]
+        );
     }
 }

@@ -20,6 +20,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getWallet, getWallets, toggleWalletStatus } from "@/services/wallet.service";
 
 type WalletRecord = {
@@ -43,6 +50,8 @@ type WalletListResponse = {
   last_page?: number;
   per_page?: number;
   total?: number;
+  from?: number;
+  to?: number;
 };
 
 export default function WalletsPage() {
@@ -54,6 +63,12 @@ export default function WalletsPage() {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(5);
+  const [totalEntries, setTotalEntries] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [fromEntry, setFromEntry] = useState(0);
+  const [toEntry, setToEntry] = useState(0);
 
   const walletList = useMemo(() => wallets ?? [], [wallets]);
 
@@ -61,7 +76,7 @@ export default function WalletsPage() {
     const loadWallets = async () => {
       try {
         setLoading(true);
-        const response = await getWallets({ page: 1, per_page: 100 });
+        const response = await getWallets({ page, per_page: perPage });
         const payload = response.data?.data as WalletListResponse | undefined;
         const items = Array.isArray(payload?.data)
           ? payload.data
@@ -69,6 +84,10 @@ export default function WalletsPage() {
             ? response.data.data
             : [];
         setWallets(items);
+        setTotalEntries(payload?.total ?? items.length);
+        setTotalPages(payload?.last_page ?? 1);
+        setFromEntry(payload?.from ?? 0);
+        setToEntry(payload?.to ?? 0);
         setError("");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load wallets.");
@@ -78,7 +97,7 @@ export default function WalletsPage() {
     };
 
     void loadWallets();
-  }, []);
+  }, [page, perPage]);
 
   useEffect(() => {
     const loadWalletDetails = async () => {
@@ -157,67 +176,143 @@ export default function WalletsPage() {
             ) : walletList.length === 0 ? (
               <p className="text-sm text-slate-500">No wallets found.</p>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Wallet</TableHead>
-                      <TableHead>Owner</TableHead>
-                      <TableHead>Balance</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {walletList.map((wallet) => (
-                      <TableRow key={wallet.id} className={id && Number(id) === wallet.id ? "bg-slate-50" : ""}>
-                        <TableCell>
-                          <div className="font-medium text-slate-900">{wallet.wallet_number ?? "—"}</div>
-                          <div className="text-xs text-slate-500">#{wallet.id}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium text-slate-900">{wallet.user?.full_name || "—"}</div>
-                          <div className="text-xs text-slate-500">{wallet.user?.phone_number || "—"}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium text-slate-900">
-                            {formatBalance(wallet.balance)} {wallet.currency ?? "MMK"}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${wallet.status === "active" ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-700"}`}>
-                            {wallet.status ?? "active"}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => navigate(`/wallets/${wallet.id}`)}
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              View
-                            </Button>
-                            <Button
-                              variant={wallet.status === "active" ? "secondary" : "default"}
-                              size="sm"
-                              onClick={() => void handleToggleStatus(wallet)}
-                              disabled={togglingId === wallet.id}
-                            >
-                              {togglingId === wallet.id
-                                ? "Updating..."
-                                : wallet.status === "active"
-                                  ? "Deactivate"
-                                  : "Activate"}
-                            </Button>
-                          </div>
-                        </TableCell>
+              <>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Wallet</TableHead>
+                        <TableHead>Owner</TableHead>
+                        <TableHead>Balance</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {walletList.map((wallet) => (
+                        <TableRow key={wallet.id} className={id && Number(id) === wallet.id ? "bg-slate-50" : ""}>
+                          <TableCell>
+                            <div className="font-medium text-slate-900">{wallet.wallet_number ?? "—"}</div>
+                            <div className="text-xs text-slate-500">#{wallet.id}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium text-slate-900">{wallet.user?.full_name || "—"}</div>
+                            <div className="text-xs text-slate-500">{wallet.user?.phone_number || "—"}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium text-slate-900">
+                              {formatBalance(wallet.balance)} {wallet.currency ?? "MMK"}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${wallet.status === "active" ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-700"}`}>
+                              {wallet.status ?? "active"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate(`/wallets/${wallet.id}`)}
+                              >
+                                <Eye className="mr-2 h-4 w-4" />
+                                View
+                              </Button>
+                              <Button
+                                variant={wallet.status === "active" ? "secondary" : "default"}
+                                size="sm"
+                                onClick={() => void handleToggleStatus(wallet)}
+                                disabled={togglingId === wallet.id}
+                              >
+                                {togglingId === wallet.id
+                                  ? "Updating..."
+                                  : wallet.status === "active"
+                                    ? "Deactivate"
+                                    : "Activate"}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {!loading && walletList.length > 0 && (
+                  <div className="mt-4 flex flex-col gap-4 border-t border-slate-100 pt-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      Showing {fromEntry} to {toEntry} of {totalEntries} Entries
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <span>Show</span>
+                        <Select
+                          value={perPage.toString()}
+                          onValueChange={(val) => {
+                            setPerPage(Number(val));
+                            setPage(1);
+                          }}
+                        >
+                          <SelectTrigger className="h-7 w-[60px] text-xs">
+                            <SelectValue placeholder={perPage.toString()} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="5">5</SelectItem>
+                            <SelectItem value="10">10</SelectItem>
+                            <SelectItem value="25">25</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <span>entries</span>
+                      </div>
+
+                      <span>
+                        Page {page} of {totalPages}
+                      </span>
+
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7 rounded-md border-slate-200 text-xs shadow-none"
+                          onClick={() => setPage(1)}
+                          disabled={page === 1}
+                        >
+                          {"<<"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7 rounded-md border-slate-200 text-xs shadow-none"
+                          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                          disabled={page === 1}
+                        >
+                          {"<"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7 rounded-md border-slate-200 text-xs shadow-none"
+                          onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                          disabled={page === totalPages}
+                        >
+                          {">"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7 rounded-md border-slate-200 text-xs shadow-none"
+                          onClick={() => setPage(totalPages)}
+                          disabled={page === totalPages}
+                        >
+                          {">>"}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>

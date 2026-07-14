@@ -1,29 +1,25 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { LayoutDashboard, LogOut } from "lucide-react";
-import { clearAdminSession } from "@/lib/cookies";
+import { ArrowRight, Banknote, LayoutDashboard, Users, Wallet as WalletIcon } from "lucide-react";
+import { getCookie } from "@/lib/cookies";
 import MainLayout from "@/components/layouts/MainLayout";
 import { useEffect, useState } from "react";
-import { getCookie } from "@/lib/cookies";
-import { logout as logoutService } from "@/services/auth.service";
 import { getAdminWallet } from "@/services/systemWallet.service";
+
+type AdminWallet = {
+  id?: number | string;
+  user_id?: number | string;
+  wallet_number?: string;
+  balance?: number | string;
+  currency?: string;
+  status?: string;
+};
 
 const DashboardPage = () => {
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    try {
-      await logoutService();
-    } catch {
-      // ignore backend errors and clear the client session anyway
-    }
-
-    clearAdminSession();
-    navigate("/login");
-  };
-
-  const [systemWallet, setSystemWallet] = useState<any | null>(null);
+  const [systemWallet, setSystemWallet] = useState<AdminWallet | null>(null);
   const [walletLoading, setWalletLoading] = useState(true);
 
   useEffect(() => {
@@ -48,14 +44,19 @@ const DashboardPage = () => {
 
         const res = await getAdminWallet(adminId);
         const walletPayload = res?.data?.data;
-        const wallets = Array.isArray(walletPayload)
-          ? walletPayload
-          : Array.isArray(walletPayload?.data)
-            ? walletPayload.data
-            : [];
+        const wallets = Array.isArray(walletPayload?.data)
+          ? walletPayload.data
+          : Array.isArray(walletPayload)
+            ? walletPayload
+            : Array.isArray(res?.data?.data)
+              ? res.data.data
+              : [];
 
-        const adminWallet = Array.isArray(wallets) && wallets.length > 0 ? wallets[0] : null;
-        setSystemWallet(adminWallet ?? null);
+        const matchedWallet = Array.isArray(wallets) && wallets.length > 0
+          ? wallets.find((item: AdminWallet) => Number(item.user_id) === Number(adminId)) ?? wallets[0]
+          : null;
+
+        setSystemWallet(matchedWallet ?? null);
       } catch {
         setSystemWallet(null);
       } finally {
@@ -66,52 +67,99 @@ const DashboardPage = () => {
     void fetchSystemWallet();
   }, []);
 
+  const formatBalance = (value?: number | string) => {
+    const numericValue = Number(value ?? 0);
+    return new Intl.NumberFormat("en-MM", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(numericValue);
+  };
+
   return (
     <MainLayout title="Dashboard">
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Admin Portal</p>
-            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Dashboard</h1>
-          </div>
-          <Button variant="outline" onClick={() => void handleLogout()}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
-        </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <Card>
+        <div className="grid gap-6 lg:grid-cols-[1.35fr_0.95fr]">
+          <Card className="border-slate-200 bg-white shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <LayoutDashboard className="h-5 w-5" />
-                Admin Overview
+                <WalletIcon className="h-5 w-5" />
+                System Wallet
               </CardTitle>
-              <CardDescription>Secure access has been completed successfully.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-slate-600">The login flow is now connected to the backend OTP and PIN endpoints. You can expand this page to include wallet, agent, and transfer management views.</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>System Wallet</CardTitle>
-              <CardDescription>Current system/admin wallet summary</CardDescription>
+              <CardDescription>Current system and admin wallet summary</CardDescription>
             </CardHeader>
             <CardContent>
               {walletLoading ? (
                 <div className="text-sm text-slate-500">Loading wallet...</div>
               ) : systemWallet ? (
-                <div className="space-y-2 text-sm">
-                  <div>Wallet Number: <strong>{systemWallet.wallet_number}</strong></div>
-                  <div>Balance: <strong>{systemWallet.balance} {systemWallet.currency}</strong></div>
-                  <div>Status: <strong>{systemWallet.status}</strong></div>
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-700">
+                      {systemWallet.wallet_number ?? "—"}
+                    </span>
+                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
+                      {systemWallet.status ?? "active"}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">Available balance</p>
+                    <p className="mt-1 text-3xl font-semibold text-slate-900">
+                      {formatBalance(systemWallet.balance)} {systemWallet.currency ?? "MMK"}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={() => navigate("/system-wallet")}>
+                      Go to system wallet
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate("/wallets")}>
+                      Manage wallets
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="text-sm text-slate-500">System wallet not found.</div>
               )}
             </CardContent>
           </Card>
+
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <LayoutDashboard className="h-5 w-5" />
+                  Admin Overview
+                </CardTitle>
+                <CardDescription>Secure access has been completed successfully.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-slate-600">The login flow is now connected to the backend OTP and PIN endpoints. You can manage wallets, transfers, and agent operations from here.</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/system-wallet")}>
+                  <Banknote className="mr-2 h-4 w-4" />
+                  Transfer to agent manager
+                </Button>
+                <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/wallets")}>
+                  <WalletIcon className="mr-2 h-4 w-4" />
+                  View all wallets
+                </Button>
+                <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/agents")}>
+                  <Users className="mr-2 h-4 w-4" />
+                  Review agents
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </MainLayout>

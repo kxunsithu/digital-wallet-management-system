@@ -326,4 +326,52 @@ class LevelManagementTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonPath('message', 'Sender wallet is inactive.');
     }
+
+    public function test_customer_transfer_can_use_receiver_phone_number(): void
+    {
+        DB::table('roles')->insert([
+            'id' => 1,
+            'name' => 'customer',
+            'description' => 'Customer',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $sender = User::create([
+            'phone_number' => '09444444448',
+            'role_id' => 1,
+            'status' => 'active',
+        ]);
+
+        $receiver = User::create([
+            'phone_number' => '+959444444449',
+            'role_id' => 1,
+            'status' => 'active',
+        ]);
+
+        DB::table('wallets')->insert([
+            ['user_id' => $sender->id, 'wallet_number' => 'WAL-005', 'balance' => 5000, 'currency' => 'MMK', 'status' => 'active', 'created_at' => now(), 'updated_at' => now()],
+            ['user_id' => $receiver->id, 'wallet_number' => 'WAL-006', 'balance' => 1000, 'currency' => 'MMK', 'status' => 'active', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        DB::table('pins')->insert([
+            'user_id' => $sender->id,
+            'pin_hash' => bcrypt('1234'),
+            'failed_attempts' => 0,
+            'is_locked' => false,
+            'locked_until' => null,
+            'last_changed_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->actingAs($sender, 'sanctum')->postJson('/api/transfers/customer', [
+            'receiver_phone' => '09444444449',
+            'amount' => 100,
+            'pin' => '1234',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true);
+    }
 }

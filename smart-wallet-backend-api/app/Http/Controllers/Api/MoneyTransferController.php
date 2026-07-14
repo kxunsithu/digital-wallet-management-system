@@ -166,11 +166,11 @@ class MoneyTransferController extends Controller
                 }
                 $receiverUserId = $wallet->user_id;
             } elseif ($receiverPhone) {
-                $user = DB::table('users')->where('phone_number', $receiverPhone)->first();
-                if (! $user) {
+                $resolvedReceiverUserId = $this->resolveReceiverUserIdByPhone($receiverPhone);
+                if ($resolvedReceiverUserId === null) {
                     return response()->json(['success' => false, 'message' => 'Receiver user not found for given phone.'], 422);
                 }
-                $receiverUserId = $user->id;
+                $receiverUserId = $resolvedReceiverUserId;
             }
         }
 
@@ -302,6 +302,47 @@ class MoneyTransferController extends Controller
     {
         $pinRecord = DB::table('pins')->where('user_id', $userId)->first();
         return $pinRecord && Hash::check($pin, $pinRecord->pin_hash);
+    }
+
+    protected function resolveReceiverUserIdByPhone(string $phone): ?int
+    {
+        $normalizedPhone = $this->normalizePhoneNumber($phone);
+        $candidatePhones = array_values(array_unique(array_filter([
+            trim($phone),
+            $normalizedPhone,
+            preg_replace('/[^\d]/', '', $phone),
+            preg_replace('/[^\d]/', '', $normalizedPhone),
+        ], fn ($value) => $value !== '')));
+
+        $user = DB::table('users')->where(function ($query) use ($candidatePhones): void {
+            foreach ($candidatePhones as $candidatePhone) {
+                $query->orWhere('phone_number', $candidatePhone);
+            }
+        })->first();
+
+        return $user ? (int) $user->id : null;
+    }
+
+    protected function normalizePhoneNumber(string $phone): string
+    {
+        $cleanPhone = preg_replace('/[^\d+]/', '', $phone) ?: '';
+        if ($cleanPhone === '') {
+            return '';
+        }
+
+        if (str_starts_with($cleanPhone, '+')) {
+            return $cleanPhone;
+        }
+
+        if (str_starts_with($cleanPhone, '09')) {
+            return '+959' . substr($cleanPhone, 2);
+        }
+
+        if (str_starts_with($cleanPhone, '959')) {
+            return '+' . $cleanPhone;
+        }
+
+        return $cleanPhone;
     }
 
     protected function validateCustomerLevelLimits(int $senderUserId, float $amount, int $senderWalletId): ?JsonResponse

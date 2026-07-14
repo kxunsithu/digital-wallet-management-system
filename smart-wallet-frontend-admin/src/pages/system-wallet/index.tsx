@@ -37,6 +37,7 @@ const SystemWalletPage = () => {
   const [error, setError] = useState("");
   const [agentManagers, setAgentManagers] = useState<AgentManagerOption[]>([]);
   const [receiverUserId, setReceiverUserId] = useState("");
+  const [receiverPhone, setReceiverPhone] = useState("");
   const [amount, setAmount] = useState("");
   const [pin, setPin] = useState("");
   const [description, setDescription] = useState("");
@@ -99,8 +100,8 @@ const SystemWalletPage = () => {
   const handleTransfer = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!receiverUserId) {
-      toast.error("Please select an agent manager.");
+    if (!receiverUserId && !receiverPhone) {
+      toast.error("Please select an agent manager or enter a receiver phone number.");
       return;
     }
 
@@ -118,13 +119,15 @@ const SystemWalletPage = () => {
       setSubmitting(true);
       const response = await adminTransferToAgentManager({
         amount: Number(amount),
-        receiver_user_id: receiverUserId,
+        receiver_user_id: receiverUserId || undefined,
+        receiver_phone: receiverPhone || undefined,
         pin,
         description: description || undefined,
       });
 
       toast.success(response?.data?.message || "Transfer completed.");
       setReceiverUserId("");
+      setReceiverPhone("");
       setAmount("");
       setPin("");
       setDescription("");
@@ -218,6 +221,17 @@ const SystemWalletPage = () => {
                     );
                   })}
                 </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="receiverPhone">Receiver Phone Number</Label>
+                <Input
+                  id="receiverPhone"
+                  type="tel"
+                  placeholder="09xxxxxxxxx"
+                  value={receiverPhone}
+                  onChange={(event) => setReceiverPhone(event.target.value)}
+                />
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">

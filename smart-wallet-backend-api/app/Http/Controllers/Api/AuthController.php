@@ -45,6 +45,26 @@ class AuthController extends Controller
 
         $user = User::where('phone_number', $data['phone_number'])->first();
 
+        if (in_array($requestedRoleName, ['agent_manager', 'agent'], true)) {
+            if (! $user) {
+                $suggestion = $requestedRoleName === 'agent_manager'
+                    ? 'Please ask an admin to create the account first.'
+                    : 'Please ask an agent manager to create the account first.';
+
+                return response()->json([
+                    'success' => false,
+                    'message' => ucfirst($requestedRoleName) . ' account not found. ' . $suggestion,
+                ], 422);
+            }
+
+            if ($user->role_id !== $requestedRoleId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This phone number is not registered as an ' . str_replace('_', ' ', $requestedRoleName) . '.',
+                ], 422);
+            }
+        }
+
         if (! $user) {
             $user = User::create([
                 'phone_number' => $data['phone_number'],
