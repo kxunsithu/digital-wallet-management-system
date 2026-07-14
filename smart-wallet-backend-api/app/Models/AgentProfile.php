@@ -25,7 +25,6 @@ class AgentProfile extends Model
         'total_volume_monthly',
         'created_by_manager_id',
         'approved_by',
-        'status',
     ];
 
     public function user()

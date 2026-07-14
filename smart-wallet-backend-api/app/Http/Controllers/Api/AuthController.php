@@ -11,6 +11,7 @@ use App\Http\Requests\Auth\VerifyPinRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\QrCodeService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,10 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly QrCodeService $qrCodeService)
+    {
+    }
+
     public function requestOtp(RequestOtpRequest $request): JsonResponse
     {
         $data = $request->validated();
@@ -43,7 +48,7 @@ class AuthController extends Controller
             }
         }
 
-        $user = User::where('phone_number', $data['phone_number'])->first();
+        $user = $this->findUserByPhoneNumber($data['phone_number']);
 
         if (in_array($requestedRoleName, ['agent_manager', 'agent'], true)) {
             if (! $user) {
@@ -62,6 +67,13 @@ class AuthController extends Controller
                     'success' => false,
                     'message' => 'This phone number is not registered as an ' . str_replace('_', ' ', $requestedRoleName) . '.',
                 ], 422);
+            }
+
+            if ($user->status !== 'active') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your ' . str_replace('_', ' ', $requestedRoleName) . ' account is currently ' . $user->status . '. Please contact your administrator.',
+                ], 403);
             }
         }
 
@@ -122,7 +134,7 @@ class AuthController extends Controller
     {
         $data = $request->validated();
 
-        $user = User::where('phone_number', $data['phone_number'])->first();
+        $user = $this->findUserByPhoneNumber($data['phone_number']);
 
         if (! $user) {
             throw ValidationException::withMessages([
@@ -159,7 +171,8 @@ class AuthController extends Controller
 
         $user->update(['is_phone_verified' => true]);
 
-        $nextStep = $user->is_pin_created ? 'verify_pin' : 'create_pin';
+        $hasPin = DB::table('pins')->where('user_id', $user->id)->exists();
+        $nextStep = ($user->is_pin_created && $hasPin) ? 'verify_pin' : 'create_pin';
 
         return response()->json([
             'success' => true,
@@ -225,6 +238,8 @@ class AuthController extends Controller
             ]);
         }
 
+        $this->qrCodeService->ensureForUser($user->fresh());
+
         return response()->json([
             'success' => true,
             'message' => 'PIN created successfully.',
@@ -286,6 +301,8 @@ class AuthController extends Controller
                 'status' => 'active',
             ]);
         }
+
+        $this->qrCodeService->ensureForUser($user->fresh());
 
         return response()->json([
             'success' => true,
@@ -420,7 +437,7 @@ class AuthController extends Controller
     {
         $data = $request->validated();
 
-        $user = User::where('phone_number', $data['phone_number'])->first();
+        $user = $this->findUserByPhoneNumber($data['phone_number']);
 
         if (! $user) {
             return response()->json([
@@ -459,5 +476,19 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'PIN reset successfully.',
         ], 200);
+    }
+
+    protected function findUserByPhoneNumber(string $phoneNumber): ?User
+    {
+        $formattedPhone = $this->formatPhoneNumber($phoneNumber);
+
+        $localPhone = '09' . substr($formattedPhone, 4);
+        $rawPhone = substr($formattedPhone, 1);
+
+        return User::where('phone_number', $formattedPhone)
+            ->orWhere('phone_number', $localPhone)
+            ->orWhere('phone_number', $rawPhone)
+            ->orWhere('phone_number', $phoneNumber)
+            ->first();
     }
 }

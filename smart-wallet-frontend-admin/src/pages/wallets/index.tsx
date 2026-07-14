@@ -41,6 +41,11 @@ type WalletRecord = {
     full_name?: string;
     phone_number?: string;
     role_id?: number;
+    role?: {
+      id?: number;
+      name?: string;
+      description?: string;
+    };
   };
 };
 
@@ -69,14 +74,25 @@ export default function WalletsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [fromEntry, setFromEntry] = useState(0);
   const [toEntry, setToEntry] = useState(0);
+  const [status, setStatus] = useState("all");
+  const [role, setRole] = useState("all");
 
   const walletList = useMemo(() => wallets ?? [], [wallets]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [status, role]);
 
   useEffect(() => {
     const loadWallets = async () => {
       try {
         setLoading(true);
-        const response = await getWallets({ page, per_page: perPage });
+        const response = await getWallets({
+          page,
+          per_page: perPage,
+          status: status !== "all" ? status : undefined,
+          role: role !== "all" ? role : undefined,
+        });
         const payload = response.data?.data as WalletListResponse | undefined;
         const items = Array.isArray(payload?.data)
           ? payload.data
@@ -97,7 +113,7 @@ export default function WalletsPage() {
     };
 
     void loadWallets();
-  }, [page, perPage]);
+  }, [page, perPage, status, role]);
 
   useEffect(() => {
     const loadWalletDetails = async () => {
@@ -162,11 +178,34 @@ export default function WalletsPage() {
 
       <div className="grid gap-6 xl:grid-cols-[1.5fr_0.9fr]">
         <Card className="border-slate-100 shadow-sm">
-          <CardHeader>
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-50 py-4">
             <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-              <WalletIcon className="h-5 w-5" />
+              <WalletIcon className="h-5 w-5 text-blue-600" />
               Wallets List
             </CardTitle>
+            <div className="flex gap-2">
+              <Select value={role} onValueChange={(val) => setRole(val)}>
+                <SelectTrigger className="w-[150px] h-9 text-xs rounded border-slate-200">
+                  <SelectValue placeholder="Owner Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Owner Types</SelectItem>
+                  <SelectItem value="customer">Customer</SelectItem>
+                  <SelectItem value="agent">Agent</SelectItem>
+                  <SelectItem value="agent_manager">Agent Manager</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={status} onValueChange={(val) => setStatus(val)}>
+                <SelectTrigger className="w-[130px] h-9 text-xs rounded border-slate-200">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -197,7 +236,22 @@ export default function WalletsPage() {
                           </TableCell>
                           <TableCell>
                             <div className="font-medium text-slate-900">{wallet.user?.full_name || "—"}</div>
-                            <div className="text-xs text-slate-500">{wallet.user?.phone_number || "—"}</div>
+                            <div className="text-xs text-slate-500 mb-1">{wallet.user?.phone_number || "—"}</div>
+                            {wallet.user?.role?.name && (
+                              <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                                wallet.user.role.name === 'admin'
+                                  ? 'bg-purple-50 text-purple-700 border-purple-100'
+                                  : wallet.user.role.name === 'agent_manager'
+                                  ? 'bg-indigo-50 text-indigo-700 border-indigo-100'
+                                  : wallet.user.role.name === 'agent'
+                                  ? 'bg-blue-50 text-blue-700 border-blue-100'
+                                  : 'bg-teal-50 text-teal-700 border-teal-100'
+                              }`}>
+                                {wallet.user.role.name === 'agent_manager'
+                                  ? 'Agent Manager'
+                                  : wallet.user.role.name.charAt(0).toUpperCase() + wallet.user.role.name.slice(1)}
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell>
                             <div className="font-medium text-slate-900">
@@ -342,11 +396,28 @@ export default function WalletsPage() {
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Status</p>
                   <p className="mt-1 text-lg font-semibold text-slate-900">{selectedWallet.status ?? "active"}</p>
                 </div>
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Owner</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900">{selectedWallet.user?.full_name || "—"}</p>
-                  <p className="text-sm text-slate-500">{selectedWallet.user?.phone_number || "—"}</p>
-                </div>
+                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Owner</p>
+                   <p className="mt-1 text-lg font-semibold text-slate-900">{selectedWallet.user?.full_name || "—"}</p>
+                   <p className="text-sm text-slate-500">{selectedWallet.user?.phone_number || "—"}</p>
+                   {selectedWallet.user?.role?.name && (
+                     <div className="mt-2">
+                       <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                         selectedWallet.user.role.name === 'admin'
+                           ? 'bg-purple-50 text-purple-700 border-purple-100'
+                           : selectedWallet.user.role.name === 'agent_manager'
+                           ? 'bg-indigo-50 text-indigo-700 border-indigo-100'
+                           : selectedWallet.user.role.name === 'agent'
+                           ? 'bg-blue-50 text-blue-700 border-blue-100'
+                           : 'bg-teal-50 text-teal-700 border-teal-100'
+                       }`}>
+                         {selectedWallet.user.role.name === 'agent_manager'
+                           ? 'Agent Manager'
+                           : selectedWallet.user.role.name.charAt(0).toUpperCase() + selectedWallet.user.role.name.slice(1)}
+                       </span>
+                     </div>
+                   )}
+                 </div>
               </div>
             ) : (
               <p className="text-sm text-red-500">Wallet not found.</p>

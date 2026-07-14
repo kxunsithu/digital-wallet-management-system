@@ -16,7 +16,15 @@ export const adminTransferToAgentManager = (data: {
   receiver_user_id?: number | string;
   receiver_phone?: string;
   receiver_wallet_number?: string;
+  qr_id?: number | string;
   amount: number;
   fee?: number;
   description?: string;
 }) => api.post("transfers/admin", data);
+
+export const getMyQrCode = () => api.get("qr-codes/me");
+
+export const lookupQrCode = (value: string) =>
+  api.get("qr-codes/lookup", {
+    params: { value },
+  });

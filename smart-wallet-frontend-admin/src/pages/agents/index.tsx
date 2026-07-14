@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Eye, Trash2, User } from "lucide-react";
-import MainLayout from "@/components/layouts/MainLayout";
+import { Search, Eye, Trash2, User, Plus, Pencil } from "lucide-react";
+import RoleAwareLayout from "@/components/layouts/RoleAwareLayout";
 import { Button } from "@/components/ui/button";
+import { getCookie } from "@/lib/cookies";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -43,6 +44,7 @@ import { getStateRegions, getTownships } from "@/services/location.service";
 
 export default function AgentsPage() {
   const navigate = useNavigate();
+  const isAgentManager = (getCookie("user_role") ?? "") === "agent_manager";
   const [agents, setAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -146,8 +148,8 @@ export default function AgentsPage() {
   };
 
   return (
-    <MainLayout title="Agents">
-      <div className="mb-6 space-y-4">
+    <RoleAwareLayout title={isAgentManager ? "My Agents" : "Agents"}>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -155,10 +157,16 @@ export default function AgentsPage() {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Agents</BreadcrumbPage>
+              <BreadcrumbPage>{isAgentManager ? "My Agents" : "Agents"}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+        {isAgentManager ? (
+          <Button onClick={() => navigate("/agents/create")}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Agent
+          </Button>
+        ) : null}
       </div>
 
       <Card className="mb-6 shadow-sm border-slate-100">
@@ -344,6 +352,16 @@ export default function AgentsPage() {
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </Button>
+                      {isAgentManager ? (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 rounded-md border-slate-200 hover:bg-slate-50 text-slate-600 shadow-none"
+                          onClick={() => navigate(`/agents/${agent.id}/edit`)}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                      ) : null}
                       <Button
                         variant="outline"
                         size="icon"
@@ -459,6 +477,6 @@ export default function AgentsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </MainLayout>
+    </RoleAwareLayout>
   );
 }

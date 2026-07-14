@@ -1,6 +1,6 @@
 import api from "../lib/axiox";
 
-const ADMIN_ROLE_ID = 1;
+
 
 interface ApiErrorPayload {
   message?: string;
@@ -34,8 +34,8 @@ export const getErrorMessage = (error: ApiError | unknown): string => {
   return "Something went wrong. Please try again.";
 };
 
-export const requestOtp = (phoneNumber: string) =>
-  api.post("auth/request-otp", { phone_number: phoneNumber, role_id: ADMIN_ROLE_ID });
+export const requestOtp = (phoneNumber: string, roleId: number) =>
+  api.post("auth/request-otp", { phone_number: phoneNumber, role_id: roleId });
 
 export const verifyOtp = (phoneNumber: string, otpCode: string) =>
   api.post("auth/verify-otp", { phone_number: phoneNumber, otp_code: otpCode });

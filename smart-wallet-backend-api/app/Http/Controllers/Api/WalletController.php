@@ -14,7 +14,7 @@ class WalletController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = (int) $request->query('per_page', 15);
-        $query = Wallet::with('user');
+        $query = Wallet::with('user.role');
 
         $includeAdmin = filter_var($request->query('include_admin', false), FILTER_VALIDATE_BOOLEAN);
         $adminId = $request->query('admin_id');
@@ -32,6 +32,17 @@ class WalletController extends Controller
             $query->where('user_id', (int) $adminId);
         }
 
+        if ($request->filled('user_id')) {
+            $query->where('user_id', (int) $request->query('user_id'));
+        }
+
+        if ($request->filled('role')) {
+            $roleName = $request->query('role');
+            $query->whereHas('user.role', function ($q) use ($roleName) {
+                $q->where('name', $roleName);
+            });
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->query('status'));
         }
@@ -43,7 +54,7 @@ class WalletController extends Controller
 
     public function show($id): JsonResponse
     {
-        $wallet = Wallet::with('user')->find($id);
+        $wallet = Wallet::with('user.role')->find($id);
         if (! $wallet) {
             return response()->json(['success' => false, 'message' => 'Not found.'], 404);
         }
@@ -66,7 +77,7 @@ class WalletController extends Controller
             'success' => true,
             'message' => 'Wallet status updated.',
             'status' => $newStatus,
-            'data' => $wallet->fresh()->load('user'),
+            'data' => $wallet->fresh()->load('user.role'),
         ], 200);
     }
 }

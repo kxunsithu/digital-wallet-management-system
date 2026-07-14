@@ -25,9 +25,13 @@ export const deleteCookie = (name: string) => {
 export const clearAdminSession = () => {
   deleteCookie("admin_access_token");
   deleteCookie("admin_user");
+  deleteCookie("user_role");
+  deleteCookie("user_role_id");
 
   if (typeof window !== "undefined") {
     window.localStorage.removeItem("admin_access_token");
     window.localStorage.removeItem("admin_user");
+    window.localStorage.removeItem("admin_auth_flow");
   }
 };
+

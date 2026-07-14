@@ -3,13 +3,13 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AdminLevelController;
 use App\Http\Controllers\Api\AgentManagerController;
-use App\Http\Controllers\Api\AgentManagerProfileController;
 use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\MoneyTransferController;
 use App\Http\Controllers\Api\NrcVerificationController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Api\QrCodeController;
 use App\Http\Controllers\Api\WalletController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,13 +45,13 @@ Route::prefix('agent-managers')->group(function () {
     Route::post('/{id}/toggle-status', [AgentManagerController::class, 'toggleStatus'])->middleware(['auth:sanctum', 'ensure.admin']);
 });
 
-Route::prefix('agents')->group(function () {
+Route::prefix('agents')->middleware('auth:sanctum')->group(function () {
     Route::get('/', [AgentController::class, 'index']);
-    Route::post('/', [AgentController::class, 'store'])->middleware(['auth:sanctum', 'ensure.agent_manager']);
+    Route::post('/', [AgentController::class, 'store']);
     Route::get('/{id}', [AgentController::class, 'show']);
     Route::put('/{id}', [AgentController::class, 'update']);
     Route::delete('/{id}', [AgentController::class, 'destroy']);
-    Route::post('/{id}/toggle-status', [AgentController::class, 'toggleStatus'])->middleware(['auth:sanctum', 'ensure.admin']);
+    Route::post('/{id}/toggle-status', [AgentController::class, 'toggleStatus'])->middleware('ensure.admin');
 });
 
 Route::prefix('customers')->group(function () {
@@ -95,4 +95,9 @@ Route::prefix('wallets')->group(function () {
     Route::get('/', [WalletController::class, 'index']);
     Route::get('/{id}', [WalletController::class, 'show']);
     Route::post('/{id}/toggle-status', [WalletController::class, 'toggleStatus'])->middleware(['auth:sanctum', 'ensure.admin']);
+});
+
+Route::prefix('qr-codes')->middleware('auth:sanctum')->group(function () {
+    Route::get('/me', [QrCodeController::class, 'me']);
+    Route::get('/lookup', [QrCodeController::class, 'lookup']);
 });

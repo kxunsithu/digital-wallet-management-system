@@ -55,7 +55,7 @@ class LevelService
     {
         $profile = AgentProfile::firstOrCreate(
             ['user_id' => $user->id],
-            ['agent_code' => 'AG'.str_pad((string) $user->id, 4, '0', STR_PAD_LEFT), 'level' => 'starter', 'status' => 'pending']
+            ['agent_code' => 'AG'.str_pad((string) $user->id, 4, '0', STR_PAD_LEFT), 'level' => 'starter']
         );
 
         $monthlyVolume = (float) $profile->total_volume_monthly;
@@ -118,9 +118,9 @@ class LevelService
             return;
         }
 
-        $currentLevel = $profile->status ?? 'pending';
+        $currentLevel = $user->status ?? 'pending';
         if ($currentLevel === 'active') {
-            DB::table('agent_manager_profiles')->where('id', $profile->id)->update(['status' => 'active']);
+            $user->update(['status' => 'active']);
         }
     }
 }

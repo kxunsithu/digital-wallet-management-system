@@ -273,6 +273,20 @@ class MoneyTransferController extends Controller
             }
         }
 
+        if ($type === 'agent_to_agent_manager') {
+            $ownsManager = DB::table('agent_profiles')
+                ->where('user_id', $senderUserId)
+                ->where('created_by_manager_id', $receiverUserId)
+                ->exists();
+
+            if (! $ownsManager) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Receiver must be the agent manager who created this agent.',
+                ], 403);
+            }
+        }
+
         if ($type === 'agent_to_agent') {
             $senderProfile = DB::table('agent_profiles')->where('user_id', $senderUserId)->first();
             if (! $senderProfile) {

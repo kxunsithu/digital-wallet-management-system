@@ -102,7 +102,6 @@ class NrcUploadOnCreationTest extends TestCase
             'manager_code' => 'MGR-002',
             'state_region_id' => $stateRegionId,
             'township_id' => $townshipId,
-            'status' => 'active',
             'approval_limit' => 1000000,
             'created_at' => now(),
             'updated_at' => now(),

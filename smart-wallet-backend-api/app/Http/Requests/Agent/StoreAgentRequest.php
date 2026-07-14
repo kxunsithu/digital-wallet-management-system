@@ -18,7 +18,7 @@ class StoreAgentRequest extends FormRequest
             'phone_number' => ['required', 'string', 'unique:users,phone_number'],
             'full_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'nrc_number' => ['required', 'string', 'max:100', 'unique:users,nrc_number', 'regex:/^\d{1,2}\/[a-zA-Z]+\([a-zA-Z]\)\d{6}$/'],
+            'nrc_number' => ['required', 'string', 'max:100', 'unique:users,nrc_number', 'regex:/^[0-9\x{1040}-\x{1049}]{1,2}\s*\/\s*[\p{L}\p{M}]+\s*\(\s*[\p{L}\p{M}]+\s*\)\s*[0-9\x{1040}-\x{1049}]{6}$/u'],
 
             // Profile fields
             'shop_name' => ['nullable', 'string', 'max:255'],

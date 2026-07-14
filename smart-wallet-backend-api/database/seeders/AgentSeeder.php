@@ -136,7 +136,7 @@ class AgentSeeder extends Seeder
                     'full_name' => $data['full_name'],
                     'email' => $data['email'],
                     'nrc_number' => $data['nrc_number'],
-                    'status' => $data['status'] === 'active' ? 'active' : 'inactive',
+                    'status' => $data['status'],
                     'is_phone_verified' => true,
                     'is_pin_created' => true,
                 ]
@@ -156,7 +156,6 @@ class AgentSeeder extends Seeder
                     'state_region_id' => $region?->id,
                     'township_id' => $township?->id,
                     'level' => $data['level'],
-                    'status' => $data['status'],
                     'float_balance' => $data['float_balance'],
                     'total_volume_monthly' => $data['total_volume_monthly'],
                     'custom_commission_override' => $data['custom_commission_override'] ?? null,

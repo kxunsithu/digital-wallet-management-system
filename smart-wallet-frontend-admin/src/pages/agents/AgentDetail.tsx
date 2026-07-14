@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   User,
   Phone,
@@ -10,8 +10,11 @@ import {
   Activity,
   Store,
   Wallet,
+  Pencil,
 } from "lucide-react";
-import MainLayout from "@/components/layouts/MainLayout";
+import RoleAwareLayout from "@/components/layouts/RoleAwareLayout";
+import { Button } from "@/components/ui/button";
+import { getCookie } from "@/lib/cookies";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -26,6 +29,8 @@ import { getAgent } from "@/services/agent.service";
 
 export default function AgentDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const isAgentManager = (getCookie("user_role") ?? "") === "agent_manager";
   const [agent, setAgent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -46,17 +51,17 @@ export default function AgentDetail() {
 
   if (loading) {
     return (
-      <MainLayout title="Agent Detail">
+      <RoleAwareLayout title="Agent Detail">
         <div className="py-20 text-center text-slate-500">Loading details...</div>
-      </MainLayout>
+      </RoleAwareLayout>
     );
   }
 
   if (!agent) {
     return (
-      <MainLayout title="Agent Detail">
+      <RoleAwareLayout title="Agent Detail">
         <div className="py-20 text-center text-red-500">Agent not found.</div>
-      </MainLayout>
+      </RoleAwareLayout>
     );
   }
 
@@ -67,8 +72,8 @@ export default function AgentDetail() {
   const storageBase = `${import.meta.env.VITE_API_URL?.replace("/api", "")}/storage/`;
 
   return (
-    <MainLayout title="Agent Detail">
-      <div className="mb-6 space-y-4">
+    <RoleAwareLayout title="Agent Detail">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -84,6 +89,12 @@ export default function AgentDetail() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+        {isAgentManager ? (
+          <Button variant="outline" onClick={() => navigate(`/agents/${id}/edit`)}>
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit Agent
+          </Button>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -303,6 +314,51 @@ export default function AgentDetail() {
           </CardContent>
         </Card>
       </div>
-    </MainLayout>
+
+      {/* Wallet Information */}
+      {user?.wallet && (
+        <div className="mt-8">
+          <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
+            <CardHeader className="border-b border-slate-50 py-5 bg-slate-50/10">
+              <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
+                <Wallet className="w-4.5 h-4.5 text-blue-500" />
+                Wallet Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Wallet Number</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800 font-mono tracking-wide">{user.wallet.wallet_number ?? "—"}</p>
+                </div>
+                <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Balance</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800">
+                    {new Intl.NumberFormat("en-MM").format(Number(user.wallet.balance ?? 0))}
+                    <span className="ml-1 text-xs font-medium text-slate-500">{user.wallet.currency ?? "MMK"}</span>
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Currency</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800">{user.wallet.currency ?? "MMK"}</p>
+                </div>
+                <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Wallet Status</p>
+                  <div className="mt-1">
+                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                      user.wallet.status === "active"
+                        ? "bg-green-50 text-green-700 border border-green-200"
+                        : "bg-red-50 text-red-700 border border-red-200"
+                    }`}>
+                      {user.wallet.status ?? "inactive"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </RoleAwareLayout>
   );
 }

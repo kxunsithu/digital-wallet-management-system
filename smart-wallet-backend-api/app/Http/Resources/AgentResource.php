@@ -39,10 +39,11 @@ class AgentResource extends JsonResource
             'total_volume_monthly' => $this->total_volume_monthly,
             'created_by_manager_id' => $this->created_by_manager_id,
             'approved_by' => $this->approved_by,
-            'status' => $this->status,
+            'status' => $this->user?->status,
             'created_at' => optional($this->created_at)?->toISOString(),
             'updated_at' => optional($this->updated_at)?->toISOString(),
             'user' => $this->whenLoaded('user', function () use ($formattedImages) {
+                $wallet = $this->user->relationLoaded('wallet') ? $this->user->wallet : $this->user->loadMissing('wallet')->wallet;
                 return [
                     'id' => $this->user->id,
                     'phone_number' => $this->user->phone_number,
@@ -51,6 +52,13 @@ class AgentResource extends JsonResource
                     'nrc_number' => $this->user->nrc_number,
                     'images' => $formattedImages,
                     'nrc_images' => $formattedImages->filter(fn ($image) => in_array($image['image_type'], ['nrc_front_image', 'nrc_back_image'], true))->values(),
+                    'wallet' => $wallet ? [
+                        'id' => $wallet->id,
+                        'wallet_number' => $wallet->wallet_number,
+                        'balance' => $wallet->balance,
+                        'currency' => $wallet->currency,
+                        'status' => $wallet->status,
+                    ] : null,
                 ];
             }),
             'parent' => $this->whenLoaded('parent', function () {

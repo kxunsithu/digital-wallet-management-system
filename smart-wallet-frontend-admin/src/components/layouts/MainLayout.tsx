@@ -11,53 +11,22 @@ import {
   UserCog,
   UserRound,
   ReceiptText,
+  CircleUserRound,
 } from "lucide-react";
 import { clearAdminSession } from "@/lib/cookies";
 import { logout as logoutService } from "@/services/auth.service";
 
-const navItems = [
-  {
-    to: "/dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    to: "/wallets",
-    label: "Wallets",
-    icon: Wallet,
-  },
-  {
-    to: "/system-wallet",
-    label: "System Wallet",
-    icon: Banknote,
-  },
-  {
-    to: "/agent-managers",
-    label: "Agent Manager",
-    icon: UserCog,
-  },
-  {
-    to: "/agents",
-    label: "Agents",
-    icon: Users,
-  },
-  {
-    to: "/customers",
-    label: "Customers",
-    icon: UserRound,
-  },
-  {
-    to: "/transactions",
-    label: "Transactions",
-    icon: ReceiptText,
-  },
-  {
-    to: "/locations",
-    label: "Locations",
-    icon: MapPin,
-  },
+const adminNavItems = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/wallets", label: "Wallets", icon: Wallet },
+  { to: "/system-wallet", label: "System Wallet", icon: Banknote },
+  { to: "/agent-managers", label: "Agent Managers", icon: UserCog },
+  { to: "/agents", label: "Agents", icon: Users },
+  { to: "/customers", label: "Customers", icon: UserRound },
+  { to: "/transactions", label: "Transactions", icon: ReceiptText },
+  { to: "/locations", label: "Locations", icon: MapPin },
+  { to: "/profile", label: "Profile", icon: CircleUserRound },
 ];
-
 
 type Props = {
   children: ReactNode;
@@ -81,14 +50,13 @@ const MainLayout = ({ children, title = "Admin Portal" }: Props) => {
     navigate("/login");
   };
 
-
   const sidebarWidth = collapsed ? "w-20" : "w-72";
 
   const navItemsWithState = useMemo(
     () =>
-      navItems.map((item) => ({
+      adminNavItems.map((item) => ({
         ...item,
-        active: pathname === item.to,
+        active: pathname === item.to || pathname.startsWith(`${item.to}/`),
       })),
     [pathname],
   );
@@ -119,8 +87,9 @@ const MainLayout = ({ children, title = "Admin Portal" }: Props) => {
                     <Link
                       key={item.to}
                       to={item.to}
-                      className={`flex items-center gap-3 rounded px-3 py-3 text-sm transition-colors ${item.active ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
-                        } ${collapsed ? "justify-center" : "border border-slate-200"} `}
+                      className={`flex items-center gap-3 rounded px-3 py-3 text-sm transition-colors ${
+                        item.active ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
+                      } ${collapsed ? "justify-center" : "border border-slate-200"} `}
                     >
                       <Icon className="h-4 w-4" />
                       {!collapsed ? item.label : null}
@@ -154,7 +123,9 @@ const MainLayout = ({ children, title = "Admin Portal" }: Props) => {
           <div className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/90 backdrop-blur-sm">
             <div className="flex flex-col gap-2 p-6 md:flex-row md:items-center md:justify-between">
               <div>
-                <span className="font-semibold tracking-tight text-2xl block" style={{ color: "rgb(15 23 42)" }}>{title}</span>
+                <span className="font-semibold tracking-tight text-2xl block" style={{ color: "rgb(15 23 42)" }}>
+                  {title}
+                </span>
               </div>
             </div>
           </div>

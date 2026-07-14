@@ -103,7 +103,7 @@ class AgentManagerSeeder extends Seeder
                     'full_name' => $data['full_name'],
                     'email' => $data['email'],
                     'nrc_number' => $data['nrc_number'],
-                    'status' => $data['status'] === 'active' ? 'active' : 'inactive',
+                    'status' => $data['status'],
                     'is_phone_verified' => true,
                     'is_pin_created' => true,
                 ]
@@ -116,7 +116,6 @@ class AgentManagerSeeder extends Seeder
                     'manager_code' => $data['manager_code'],
                     'state_region_id' => $region ? $region->id : null,
                     'township_id' => $township ? $township->id : null,
-                    'status' => $data['status'],
                     'approval_limit' => $data['approval_limit']
                 ]
             );

@@ -22,66 +22,50 @@ import {
   verifyOtp,
   verifyPin,
 } from "@/services/auth.service";
-import { LockKeyhole } from "lucide-react";
+import { LockKeyhole, ShieldCheck, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import AuthLayout from "@/components/layouts/AuthLayout";
 import { getCookie, setCookie } from "@/lib/cookies";
 
-const ADMIN_ROLE_ID = 1;
+// Role IDs — must match the backend `roles` table
+const ROLE_ADMIN = 1;
+const ROLE_AGENT_MANAGER = 2;
+
 const FLOW_STORAGE_KEY = "admin_auth_flow";
 
-type Step = "phone" | "otp" | "pin" | "verify-pin" | "dashboard";
+type Step = "role" | "phone" | "otp" | "pin" | "verify-pin" | "dashboard";
 
 type PersistedFlow = {
   step: Step;
   phoneNumber: string;
   userId: number | null;
+  roleId: number | null;
+  roleName: string;
 };
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<Step>(() => {
-    if (typeof window === "undefined") return "phone";
 
+  const loadFlow = (): PersistedFlow => {
+    if (typeof window === "undefined") return { step: "role", phoneNumber: "", userId: null, roleId: null, roleName: "" };
     try {
-      const storedFlow = window.localStorage.getItem(FLOW_STORAGE_KEY);
-      const parsedFlow = storedFlow
-        ? (JSON.parse(storedFlow) as PersistedFlow)
-        : null;
-      return parsedFlow?.step ?? "phone";
+      const stored = window.localStorage.getItem(FLOW_STORAGE_KEY);
+      return stored ? (JSON.parse(stored) as PersistedFlow) : { step: "role", phoneNumber: "", userId: null, roleId: null, roleName: "" };
     } catch {
-      return "phone";
+      return { step: "role", phoneNumber: "", userId: null, roleId: null, roleName: "" };
     }
-  });
-  const [phoneNumber, setPhoneNumber] = useState(() => {
-    if (typeof window === "undefined") return "";
+  };
 
-    try {
-      const storedFlow = window.localStorage.getItem(FLOW_STORAGE_KEY);
-      const parsedFlow = storedFlow
-        ? (JSON.parse(storedFlow) as PersistedFlow)
-        : null;
-      return parsedFlow?.phoneNumber ?? "";
-    } catch {
-      return "";
-    }
-  });
+  const initial = loadFlow();
+
+  const [step, setStep] = useState<Step>(initial.step);
+  const [phoneNumber, setPhoneNumber] = useState(initial.phoneNumber);
+  const [userId, setUserId] = useState<number | null>(initial.userId);
+  const [roleId, setRoleId] = useState<number | null>(initial.roleId);
+  const [roleName, setRoleName] = useState(initial.roleName);
   const [otp, setOtp] = useState("");
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
-  const [userId, setUserId] = useState<number | null>(() => {
-    if (typeof window === "undefined") return null;
-
-    try {
-      const storedFlow = window.localStorage.getItem(FLOW_STORAGE_KEY);
-      const parsedFlow = storedFlow
-        ? (JSON.parse(storedFlow) as PersistedFlow)
-        : null;
-      return parsedFlow?.userId ?? null;
-    } catch {
-      return null;
-    }
-  });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -91,14 +75,19 @@ const LoginPage = () => {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (step === "dashboard") {
+      window.localStorage.removeItem(FLOW_STORAGE_KEY);
+      return;
+    }
+    window.localStorage.setItem(FLOW_STORAGE_KEY, JSON.stringify({ step, phoneNumber, userId, roleId, roleName }));
+  }, [step, phoneNumber, userId, roleId, roleName]);
+
   const normalizePhoneNumber = (value: string) => {
     const digits = value.replace(/\D/g, "");
     const normalized = digits.replace(/^0+/, "");
-
-    if (normalized.startsWith("959")) {
-      return `+${normalized}`;
-    }
-
+    if (normalized.startsWith("959")) return `+${normalized}`;
     return `+95${normalized}`;
   };
 
@@ -113,30 +102,24 @@ const LoginPage = () => {
     return normalizePhoneNumber(phoneNumber);
   };
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  // Step 1: Role selection
+  const handleSelectRole = (id: number, name: string) => {
+    setRoleId(id);
+    setRoleName(name);
+    setStep("phone");
+  };
 
-    if (step === "dashboard") {
-      window.localStorage.removeItem(FLOW_STORAGE_KEY);
-      return;
-    }
-
-    window.localStorage.setItem(
-      FLOW_STORAGE_KEY,
-      JSON.stringify({
-        step,
-        phoneNumber,
-        userId,
-      }),
-    );
-  }, [step, phoneNumber, userId]);
-
+  // Step 2: Request OTP
   const handleRequestOtp = async (event: FormEvent) => {
     event.preventDefault();
+    if (!roleId) {
+      toast.error("Please select a role first.");
+      setStep("role");
+      return;
+    }
     setLoading(true);
-
     try {
-      const response = await requestOtp(normalizePhoneNumber(phoneNumber));
+      const response = await requestOtp(normalizePhoneNumber(phoneNumber), roleId);
       if (response.data?.success || response.status === 200) {
         toast.success(response.data?.message ?? "OTP has been sent to your phone.");
         setStep("otp");
@@ -150,17 +133,15 @@ const LoginPage = () => {
     }
   };
 
+  // Step 3: Verify OTP
   const handleVerifyOtp = async (event: FormEvent) => {
     event.preventDefault();
     setLoading(true);
-
     try {
       const response = await verifyOtp(normalizePhoneNumber(phoneNumber), otp);
       const nextStep = response.data?.data?.next_step;
-
       if (response.data?.success) {
-        const verifiedUserId = response.data?.data?.user_id ?? null;
-        setUserId(verifiedUserId);
+        setUserId(response.data?.data?.user_id ?? null);
         if (nextStep === "verify_pin") {
           setStep("verify-pin");
           toast.success("OTP verified. Please enter your PIN to continue.");
@@ -178,22 +159,18 @@ const LoginPage = () => {
     }
   };
 
+  // Step 4a: Create PIN
   const handleCreatePin = async (event: FormEvent) => {
     event.preventDefault();
-    setLoading(true);
-
     if (pin.length !== 4 || confirmPin.length !== 4 || pin !== confirmPin) {
       toast.error("PINs must match and be exactly 4 digits.");
-      setLoading(false);
       return;
     }
-
     if (!userId) {
       toast.error("User information is missing.");
-      setLoading(false);
       return;
     }
-
+    setLoading(true);
     try {
       const response = await createPin(userId, pin, confirmPin);
       if (response.data?.success || response.status === 201) {
@@ -209,26 +186,28 @@ const LoginPage = () => {
     }
   };
 
+  // Step 4b: Verify PIN → Login
   const handleVerifyPin = async (event: FormEvent) => {
     event.preventDefault();
-    setLoading(true);
-
     if (!userId) {
       toast.error("User information is missing.");
-      setLoading(false);
       return;
     }
-
+    setLoading(true);
     try {
       const response = await verifyPin(userId, pin);
       if (response.data?.success) {
-        const adminData = response.data?.data ?? {};
-        const token = adminData?.access_token;
+        const userData = response.data?.data ?? {};
+        const token = userData?.access_token;
         if (token) {
           setCookie("admin_access_token", token);
-          setCookie("admin_user", JSON.stringify(adminData));
+          setCookie("admin_user", JSON.stringify(userData));
+          // Store the role so the app can do role-based access control
+          setCookie("user_role", userData?.role ?? roleName ?? "");
+          setCookie("user_role_id", String(userData?.role_id ?? roleId ?? ""));
         }
-        toast.success("Welcome back, admin.");
+        const displayRole = roleName === "agent_manager" ? "Agent Manager" : "Admin";
+        toast.success(`Welcome back, ${displayRole}.`);
         setStep("dashboard");
         navigate("/dashboard");
       } else {
@@ -246,11 +225,10 @@ const LoginPage = () => {
       toast.error("Please enter a phone number first.");
       return;
     }
-
+    if (!roleId) return;
     setLoading(true);
-
     try {
-      const response = await requestOtp(normalizePhoneNumber(phoneNumber));
+      const response = await requestOtp(normalizePhoneNumber(phoneNumber), roleId);
       if (response.data?.success || response.status === 200) {
         toast.success(response.data?.message ?? "OTP has been resent.");
       } else {
@@ -265,35 +243,25 @@ const LoginPage = () => {
 
   const getStepTitle = () => {
     switch (step) {
-      case "phone":
-        return "Secure admin login";
-      case "otp":
-        return "Please fill your OTP code";
-      case "pin":
-        return "Create your PIN";
-      case "verify-pin":
-        return "Verify your PIN";
-      case "dashboard":
-        return "Welcome back";
-      default:
-        return "Secure admin login";
+      case "role": return "Welcome back";
+      case "phone": return roleName === "agent_manager" ? "Agent Manager Login" : "Admin Login";
+      case "otp": return "Enter OTP Code";
+      case "pin": return "Create your PIN";
+      case "verify-pin": return "Verify your PIN";
+      case "dashboard": return "Welcome back";
+      default: return "Login";
     }
   };
 
   const getStepDescription = () => {
     switch (step) {
-      case "phone":
-        return "Enter your local Myanmar number without the leading zero. We will prefix +95 automatically.";
-      case "otp":
-        return "We sent a 6-digit code to your phone. Enter it below to continue.";
-      case "pin":
-        return "Create a new 4-digit PIN to complete your account setup.";
-      case "verify-pin":
-        return "Enter your existing PIN to continue to the admin dashboard.";
-      case "dashboard":
-        return "Your secure access is ready. Redirecting now...";
-      default:
-        return "Enter your phone number to start secure access.";
+      case "role": return "Select your role to continue.";
+      case "phone": return "Enter your local Myanmar number without the leading zero. We will prefix +95 automatically.";
+      case "otp": return "We sent a 6-digit code to your phone. Enter it below to continue.";
+      case "pin": return "Create a new 4-digit PIN to complete your account setup.";
+      case "verify-pin": return `Enter your 4-digit PIN to continue to the ${roleName === "agent_manager" ? "Agent Manager" : "Admin"} dashboard.`;
+      case "dashboard": return "Redirecting...";
+      default: return "";
     }
   };
 
@@ -312,6 +280,43 @@ const LoginPage = () => {
         </CardHeader>
 
         <CardContent className="space-y-5">
+
+          {/* Step 1: Role Selection */}
+          {step === "role" ? (
+            <div className="space-y-3">
+              <button
+                id="btn-role-admin"
+                type="button"
+                onClick={() => handleSelectRole(ROLE_ADMIN, "admin")}
+                className="flex w-full items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left transition-all hover:border-slate-900 hover:bg-slate-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-slate-900"
+              >
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-slate-900 text-white">
+                  <ShieldCheck className="h-5 w-5" />
+                </span>
+                <span>
+                  <span className="block font-semibold text-slate-900">Admin</span>
+                  <span className="text-sm text-slate-500">Full system access</span>
+                </span>
+              </button>
+
+              <button
+                id="btn-role-agent-manager"
+                type="button"
+                onClick={() => handleSelectRole(ROLE_AGENT_MANAGER, "agent_manager")}
+                className="flex w-full items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left transition-all hover:border-indigo-600 hover:bg-indigo-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-indigo-600 text-white">
+                  <UserCog className="h-5 w-5" />
+                </span>
+                <span>
+                  <span className="block font-semibold text-slate-900">Agent Manager</span>
+                  <span className="text-sm text-slate-500">Manage agents & operations</span>
+                </span>
+              </button>
+            </div>
+          ) : null}
+
+          {/* Step 2: Phone Number */}
           {step === "phone" ? (
             <form className="space-y-5" onSubmit={handleRequestOtp}>
               <div className="space-y-2">
@@ -331,15 +336,21 @@ const LoginPage = () => {
                 </div>
               </div>
 
-
-              <input type="hidden" value={ADMIN_ROLE_ID} readOnly />
-
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Sending OTP..." : "Send OTP"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => { setStep("role"); setPhoneNumber(""); }}
+              >
+                ← Back
               </Button>
             </form>
           ) : null}
 
+          {/* Step 3: OTP */}
           {step === "otp" ? (
             <form className="space-y-5" onSubmit={handleVerifyOtp}>
               <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
@@ -366,7 +377,7 @@ const LoginPage = () => {
               </div>
 
               <div className="flex items-center justify-between text-sm text-slate-500">
-                <span className="text-slate-500">Enter the 6-digit code</span>
+                <span>Enter the 6-digit code</span>
                 <button
                   type="button"
                   className="text-primary hover:underline"
@@ -386,15 +397,16 @@ const LoginPage = () => {
                 className="w-full"
                 onClick={() => setStep("phone")}
               >
-                Use another phone number
+                ← Back
               </Button>
             </form>
           ) : null}
 
+          {/* Step 4a: Create PIN */}
           {step === "pin" ? (
             <form className="space-y-5" onSubmit={handleCreatePin}>
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Choose a new 4-digit PIN to protect your admin access.</p>
+                <p className="text-sm text-slate-500">Choose a new 4-digit PIN to protect your access.</p>
                 <div className="mt-4 flex justify-center">
                   <InputOTP
                     value={pin}
@@ -441,10 +453,11 @@ const LoginPage = () => {
             </form>
           ) : null}
 
+          {/* Step 4b: Verify PIN */}
           {step === "verify-pin" ? (
             <form className="space-y-5" onSubmit={handleVerifyPin}>
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-sm text-slate-500">Enter your 4-digit PIN to continue to the admin dashboard.</p>
+                <p className="text-sm text-slate-500">Enter your 4-digit PIN to continue.</p>
                 <div className="mt-4 flex justify-center">
                   <InputOTP
                     value={pin}
@@ -470,18 +483,17 @@ const LoginPage = () => {
             </form>
           ) : null}
 
+          {/* Final: Dashboard redirect */}
           {step === "dashboard" ? (
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
               <div className="flex items-center gap-2 font-semibold text-slate-900">
                 <LockKeyhole className="h-4 w-4" />
                 Authentication complete
               </div>
-              <p className="mt-2">
-                The dashboard view is ready. You can now continue into the admin
-                area.
-              </p>
+              <p className="mt-2">Redirecting to your dashboard...</p>
             </div>
           ) : null}
+
         </CardContent>
       </Card>
     </AuthLayout>

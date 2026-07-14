@@ -54,7 +54,7 @@ class CustomerController extends Controller
 
     public function show($id): JsonResponse
     {
-        $profile = CustomerProfile::with(['user.images', 'user.nrcVerification', 'referrer', 'stateRegion', 'township'])->find($id);
+        $profile = CustomerProfile::with(['user.images', 'user.wallet', 'user.nrcVerification', 'referrer', 'stateRegion', 'township'])->find($id);
         if (! $profile) {
             return response()->json(['success' => false, 'message' => 'Not found.'], 404);
         }

@@ -22,7 +22,7 @@ class UpdateAgentManagerRequest extends FormRequest
             // User fields
             'full_name'         => ['nullable', 'string', 'max:255'],
             'email'             => ['nullable', 'email', 'max:255', "unique:users,email,{$userId}"],
-            'nrc_number'        => ['nullable', 'string', 'max:100', "unique:users,nrc_number,{$userId}", 'regex:/^\d{1,2}\/[a-zA-Z]+\([a-zA-Z]\)\d{6}$/'],
+            'nrc_number'        => ['nullable', 'string', 'max:100', "unique:users,nrc_number,{$userId}", 'regex:/^[0-9\x{1040}-\x{1049}]{1,2}\s*\/\s*[\p{L}\p{M}]+\s*\(\s*[\p{L}\p{M}]+\s*\)\s*[0-9\x{1040}-\x{1049}]{6}$/u'],
 
             // Profile fields
             'manager_code'      => ['sometimes', 'string', 'max:100', "unique:agent_manager_profiles,manager_code,{$id}"],

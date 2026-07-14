@@ -10,11 +10,19 @@ import EditAgentManager from "../pages/agent-managers/EditAgentManager";
 import AgentManagerDetail from "../pages/agent-managers/AgentManagerDetail";
 import AgentsPage from "../pages/agents";
 import AgentDetail from "../pages/agents/AgentDetail";
+import CreateAgent from "../pages/agents/CreateAgent";
+import EditAgent from "../pages/agents/EditAgent";
 import CustomersPage from "../pages/customers";
 import CustomerDetail from "../pages/customers/CustomerDetail";
 import ManageLocations from "../pages/locations/ManageLocations";
 import SystemWalletPage from "../pages/system-wallet";
 import WalletsPage from "../pages/wallets";
+import ManagerTransferPage from "../pages/transfer";
+import ProfilePage from "../pages/profile";
+
+const ADMIN_ONLY = ["admin"];
+const ADMIN_AND_MANAGER = ["admin", "agent_manager"];
+const MANAGER_ONLY = ["agent_manager"];
 
 const router = createBrowserRouter([
   {
@@ -30,9 +38,19 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: "/profile",
+    element: (
+      <ProtectedRoute allowedRoles={ADMIN_AND_MANAGER}>
+        <ProfilePage />
+      </ProtectedRoute>
+    ),
+  },
+
+  // ─── Agent Manager list & CRUD: admin only ─────────────────────────────────
+  {
     path: "/agent-managers",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
         <AgentManagersPage />
       </ProtectedRoute>
     ),
@@ -40,7 +58,7 @@ const router = createBrowserRouter([
   {
     path: "/agent-managers/create",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
         <CreateAgentManager />
       </ProtectedRoute>
     ),
@@ -48,7 +66,7 @@ const router = createBrowserRouter([
   {
     path: "/agent-managers/:id/edit",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
         <EditAgentManager />
       </ProtectedRoute>
     ),
@@ -56,31 +74,61 @@ const router = createBrowserRouter([
   {
     path: "/agent-managers/:id",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
         <AgentManagerDetail />
       </ProtectedRoute>
     ),
   },
+
+  // ─── Agents: admin + agent_manager ─────────────────────────────────────────
   {
     path: "/agents",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={ADMIN_AND_MANAGER}>
         <AgentsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/agents/create",
+    element: (
+      <ProtectedRoute allowedRoles={MANAGER_ONLY}>
+        <CreateAgent />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/agents/:id/edit",
+    element: (
+      <ProtectedRoute allowedRoles={MANAGER_ONLY}>
+        <EditAgent />
       </ProtectedRoute>
     ),
   },
   {
     path: "/agents/:id",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={ADMIN_AND_MANAGER}>
         <AgentDetail />
       </ProtectedRoute>
     ),
   },
+
+  // ─── Transfer: agent_manager only ──────────────────────────────────────────
+  {
+    path: "/transfer",
+    element: (
+      <ProtectedRoute allowedRoles={MANAGER_ONLY}>
+        <ManagerTransferPage />
+      </ProtectedRoute>
+    ),
+  },
+
+  // ─── Customers: admin only ─────────────────────────────────────────────────
   {
     path: "/customers",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
         <CustomersPage />
       </ProtectedRoute>
     ),
@@ -88,31 +136,37 @@ const router = createBrowserRouter([
   {
     path: "/customers/:id",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
         <CustomerDetail />
       </ProtectedRoute>
     ),
   },
+
+  // ─── Locations: admin only ──────────────────────────────────────────────────
   {
     path: "/locations",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
         <ManageLocations />
       </ProtectedRoute>
     ),
   },
+
+  // ─── System Wallet: admin only ──────────────────────────────────────────────
   {
     path: "/system-wallet",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
         <SystemWalletPage />
       </ProtectedRoute>
     ),
   },
+
+  // ─── Wallets: admin only ────────────────────────────────────────────────────
   {
     path: "/wallets",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
         <WalletsPage />
       </ProtectedRoute>
     ),
@@ -120,11 +174,12 @@ const router = createBrowserRouter([
   {
     path: "/wallets/:id",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
         <WalletsPage />
       </ProtectedRoute>
     ),
   },
+
   {
     path: "/",
     element: getCookie("admin_access_token") ? (

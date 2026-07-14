@@ -37,6 +37,7 @@ class CustomerResource extends JsonResource
             'created_at' => optional($this->created_at)?->toISOString(),
             'updated_at' => optional($this->updated_at)?->toISOString(),
             'user' => $this->whenLoaded('user', function () use ($formattedImages) {
+                $wallet = $this->user->relationLoaded('wallet') ? $this->user->wallet : $this->user->loadMissing('wallet')->wallet;
                 return [
                     'id' => $this->user->id,
                     'phone_number' => $this->user->phone_number,
@@ -51,6 +52,13 @@ class CustomerResource extends JsonResource
                         'status' => $this->user->nrcVerification?->status,
                         'rejection_reason' => $this->user->nrcVerification?->rejection_reason,
                     ],
+                    'wallet' => $wallet ? [
+                        'id' => $wallet->id,
+                        'wallet_number' => $wallet->wallet_number,
+                        'balance' => $wallet->balance,
+                        'currency' => $wallet->currency,
+                        'status' => $wallet->status,
+                    ] : null,
                 ];
             }),
             'referrer' => $this->whenLoaded('referrer', function () {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { User, Phone, Mail, CreditCard, MapPin, Image as ImageIcon, Activity, Edit2 } from "lucide-react";
+import { User, Phone, Mail, CreditCard, MapPin, Image as ImageIcon, Activity, Edit2, Wallet as WalletIcon } from "lucide-react";
 import MainLayout from "@/components/layouts/MainLayout";
 import {
   Breadcrumb,
@@ -228,6 +228,51 @@ export default function AgentManagerDetail() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Wallet Information */}
+      {user?.wallet && (
+        <div className="mt-8">
+          <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
+            <CardHeader className="border-b border-slate-50 py-5 bg-slate-50/10">
+              <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
+                <WalletIcon className="w-4.5 h-4.5 text-blue-500" />
+                Wallet Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Wallet Number</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800 font-mono tracking-wide">{user.wallet.wallet_number ?? "—"}</p>
+                </div>
+                <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Balance</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800">
+                    {new Intl.NumberFormat("en-MM").format(Number(user.wallet.balance ?? 0))}
+                    <span className="ml-1 text-xs font-medium text-slate-500">{user.wallet.currency ?? "MMK"}</span>
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Currency</p>
+                  <p className="mt-1 text-sm font-bold text-slate-800">{user.wallet.currency ?? "MMK"}</p>
+                </div>
+                <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
+                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Wallet Status</p>
+                  <div className="mt-1">
+                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                      user.wallet.status === "active"
+                        ? "bg-green-50 text-green-700 border border-green-200"
+                        : "bg-red-50 text-red-700 border border-red-200"
+                    }`}>
+                      {user.wallet.status ?? "inactive"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </MainLayout>
   );
 }
