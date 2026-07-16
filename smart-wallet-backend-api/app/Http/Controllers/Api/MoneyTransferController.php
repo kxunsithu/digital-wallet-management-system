@@ -134,6 +134,14 @@ class MoneyTransferController extends Controller
         $fee = $data['fee'] ?? 0;
         $description = $data['description'] ?? null;
 
+        $senderStatus = $this->getUserStatus($senderUserId);
+        if ($senderStatus !== 'active') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sender account is '.$senderStatus.' and cannot send money.',
+            ], 403);
+        }
+
         if ($qrId) {
             $qr = DB::table('qr_codes')->where('id', $qrId)->first();
             if (! $qr) {
@@ -182,6 +190,14 @@ class MoneyTransferController extends Controller
             return response()->json(['success' => false, 'message' => 'Receiver not specified.'], 422);
         }
 
+        $receiverStatus = $this->getUserStatus($receiverUserId);
+        if ($receiverStatus !== 'active') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Receiver account is '.$receiverStatus.' and cannot receive money.',
+            ], 403);
+        }
+
         $senderRole = $this->resolveUserRole($senderUserId);
         $receiverRole = $this->resolveUserRole($receiverUserId);
         $transactionType = $this->determineTransferType($type, $senderRole, $receiverRole);
@@ -205,6 +221,13 @@ class MoneyTransferController extends Controller
         }
 
         return DB::table('roles')->where('id', $roleId)->value('name');
+    }
+
+    protected function getUserStatus(int $userId): string
+    {
+        $status = DB::table('users')->where('id', $userId)->value('status');
+
+        return $status ?? 'inactive';
     }
 
     protected function determineTransferType(string $context, ?string $senderRole, ?string $receiverRole): JsonResponse|string

@@ -14,6 +14,7 @@ export const managerTransfer = (data: {
   receiver_user_id?: number | string;
   receiver_phone?: string;
   receiver_wallet_number?: string;
+  qr_id?: number | string;
   amount: number;
   fee?: number;
   description?: string;
@@ -24,6 +25,7 @@ export const agentTransfer = (data: {
   receiver_user_id?: number | string;
   receiver_phone?: string;
   receiver_wallet_number?: string;
+  qr_id?: number | string;
   amount: number;
   fee?: number;
   description?: string;

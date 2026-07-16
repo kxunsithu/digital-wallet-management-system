@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\QrCodeController;
 use App\Http\Controllers\Api\WalletController;
+use App\Http\Controllers\Api\TransactionController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -100,4 +101,9 @@ Route::prefix('wallets')->group(function () {
 Route::prefix('qr-codes')->middleware('auth:sanctum')->group(function () {
     Route::get('/me', [QrCodeController::class, 'me']);
     Route::get('/lookup', [QrCodeController::class, 'lookup']);
+});
+
+Route::prefix('transactions')->middleware('auth:sanctum')->group(function () {
+    Route::get('/', [TransactionController::class, 'index']);
+    Route::get('/{id}', [TransactionController::class, 'show']);
 });

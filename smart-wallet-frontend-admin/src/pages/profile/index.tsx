@@ -108,7 +108,7 @@ export default function ProfilePage() {
       });
 
       const profileImage = data.images?.find((img) => img.image_type === "profile_image");
-      setPreviewUrl(getStorageUrl(profileImage?.image_path) || profileImage?.image_url);
+      setPreviewUrl(getStorageUrl(profileImage?.image_path) ?? profileImage?.image_url ?? null);
       syncSessionCookie(data);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to load profile");
@@ -152,7 +152,7 @@ export default function ProfilePage() {
     try {
       setUploading(true);
       const response = await uploadProfilePicture(file);
-      const imageUrl = getStorageUrl(response.data?.data?.image_path) || response.data?.data?.image_url;
+      const imageUrl = getStorageUrl(response.data?.data?.image_path) ?? response.data?.data?.image_url ?? null;
       setPreviewUrl(imageUrl);
       toast.success(response.data?.message || "Profile picture uploaded.");
       await loadProfile();

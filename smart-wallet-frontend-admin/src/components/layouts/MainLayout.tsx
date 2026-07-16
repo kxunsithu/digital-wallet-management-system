@@ -23,7 +23,8 @@ const adminNavItems = [
   { to: "/agent-managers", label: "Agent Managers", icon: UserCog },
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/customers", label: "Customers", icon: UserRound },
-  { to: "/transactions", label: "Transactions", icon: ReceiptText },
+  { to: "/transactions", label: "All Transactions", icon: ReceiptText, exact: true },
+  { to: "/transactions/system", label: "System Transactions", icon: Banknote },
   { to: "/locations", label: "Locations", icon: MapPin },
   { to: "/profile", label: "Profile", icon: CircleUserRound },
 ];
@@ -56,7 +57,9 @@ const MainLayout = ({ children, title = "Admin Portal" }: Props) => {
     () =>
       adminNavItems.map((item) => ({
         ...item,
-        active: pathname === item.to || pathname.startsWith(`${item.to}/`),
+        active: item.exact
+          ? pathname === item.to
+          : pathname === item.to || pathname.startsWith(`${item.to}/`),
       })),
     [pathname],
   );

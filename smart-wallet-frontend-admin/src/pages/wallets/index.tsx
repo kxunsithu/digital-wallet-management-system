@@ -184,7 +184,7 @@ export default function WalletsPage() {
               Wallets List
             </CardTitle>
             <div className="flex gap-2">
-              <Select value={role} onValueChange={(val) => setRole(val)}>
+              <Select value={role} onValueChange={(val) => setRole(val ?? "all")}>
                 <SelectTrigger className="w-[150px] h-9 text-xs rounded border-slate-200">
                   <SelectValue placeholder="Owner Type" />
                 </SelectTrigger>
@@ -195,7 +195,7 @@ export default function WalletsPage() {
                   <SelectItem value="agent_manager">Agent Manager</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={status} onValueChange={(val) => setStatus(val)}>
+              <Select value={status} onValueChange={(val) => setStatus(val ?? "all")}>
                 <SelectTrigger className="w-[130px] h-9 text-xs rounded border-slate-200">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>

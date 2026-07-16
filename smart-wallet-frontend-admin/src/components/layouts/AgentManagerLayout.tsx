@@ -8,6 +8,7 @@ import {
   Banknote,
   Wallet,
   CircleUserRound,
+  ReceiptText,
 } from "lucide-react";
 import { clearAdminSession, getCookie } from "@/lib/cookies";
 import { logout as logoutService } from "@/services/auth.service";
@@ -16,6 +17,7 @@ const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/agents", label: "My Agents", icon: Users },
   { to: "/transfer", label: "Transfer", icon: Banknote },
+  { to: "/transactions/my", label: "My Transactions", icon: ReceiptText },
   { to: "/profile", label: "Profile", icon: CircleUserRound },
 ];
 
