@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getTransactions } from "@/services/transaction.service";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
   filterParams?: Record<string, any>;
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export default function TransactionList({ filterParams = {}, pageTitle = "Transactions" }: Props) {
+  const navigate = useNavigate();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState("");
@@ -66,7 +68,7 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold">{pageTitle}</h2>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Input placeholder="Search by ref or phone" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Input placeholder="Search by transaction no or phone" value={query} onChange={(e) => setQuery(e.target.value)} />
           <Button
             onClick={() => {
               setPage(1);
@@ -83,7 +85,7 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
         <table className="w-full table-auto divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50">
             <tr>
-              <th className="px-3 py-2 text-left">Ref</th>
+              <th className="px-3 py-2 text-left">Transaction No</th>
               <th className="px-3 py-2 text-left">Type</th>
               <th className="px-3 py-2 text-right">Amount</th>
               <th className="px-3 py-2 text-right">Fee</th>
@@ -91,19 +93,20 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
               <th className="px-3 py-2 text-left">Receiver</th>
               <th className="px-3 py-2 text-left">Status</th>
               <th className="px-3 py-2 text-left">Date</th>
+              <th className="px-3 py-2 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {items.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-3 py-6 text-center text-sm text-slate-500">
+                <td colSpan={9} className="px-3 py-6 text-center text-sm text-slate-500">
                   {loading ? "Loading transactions..." : "No transactions found."}
                 </td>
               </tr>
             ) : (
               items.map((tx: any) => (
                 <tr key={tx.id}>
-                  <td className="px-3 py-2">{tx.transaction_ref}</td>
+                  <td className="px-3 py-2">{tx.transaction_number}</td>
                   <td className="px-3 py-2">{tx.transaction_type}</td>
                   <td className="px-3 py-2 text-right">{tx.amount}</td>
                   <td className="px-3 py-2 text-right">{tx.fee}</td>
@@ -111,6 +114,15 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
                   <td className="px-3 py-2">{tx.receiver_phone ?? tx.receiver_wallet_id}</td>
                   <td className="px-3 py-2">{tx.status}</td>
                   <td className="px-3 py-2">{new Date(tx.created_at).toLocaleString()}</td>
+                  <td className="px-3 py-2 text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/transactions/${tx.id}`)}
+                    >
+                      View Details
+                    </Button>
+                  </td>
                 </tr>
               ))
             )}

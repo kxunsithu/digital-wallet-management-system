@@ -8,6 +8,7 @@ import AgentManagersPage from "../pages/agent-managers";
 import AdminTransactions from "../pages/transactions/AdminTransactions";
 import SystemTransactions from "../pages/transactions/SystemTransactions";
 import ManagerTransactions from "../pages/transactions/ManagerTransactions";
+import TransactionDetail from "../pages/transactions/TransactionDetail";
 import CreateAgentManager from "../pages/agent-managers/CreateAgentManager";
 import EditAgentManager from "../pages/agent-managers/EditAgentManager";
 import AgentManagerDetail from "../pages/agent-managers/AgentManagerDetail";
@@ -20,7 +21,7 @@ import CustomerDetail from "../pages/customers/CustomerDetail";
 import ManageLocations from "../pages/locations/ManageLocations";
 import SystemWalletPage from "../pages/system-wallet";
 import WalletsPage from "../pages/wallets";
-import ManagerTransferPage from "../pages/transfer";
+import ManagerTransferPage from "../pages/agent-manager-wallet";
 import ProfilePage from "../pages/profile";
 
 const ADMIN_ONLY = ["admin"];
@@ -187,6 +188,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedRoles={MANAGER_ONLY}>
         <ManagerTransactions />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/transactions/:id",
+    element: (
+      <ProtectedRoute allowedRoles={ADMIN_AND_MANAGER}>
+        <TransactionDetail />
       </ProtectedRoute>
     ),
   },

@@ -19,10 +19,6 @@ class CustomerController extends Controller
             $query->where('kyc_status', $request->query('kyc_status'));
         }
 
-        if ($request->filled('level')) {
-            $query->where('level', $request->query('level'));
-        }
-
         if ($request->filled('state_region_id')) {
             $query->where('state_region_id', $request->query('state_region_id'));
         }

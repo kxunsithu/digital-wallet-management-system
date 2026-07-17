@@ -288,9 +288,9 @@ const LoginPage = () => {
                 id="btn-role-admin"
                 type="button"
                 onClick={() => handleSelectRole(ROLE_ADMIN, "admin")}
-                className="flex w-full items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left transition-all hover:border-slate-900 hover:bg-slate-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-slate-900"
+                className="flex w-full items-center gap-4 rounded border border-slate-200 bg-white p-4 text-left transition-all hover:border-slate-900 hover:bg-slate-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-slate-900"
               >
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-slate-900 text-white">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded bg-slate-900 text-white">
                   <ShieldCheck className="h-5 w-5" />
                 </span>
                 <span>
@@ -303,9 +303,9 @@ const LoginPage = () => {
                 id="btn-role-agent-manager"
                 type="button"
                 onClick={() => handleSelectRole(ROLE_AGENT_MANAGER, "agent_manager")}
-                className="flex w-full items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left transition-all hover:border-indigo-600 hover:bg-indigo-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="flex w-full items-center gap-4 rounded border border-slate-200 bg-white p-4 text-left transition-all hover:border-indigo-600 hover:bg-indigo-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-indigo-600 text-white">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded bg-indigo-600 text-white">
                   <UserCog className="h-5 w-5" />
                 </span>
                 <span>
@@ -353,7 +353,7 @@ const LoginPage = () => {
           {/* Step 3: OTP */}
           {step === "otp" ? (
             <form className="space-y-5" onSubmit={handleVerifyOtp}>
-              <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+              <div className="space-y-3 rounded border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
                 <p>OTP sent to</p>
                 <p className="font-medium text-slate-900">{formattedPhoneNumber()}</p>
               </div>
@@ -405,7 +405,7 @@ const LoginPage = () => {
           {/* Step 4a: Create PIN */}
           {step === "pin" ? (
             <form className="space-y-5" onSubmit={handleCreatePin}>
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="overflow-hidden rounded border border-slate-200 bg-slate-50 p-4">
                 <p className="text-sm text-slate-500">Choose a new 4-digit PIN to protect your access.</p>
                 <div className="mt-4 flex justify-center">
                   <InputOTP
@@ -426,7 +426,7 @@ const LoginPage = () => {
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="overflow-hidden rounded border border-slate-200 bg-slate-50 p-4">
                 <p className="text-sm text-slate-500">Re-enter your PIN for confirmation.</p>
                 <div className="mt-4 flex justify-center">
                   <InputOTP
@@ -456,7 +456,7 @@ const LoginPage = () => {
           {/* Step 4b: Verify PIN */}
           {step === "verify-pin" ? (
             <form className="space-y-5" onSubmit={handleVerifyPin}>
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="overflow-hidden rounded border border-slate-200 bg-slate-50 p-4">
                 <p className="text-sm text-slate-500">Enter your 4-digit PIN to continue.</p>
                 <div className="mt-4 flex justify-center">
                   <InputOTP
@@ -485,7 +485,7 @@ const LoginPage = () => {
 
           {/* Final: Dashboard redirect */}
           {step === "dashboard" ? (
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
+            <div className="rounded border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
               <div className="flex items-center gap-2 font-semibold text-slate-900">
                 <LockKeyhole className="h-4 w-4" />
                 Authentication complete

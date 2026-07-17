@@ -68,7 +68,6 @@ class WalletSeeder extends Seeder
             'user_id' => $user->id,
             'wallet_number' => 'WAL-' . strtoupper(Str::random(8)),
             'balance' => $balance,
-            'currency' => env('DEFAULT_CURRENCY', 'MMK'),
             'status' => $status,
         ]);
     }

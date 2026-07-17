@@ -38,7 +38,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { getCustomers, deleteCustomer, getCustomerLevels } from "@/services/customer.service";
+import { getCustomers, deleteCustomer } from "@/services/customer.service";
 import { getStateRegions, getTownships } from "@/services/location.service";
 
 const kycStatusClass = (status?: string) => {
@@ -61,13 +61,11 @@ export default function CustomersPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [kycStatus, setKycStatus] = useState("all");
-  const [level, setLevel] = useState("all");
   const [regionId, setRegionId] = useState("");
   const [townshipId, setTownshipId] = useState("");
 
   const [regionsList, setRegionsList] = useState<any[]>([]);
   const [townshipsList, setTownshipsList] = useState<any[]>([]);
-  const [levelsList, setLevelsList] = useState<any[]>([]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -88,7 +86,6 @@ export default function CustomersPage() {
 
   useEffect(() => {
     getStateRegions().then((res) => setRegionsList(res.data.data)).catch(() => {});
-    getCustomerLevels().then((res) => setLevelsList(res.data.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -109,7 +106,6 @@ export default function CustomersPage() {
         per_page: perPage,
         search: debouncedSearch || undefined,
         kyc_status: kycStatus !== "all" ? kycStatus : undefined,
-        level: level !== "all" ? level : undefined,
         state_region_id: regionId || undefined,
         township_id: townshipId || undefined,
       });
@@ -132,16 +128,15 @@ export default function CustomersPage() {
 
   useEffect(() => {
     fetchCustomers();
-  }, [page, perPage, debouncedSearch, kycStatus, level, regionId, townshipId]);
+  }, [page, perPage, debouncedSearch, kycStatus, regionId, townshipId]);
 
   useEffect(() => {
     setPage(1);
-  }, [kycStatus, level, regionId, townshipId]);
+  }, [kycStatus, regionId, townshipId]);
 
   const handleClearFilters = () => {
     setSearch("");
     setKycStatus("all");
-    setLevel("all");
     setRegionId("");
     setTownshipId("");
     setPage(1);
@@ -202,24 +197,7 @@ export default function CustomersPage() {
                 <SelectItem value="rejected">rejected</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={level} onValueChange={(val) => setLevel(val as string)}>
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Level">
-                  {(val: string | null) => {
-                    if (!val || val === "all") return "Level";
-                    return val;
-                  }}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">all levels</SelectItem>
-                {levelsList.map((l) => (
-                  <SelectItem key={l.id} value={l.level}>
-                    {l.level}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
             <Select
               value={regionId}
               onValueChange={(val) => {
@@ -289,9 +267,6 @@ export default function CustomersPage() {
                 Referral Code
               </TableHead>
               <TableHead className="bg-slate-50/50 text-slate-500 text-xs font-semibold uppercase tracking-wider px-4">
-                Level
-              </TableHead>
-              <TableHead className="bg-slate-50/50 text-slate-500 text-xs font-semibold uppercase tracking-wider px-4">
                 KYC Status
               </TableHead>
               <TableHead className="bg-slate-50/50 text-slate-500 text-xs font-semibold uppercase tracking-wider px-4">
@@ -305,13 +280,13 @@ export default function CustomersPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10">
+                <TableCell colSpan={6} className="text-center py-10">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : customers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10">
+                <TableCell colSpan={6} className="text-center py-10">
                   No customers found.
                 </TableCell>
               </TableRow>
@@ -343,9 +318,6 @@ export default function CustomersPage() {
                   </TableCell>
                   <TableCell className="px-4 py-3 font-medium text-slate-700 text-sm">
                     {customer.referral_code || "-"}
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-slate-600 text-sm capitalize">
-                    {customer.level || "-"}
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <span

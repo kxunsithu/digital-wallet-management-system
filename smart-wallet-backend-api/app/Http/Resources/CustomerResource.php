@@ -27,7 +27,6 @@ class CustomerResource extends JsonResource
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
-            'level' => $this->level,
             'custom_limit_override' => $this->custom_limit_override !== null ? (float) $this->custom_limit_override : null,
             'kyc_status' => $this->kyc_status,
             'referral_code' => $this->referral_code,
@@ -56,7 +55,6 @@ class CustomerResource extends JsonResource
                         'id' => $wallet->id,
                         'wallet_number' => $wallet->wallet_number,
                         'balance' => $wallet->balance,
-                        'currency' => $wallet->currency,
                         'status' => $wallet->status,
                     ] : null,
                 ];

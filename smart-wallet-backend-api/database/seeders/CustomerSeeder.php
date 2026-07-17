@@ -30,7 +30,6 @@ class CustomerSeeder extends Seeder
                 'referral_code' => 'ref_maythu',
                 'region_name' => 'Yangon Region',
                 'township_name' => 'Kamayut',
-                'level' => 'gold',
                 'kyc_status' => 'verified',
                 'custom_limit_override' => null,
             ],
@@ -42,7 +41,6 @@ class CustomerSeeder extends Seeder
                 'referral_code' => 'ref_zinmar',
                 'region_name' => 'Yangon Region',
                 'township_name' => 'Bahan',
-                'level' => 'silver',
                 'kyc_status' => 'verified',
                 'referrer_phone' => '09944076001',
             ],
@@ -54,7 +52,6 @@ class CustomerSeeder extends Seeder
                 'referral_code' => 'ref_kaungh',
                 'region_name' => 'Mandalay Region',
                 'township_name' => 'Mahar Aung Myay',
-                'level' => 'basic',
                 'kyc_status' => 'pending',
             ],
             [
@@ -65,7 +62,6 @@ class CustomerSeeder extends Seeder
                 'referral_code' => 'ref_eimon',
                 'region_name' => 'Shan State',
                 'township_name' => 'Taunggyi',
-                'level' => 'silver',
                 'kyc_status' => 'approved',
                 'referrer_phone' => '09944076001',
             ],
@@ -77,7 +73,6 @@ class CustomerSeeder extends Seeder
                 'referral_code' => 'ref_soepa',
                 'region_name' => 'Bago Region',
                 'township_name' => 'Pyay',
-                'level' => 'basic',
                 'kyc_status' => 'rejected',
             ],
             [
@@ -88,7 +83,6 @@ class CustomerSeeder extends Seeder
                 'referral_code' => 'ref_hninw',
                 'region_name' => 'Yangon Region',
                 'township_name' => 'Hlaing',
-                'level' => 'platinum',
                 'kyc_status' => 'verified',
                 'custom_limit_override' => 15000000.00,
                 'referrer_phone' => '09944076002',
@@ -120,7 +114,6 @@ class CustomerSeeder extends Seeder
             CustomerProfile::updateOrCreate(
                 ['user_id' => $user->id],
                 [
-                    'level' => $data['level'],
                     'kyc_status' => $data['kyc_status'],
                     'referral_code' => $data['referral_code'],
                     'referred_by' => $referrerId,

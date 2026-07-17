@@ -54,7 +54,6 @@ class QrCodeAutoCreationTest extends TestCase
             'user_id' => $user->id,
             'wallet_number' => 'WAL-TEST1234',
             'balance' => 0,
-            'currency' => 'MMK',
             'status' => 'active',
         ]);
 
@@ -100,7 +99,6 @@ class QrCodeAutoCreationTest extends TestCase
             'user_id' => $user->id,
             'wallet_number' => 'WAL-VERIFY123',
             'balance' => 0,
-            'currency' => 'MMK',
             'status' => 'active',
         ]);
 

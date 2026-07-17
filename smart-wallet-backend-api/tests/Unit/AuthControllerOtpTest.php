@@ -23,7 +23,8 @@ class AuthControllerOtpTest extends TestCase
             '*' => Http::response(['status' => 'ok'], 200),
         ]);
 
-        $controller = new AuthController();
+        $qrCodeServiceMock = $this->createMock(\App\Services\QrCodeService::class);
+        $controller = new AuthController($qrCodeServiceMock);
         $method = new \ReflectionMethod(AuthController::class, 'sendOtpCode');
         $method->setAccessible(true);
 

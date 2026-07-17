@@ -183,15 +183,6 @@ export default function AgentDetail() {
                 </div>
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <Activity className="w-4 h-4 text-slate-400 mt-0.5" />
-              <div>
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  Level
-                </p>
-                <p className="text-sm font-semibold text-slate-700">{agent.level || "-"}</p>
-              </div>
-            </div>
             {agent.parent && (
               <div className="flex items-start gap-3">
                 <User className="w-4 h-4 text-slate-400 mt-0.5" />
@@ -335,12 +326,8 @@ export default function AgentDetail() {
                   <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Balance</p>
                   <p className="mt-1 text-sm font-bold text-slate-800">
                     {new Intl.NumberFormat("en-MM").format(Number(user.wallet.balance ?? 0))}
-                    <span className="ml-1 text-xs font-medium text-slate-500">{user.wallet.currency ?? "MMK"}</span>
+                    <span className="ml-1 text-xs font-medium text-slate-500">MMK</span>
                   </p>
-                </div>
-                <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Currency</p>
-                  <p className="mt-1 text-sm font-bold text-slate-800">{user.wallet.currency ?? "MMK"}</p>
                 </div>
                 <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
                   <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Wallet Status</p>

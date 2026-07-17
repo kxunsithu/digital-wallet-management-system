@@ -35,7 +35,6 @@ class QrCodeResource extends JsonResource
                 return [
                     'id' => $this->wallet->id,
                     'wallet_number' => $this->wallet->wallet_number,
-                    'currency' => $this->wallet->currency,
                     'status' => $this->wallet->status,
                 ];
             }),

@@ -29,7 +29,6 @@ class UpdateAgentManagerRequest extends FormRequest
             'state_region_id'   => ['nullable', 'integer', 'exists:state_regions,id'],
             'township_id'       => ['nullable', 'integer', 'exists:townships,id'],
             'status'            => ['nullable', 'string', 'in:pending,active,inactive'],
-            'approval_limit'    => ['nullable', 'numeric'],
             'parent_manager_id' => ['nullable', 'integer', 'exists:agent_manager_profiles,id'],
 
             // NRC images

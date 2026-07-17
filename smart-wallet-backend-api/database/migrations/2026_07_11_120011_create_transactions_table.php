@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->string('transaction_ref')->unique();
+            $table->string('transaction_number')->unique();
             $table->foreignId('sender_wallet_id')->nullable()->constrained('wallets')->nullOnDelete();
             $table->foreignId('receiver_wallet_id')->nullable()->constrained('wallets')->nullOnDelete();
             $table->string('transaction_type');

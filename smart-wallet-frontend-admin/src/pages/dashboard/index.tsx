@@ -1,20 +1,21 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Banknote, LayoutDashboard, Users, Wallet as WalletIcon } from "lucide-react";
+import { ArrowRight, Banknote, LayoutDashboard, Users, Wallet as WalletIcon, RefreshCw } from "lucide-react";
 import { getCookie } from "@/lib/cookies";
 import RoleAwareLayout from "@/components/layouts/RoleAwareLayout";
 import { useEffect, useState } from "react";
 import { getAdminWallet } from "@/services/systemWallet.service";
 import { getUserWallet } from "@/services/transfer.service";
 import { getAgents } from "@/services/agent.service";
+import { useRealTimeBalance } from "@/hooks/useRealTimeBalance";
 
 type WalletRecord = {
   id?: number | string;
   user_id?: number | string;
   wallet_number?: string;
   balance?: number | string;
-  currency?: string;
+  
   status?: string;
 };
 
@@ -27,29 +28,43 @@ const DashboardPage = () => {
   const [walletLoading, setWalletLoading] = useState(true);
   const [agentCount, setAgentCount] = useState<number | null>(null);
 
+  const getSessionUser = () => {
+    try {
+      const adminCookie = getCookie("admin_user");
+      if (!adminCookie) return null;
+      const adminData = JSON.parse(adminCookie);
+      return adminData?.id ?? adminData?.user_id ?? adminData?.user?.id ?? null;
+    } catch {
+      return null;
+    }
+  };
+
+  const userId = getSessionUser();
+  const { balance: realtimeBalance } = useRealTimeBalance(userId, true);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const adminCookie = getCookie("admin_user");
-        let userId: number | null = null;
+        let fetchUserId: number | null = null;
 
         if (adminCookie) {
           try {
             const adminData = JSON.parse(adminCookie);
-            userId = adminData?.id ?? adminData?.user_id ?? adminData?.user?.id ?? null;
+            fetchUserId = adminData?.id ?? adminData?.user_id ?? adminData?.user?.id ?? null;
           } catch {
-            userId = null;
+            fetchUserId = null;
           }
         }
 
-        if (!userId) {
+        if (!fetchUserId) {
           setWallet(null);
           return;
         }
 
         if (isAgentManager) {
           const [walletRes, agentsRes] = await Promise.all([
-            getUserWallet(userId),
+            getUserWallet(fetchUserId),
             getAgents({ per_page: 1 }),
           ]);
 
@@ -61,13 +76,13 @@ const DashboardPage = () => {
               : [];
 
           const matchedWallet = Array.isArray(wallets)
-            ? wallets.find((item: WalletRecord) => Number(item.user_id) === Number(userId)) ?? wallets[0]
+            ? wallets.find((item: WalletRecord) => Number(item.user_id) === Number(fetchUserId)) ?? wallets[0]
             : null;
 
           setWallet(matchedWallet ?? null);
           setAgentCount(agentsRes?.data?.meta?.total ?? agentsRes?.data?.data?.length ?? 0);
         } else {
-          const res = await getAdminWallet(userId);
+          const res = await getAdminWallet(fetchUserId);
           const walletPayload = res?.data?.data;
           const wallets = Array.isArray(walletPayload?.data)
             ? walletPayload.data
@@ -78,7 +93,7 @@ const DashboardPage = () => {
                 : [];
 
           const matchedWallet = Array.isArray(wallets) && wallets.length > 0
-            ? wallets.find((item: WalletRecord) => Number(item.user_id) === Number(userId)) ?? wallets[0]
+            ? wallets.find((item: WalletRecord) => Number(item.user_id) === Number(fetchUserId)) ?? wallets[0]
             : null;
 
           setWallet(matchedWallet ?? null);
@@ -130,8 +145,14 @@ const DashboardPage = () => {
                     <div>
                       <p className="text-sm text-slate-500">Available balance</p>
                       <p className="mt-1 text-3xl font-semibold text-slate-900">
-                        {formatBalance(wallet.balance)} {wallet.currency ?? "MMK"}
+                        {formatBalance(realtimeBalance !== null ? realtimeBalance : wallet.balance)} MMK
                       </p>
+                      {realtimeBalance !== null && (
+                        <p className="mt-2 text-xs text-slate-400">
+                          <RefreshCw className="inline h-3 w-3 mr-1 animate-spin" />
+                          Real-time updates enabled
+                        </p>
+                      )}
                     </div>
                     <Button onClick={() => navigate("/transfer")}>
                       Transfer to agent
@@ -219,8 +240,14 @@ const DashboardPage = () => {
                   <div>
                     <p className="text-sm text-slate-500">Available balance</p>
                     <p className="mt-1 text-3xl font-semibold text-slate-900">
-                      {formatBalance(wallet.balance)} {wallet.currency ?? "MMK"}
+                      {formatBalance(realtimeBalance !== null ? realtimeBalance : wallet.balance)} MMK
                     </p>
+                    {realtimeBalance !== null && (
+                      <p className="mt-2 text-xs text-slate-400">
+                        <RefreshCw className="inline h-3 w-3 mr-1 animate-spin" />
+                        Real-time updates enabled
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button onClick={() => navigate("/system-wallet")}>

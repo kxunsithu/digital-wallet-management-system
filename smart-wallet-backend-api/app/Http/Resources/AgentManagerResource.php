@@ -37,7 +37,6 @@ class AgentManagerResource extends JsonResource
             'state_region_id' => $this->state_region_id,
             'township_id' => $this->township_id,
             'status' => $this->user?->status,
-            'approval_limit' => $this->approval_limit,
             'parent_manager_id' => $this->parent_manager_id,
             'approved_by' => $this->approved_by,
             'created_at' => optional($this->created_at)?->toISOString(),
@@ -56,7 +55,6 @@ class AgentManagerResource extends JsonResource
                         'id' => $wallet->id,
                         'wallet_number' => $wallet->wallet_number,
                         'balance' => $wallet->balance,
-                        'currency' => $wallet->currency,
                         'status' => $wallet->status,
                     ] : null,
                 ];

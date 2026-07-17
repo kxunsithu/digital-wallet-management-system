@@ -5,7 +5,6 @@ export const getCustomers = (params?: {
   per_page?: number;
   search?: string;
   kyc_status?: string;
-  level?: string;
   state_region_id?: string;
   township_id?: string;
 }) => api.get("customers", { params });
@@ -23,5 +22,3 @@ export const rejectCustomerNrc = (
 });
 
 export const deleteCustomer = (id: number | string) => api.delete(`customers/${id}`);
-
-export const getCustomerLevels = () => api.get("admin/levels/customers");

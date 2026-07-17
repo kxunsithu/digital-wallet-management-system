@@ -84,7 +84,6 @@ class AgentManagerController extends Controller
                 'manager_code'      => $managerCode,
                 'state_region_id'   => $data['state_region_id'] ?? null,
                 'township_id'       => $data['township_id'] ?? null,
-                'approval_limit'    => $data['approval_limit'] ?? 0,
                 'parent_manager_id' => $data['parent_manager_id'] ?? null,
             ]);
 
@@ -173,7 +172,6 @@ class AgentManagerController extends Controller
                 'manager_code'      => $data['manager_code'] ?? null,
                 'state_region_id'   => $data['state_region_id'] ?? null,
                 'township_id'       => $data['township_id'] ?? null,
-                'approval_limit'    => $data['approval_limit'] ?? null,
                 'parent_manager_id' => $data['parent_manager_id'] ?? null,
             ], fn($v) => $v !== null);
 

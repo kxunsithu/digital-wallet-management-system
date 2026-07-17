@@ -13,7 +13,6 @@ return new class extends Migration
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->string('wallet_number')->unique();
             $table->decimal('balance', 15, 2)->default(0);
-            $table->string('currency')->default('MMK');
             $table->string('status')->default('active');
             $table->timestamps();
         });

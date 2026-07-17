@@ -7,7 +7,7 @@ use App\Models\CustomerProfile;
 use App\Models\Image;
 use App\Models\NrcVerification;
 use App\Models\User;
-use App\Services\LevelService;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 
 class NrcVerificationController extends Controller
 {
-    public function __construct(private readonly LevelService $levelService)
+    public function __construct()
     {
     }
 
@@ -62,7 +62,7 @@ class NrcVerificationController extends Controller
 
         $customerProfile = CustomerProfile::firstOrCreate(
             ['user_id' => $user->id],
-            ['level' => 'basic', 'kyc_status' => 'pending']
+            ['kyc_status' => 'pending']
         );
         if ($customerProfile->kyc_status !== 'pending') {
             $customerProfile->update(['kyc_status' => 'pending']);
@@ -129,10 +129,8 @@ class NrcVerificationController extends Controller
 
                 CustomerProfile::firstOrCreate(
                     ['user_id' => $verifiedUser->id],
-                    ['level' => 'basic', 'kyc_status' => 'verified']
+                    ['kyc_status' => 'verified']
                 )->update(['kyc_status' => 'verified']);
-
-                $this->levelService->upgradeUserLevel($verifiedUser);
             }
         }
 
@@ -175,7 +173,7 @@ class NrcVerificationController extends Controller
         if ($rejectedUser) {
             CustomerProfile::firstOrCreate(
                 ['user_id' => $rejectedUser->id],
-                ['level' => 'basic', 'kyc_status' => 'rejected']
+                ['kyc_status' => 'rejected']
             )->update(['kyc_status' => 'rejected']);
         }
 

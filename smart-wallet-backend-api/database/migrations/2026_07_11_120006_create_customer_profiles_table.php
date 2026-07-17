@@ -11,7 +11,6 @@ return new class extends Migration
         Schema::create('customer_profiles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
-            $table->string('level')->nullable();
             $table->decimal('custom_limit_override', 15, 2)->nullable();
             $table->string('kyc_status')->default('pending');
             $table->string('referral_code')->nullable()->unique();

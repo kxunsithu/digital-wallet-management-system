@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\AdminLevelController;
+
 use App\Http\Controllers\Api\AgentManagerController;
 use App\Http\Controllers\Api\AgentController;
 use App\Http\Controllers\Api\CustomerController;
@@ -68,12 +68,7 @@ Route::prefix('profile')->middleware('auth:sanctum')->group(function () {
     Route::post('/change-pin', [UserProfileController::class, 'changePin']);
 });
 
-Route::prefix('admin/levels')->middleware(['auth:sanctum', 'ensure.admin'])->group(function () {
-    Route::get('/customers', [AdminLevelController::class, 'customerLevels']);
-    Route::get('/agents', [AdminLevelController::class, 'agentLevels']);
-    Route::put('/customers/{id}', [AdminLevelController::class, 'updateCustomerLevel']);
-    Route::put('/agents/{id}', [AdminLevelController::class, 'updateAgentLevel']);
-});
+
 
 Route::prefix('customer/nrc-verifications')->middleware(['auth:sanctum', 'ensure.customer'])->group(function () {
     Route::post('/submit', [NrcVerificationController::class, 'submit']);

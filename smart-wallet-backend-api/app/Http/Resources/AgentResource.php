@@ -28,7 +28,6 @@ class AgentResource extends JsonResource
             'id' => $this->id,
             'user_id' => $this->user_id,
             'agent_code' => $this->agent_code,
-            'level' => $this->level,
             'custom_commission_override' => $this->custom_commission_override !== null ? (float) $this->custom_commission_override : null,
             'shop_name' => $this->shop_name,
             'shop_address' => $this->shop_address,
@@ -56,7 +55,6 @@ class AgentResource extends JsonResource
                         'id' => $wallet->id,
                         'wallet_number' => $wallet->wallet_number,
                         'balance' => $wallet->balance,
-                        'currency' => $wallet->currency,
                         'status' => $wallet->status,
                     ] : null,
                 ];

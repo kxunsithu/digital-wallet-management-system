@@ -87,11 +87,10 @@ const AgentManagerLayout = ({ children, title = "Agent Manager" }: Props) => {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`inline-flex items-center gap-2 rounded px-3 py-2 text-sm transition-colors ${
-                    item.active
+                  className={`inline-flex items-center gap-2 rounded px-3 py-2 text-sm transition-colors ${item.active
                       ? "bg-slate-900 text-white"
                       : "text-slate-700 hover:bg-slate-100"
-                  }`}
+                    }`}
                 >
                   <Icon className="h-4 w-4" />
                   {item.label}
@@ -114,11 +113,10 @@ const AgentManagerLayout = ({ children, title = "Agent Manager" }: Props) => {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`inline-flex shrink-0 items-center gap-2 rounded px-3 py-2 text-sm transition-colors ${
-                    item.active
+                  className={`inline-flex shrink-0 items-center gap-2 rounded px-3 py-2 text-sm transition-colors ${item.active
                       ? "bg-slate-900 text-white"
                       : "text-slate-700 hover:bg-slate-100"
-                  }`}
+                    }`}
                 >
                   <Icon className="h-4 w-4" />
                   {item.label}
@@ -131,7 +129,7 @@ const AgentManagerLayout = ({ children, title = "Agent Manager" }: Props) => {
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-950">{title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-950" style={{ color: "rgb(15 23 42)" }}>{title}</h1>
         </div>
         {children}
       </main>

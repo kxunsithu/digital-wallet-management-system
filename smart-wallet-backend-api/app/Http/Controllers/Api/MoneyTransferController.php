@@ -5,12 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Transfer\TransferRequest;
 use App\Http\Resources\TransactionResource;
-use App\Models\AgentLevelConfig;
 use App\Models\AgentProfile;
-use App\Models\CustomerLevelConfig;
 use App\Models\CustomerProfile;
 use App\Models\User;
-use App\Services\LevelService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,9 +17,6 @@ use Illuminate\Support\Str;
 
 class MoneyTransferController extends Controller
 {
-    public function __construct(private readonly LevelService $levelService)
-    {
-    }
 
     /**
      * Money transfer role rules:
@@ -382,85 +376,7 @@ class MoneyTransferController extends Controller
         return $cleanPhone;
     }
 
-    protected function validateCustomerLevelLimits(int $senderUserId, float $amount, int $senderWalletId): ?JsonResponse
-    {
-        $senderRole = $this->resolveUserRole($senderUserId);
-        if ($senderRole !== 'customer') {
-            return null;
-        }
 
-        $profile = CustomerProfile::where('user_id', $senderUserId)->first();
-        $levelName = $profile?->level ?? 'basic';
-        $config = CustomerLevelConfig::where('level', $levelName)->where('is_active', true)->first();
-
-        if (! $config) {
-            return null;
-        }
-
-        $todayStart = now()->startOfDay();
-        $monthStart = now()->startOfMonth();
-
-        $todayCount = DB::table('transactions')
-            ->where('sender_wallet_id', $senderWalletId)
-            ->where('status', 'completed')
-            ->where('created_at', '>=', $todayStart)
-            ->count();
-
-        $todayAmount = (float) DB::table('transactions')
-            ->where('sender_wallet_id', $senderWalletId)
-            ->where('status', 'completed')
-            ->where('created_at', '>=', $todayStart)
-            ->sum('amount');
-
-        $monthAmount = (float) DB::table('transactions')
-            ->where('sender_wallet_id', $senderWalletId)
-            ->where('status', 'completed')
-            ->where('created_at', '>=', $monthStart)
-            ->sum('amount');
-
-        if ($config->daily_transfer_limit !== null && ($todayAmount + $amount) > $config->daily_transfer_limit) {
-            return response()->json(['success' => false, 'message' => 'Daily transfer limit exceeded for your level.'], 422);
-        }
-
-        if ($config->monthly_transfer_limit !== null && ($monthAmount + $amount) > $config->monthly_transfer_limit) {
-            return response()->json(['success' => false, 'message' => 'Monthly transfer limit exceeded for your level.'], 422);
-        }
-
-        if ($config->max_transaction_count_daily !== null && ($todayCount + 1) > $config->max_transaction_count_daily) {
-            return response()->json(['success' => false, 'message' => 'Daily transaction count limit exceeded for your level.'], 422);
-        }
-
-        return null;
-    }
-
-    protected function validateAgentLevelLimits(int $senderUserId, float $amount, int $senderWalletId): ?JsonResponse
-    {
-        $senderRole = $this->resolveUserRole($senderUserId);
-        if ($senderRole !== 'agent') {
-            return null;
-        }
-
-        $profile = AgentProfile::where('user_id', $senderUserId)->first();
-        $levelName = $profile?->level ?? 'starter';
-        $config = AgentLevelConfig::where('level', $levelName)->where('is_active', true)->first();
-
-        if (! $config) {
-            return null;
-        }
-
-        $todayStart = now()->startOfDay();
-        $todayAmount = (float) DB::table('transactions')
-            ->where('sender_wallet_id', $senderWalletId)
-            ->where('status', 'completed')
-            ->where('created_at', '>=', $todayStart)
-            ->sum('amount');
-
-        if ($config->daily_cash_limit !== null && ($todayAmount + $amount) > $config->daily_cash_limit) {
-            return response()->json(['success' => false, 'message' => 'Daily cash limit exceeded for your level.'], 422);
-        }
-
-        return null;
-    }
 
     protected function executeTransfer(int $senderUserId, int $receiverUserId = null, ?int $qrId = null, float $amount, float $fee, ?string $description, string $type): JsonResponse
     {
@@ -493,16 +409,6 @@ class MoneyTransferController extends Controller
                 return response()->json(['success' => false, 'message' => 'Receiver wallet is inactive.'], 422);
             }
 
-            $customerLimitError = $this->validateCustomerLevelLimits($senderUserId, $amount, $senderWallet->id);
-            if ($customerLimitError) {
-                return $customerLimitError;
-            }
-
-            $agentLimitError = $this->validateAgentLevelLimits($senderUserId, $amount, $senderWallet->id);
-            if ($agentLimitError) {
-                return $agentLimitError;
-            }
-
             $total = round($amount + $fee, 2);
             if ((float) $senderWallet->balance < $total) {
                 return response()->json(['success' => false, 'message' => 'Insufficient balance.'], 422);
@@ -522,7 +428,7 @@ class MoneyTransferController extends Controller
             $transactionRef = Str::upper('TX'.Str::random(12));
 
             $txId = DB::table('transactions')->insertGetId([
-                'transaction_ref' => $transactionRef,
+                'transaction_number' => $transactionRef,
                 'sender_wallet_id' => $senderWallet->id,
                 'receiver_wallet_id' => $receiverWallet->id,
                 'transaction_type' => $type,
@@ -537,17 +443,8 @@ class MoneyTransferController extends Controller
                 'updated_at' => now(),
             ]);
 
-            $tx = DB::table('transactions')->where('id', $txId)->first();
+            $tx = \App\Models\Transaction::with(['senderWallet.user', 'receiverWallet.user'])->find($txId);
 
-            $sender = User::find($senderUserId);
-            if ($sender) {
-                $this->levelService->upgradeUserLevel($sender, $amount);
-            }
-
-            $receiver = User::find($receiverUserId);
-            if ($receiver) {
-                $this->levelService->upgradeUserLevel($receiver, $amount);
-            }
 
             return response()->json(['success' => true, 'message' => 'Transfer completed.', 'data' => new TransactionResource($tx)], 200);
         });

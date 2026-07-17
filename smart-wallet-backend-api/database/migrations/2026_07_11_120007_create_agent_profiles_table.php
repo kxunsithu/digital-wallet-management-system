@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->string('agent_code')->unique();
-            $table->string('level')->nullable();
             $table->decimal('custom_commission_override', 5, 2)->nullable();
             $table->string('shop_name')->nullable();
             $table->string('shop_address')->nullable();

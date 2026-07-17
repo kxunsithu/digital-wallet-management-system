@@ -172,13 +172,7 @@ export default function AgentManagerDetail() {
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <CreditCard className="w-4 h-4 text-slate-400 mt-0.5" />
-              <div>
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Approval Limit</p>
-                <p className="text-sm font-bold text-slate-700">{manager.approval_limit ? Number(manager.approval_limit).toLocaleString() : "0"}</p>
-              </div>
-            </div>
+
           </CardContent>
         </Card>
 
@@ -249,12 +243,8 @@ export default function AgentManagerDetail() {
                   <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Balance</p>
                   <p className="mt-1 text-sm font-bold text-slate-800">
                     {new Intl.NumberFormat("en-MM").format(Number(user.wallet.balance ?? 0))}
-                    <span className="ml-1 text-xs font-medium text-slate-500">{user.wallet.currency ?? "MMK"}</span>
+                    <span className="ml-1 text-xs font-medium text-slate-500">MMK</span>
                   </p>
-                </div>
-                <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Currency</p>
-                  <p className="mt-1 text-sm font-bold text-slate-800">{user.wallet.currency ?? "MMK"}</p>
                 </div>
                 <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
                   <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Wallet Status</p>

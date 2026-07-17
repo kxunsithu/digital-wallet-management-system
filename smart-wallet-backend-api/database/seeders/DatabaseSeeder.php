@@ -6,8 +6,6 @@ use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Database\Seeders\AgentLevelConfigSeeder;
-use Database\Seeders\CustomerLevelConfigSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -22,8 +20,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             RolesSeeder::class,
-            CustomerLevelConfigSeeder::class,
-            AgentLevelConfigSeeder::class,
             MyanmarLocationsSeeder::class,
             AgentManagerSeeder::class,
             AgentSeeder::class,

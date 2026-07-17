@@ -102,7 +102,6 @@ class AgentController extends Controller
                 'shop_address' => $data['shop_address'] ?? null,
                 'state_region_id' => $data['state_region_id'] ?? null,
                 'township_id' => $data['township_id'] ?? null,
-                'level' => $data['level'] ?? null,
                 'custom_commission_override' => $data['custom_commission_override'] ?? null,
                 'parent_agent_id' => $data['parent_agent_id'] ?? null,
                 'created_by_manager_id' => $createdByManagerId,
@@ -212,7 +211,6 @@ class AgentController extends Controller
                 'shop_address' => $data['shop_address'] ?? null,
                 'state_region_id' => $data['state_region_id'] ?? null,
                 'township_id' => $data['township_id'] ?? null,
-                'level' => $data['level'] ?? null,
                 'custom_commission_override' => $data['custom_commission_override'] ?? null,
                 'parent_agent_id' => $data['parent_agent_id'] ?? null,
             ], fn ($v) => $v !== null);

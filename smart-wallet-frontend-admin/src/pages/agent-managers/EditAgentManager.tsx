@@ -46,7 +46,6 @@ export default function EditAgentManager() {
     state_region_id: "",
     township_id: "",
     status: "pending",
-    approval_limit: "",
   });
 
   const [regions, setRegions] = useState<any[]>([]);
@@ -90,7 +89,6 @@ export default function EditAgentManager() {
           state_region_id: data.state_region_id?.toString() || "",
           township_id: data.township_id?.toString() || "",
           status: data.status || "pending",
-          approval_limit: data.approval_limit?.toString() || "",
         });
 
         const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') + '/storage/';
@@ -113,11 +111,6 @@ export default function EditAgentManager() {
   const handleUserChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setUserForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setProfileForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (value: string, name: string) => {
@@ -308,18 +301,7 @@ export default function EditAgentManager() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="approval_limit" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Approval Limit</Label>
-                    <Input
-                      id="approval_limit"
-                      name="approval_limit"
-                      type="number"
-                      value={profileForm.approval_limit}
-                      onChange={handleProfileChange}
-                      placeholder="0.00"
-                      className="h-9 text-sm rounded"
-                    />
-                  </div>
+
                 </div>
               </CardContent>
             </Card>

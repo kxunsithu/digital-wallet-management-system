@@ -288,7 +288,8 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            {/* NRC Images Card */}
+            {/* NRC Images Card — agent managers only */}
+            {userRole !== "admin" && (
             <Card className="border-slate-100 bg-white shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -360,8 +361,10 @@ export default function ProfilePage() {
                 })()}
               </CardContent>
             </Card>
+            )}
 
-            {/* NRC Image Lightbox */}
+            {/* NRC Image Lightbox — agent managers only */}
+            {userRole !== "admin" && (
             <Dialog open={!!lightboxImage} onOpenChange={(open) => { if (!open) setLightboxImage(null); }}>
               <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
@@ -378,6 +381,7 @@ export default function ProfilePage() {
                 )}
               </DialogContent>
             </Dialog>
+            )}
 
             <Card className="border-slate-100 bg-white shadow-sm">
               <CardHeader>

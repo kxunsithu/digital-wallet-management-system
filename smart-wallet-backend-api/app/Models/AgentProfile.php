@@ -14,7 +14,6 @@ class AgentProfile extends Model
     protected $fillable = [
         'user_id',
         'agent_code',
-        'level',
         'custom_commission_override',
         'shop_name',
         'shop_address',

@@ -13,7 +13,6 @@ class CustomerProfile extends Model
 
     protected $fillable = [
         'user_id',
-        'level',
         'custom_limit_override',
         'kyc_status',
         'referral_code',

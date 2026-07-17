@@ -19,10 +19,10 @@ class TransactionController extends Controller
 
         $query = Transaction::with(['senderWallet.user', 'receiverWallet.user', 'agent']);
 
-        // search by transaction_ref or sender/receiver phone
+        // search by transaction_number or sender/receiver phone
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('transaction_ref', 'like', "%{$search}%")
+                $q->where('transaction_number', 'like', "%{$search}%")
                     ->orWhereHas('senderWallet.user', function ($qq) use ($search) {
                         $qq->where('phone_number', 'like', "%{$search}%");
                     })

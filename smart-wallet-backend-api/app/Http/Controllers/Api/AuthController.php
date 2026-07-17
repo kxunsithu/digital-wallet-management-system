@@ -233,7 +233,6 @@ class AuthController extends Controller
                 'user_id' => $user->id,
                 'wallet_number' => $walletNumber,
                 'balance' => $initialBalance,
-                'currency' => env('DEFAULT_CURRENCY', 'MMK'),
                 'status' => 'active',
             ]);
         }
@@ -297,7 +296,6 @@ class AuthController extends Controller
                 'user_id' => $user->id,
                 'wallet_number' => $walletNumber,
                 'balance' => $initialBalance,
-                'currency' => env('DEFAULT_CURRENCY', 'MMK'),
                 'status' => 'active',
             ]);
         }

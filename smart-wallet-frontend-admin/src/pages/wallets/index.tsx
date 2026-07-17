@@ -34,7 +34,7 @@ type WalletRecord = {
   user_id?: number;
   wallet_number?: string;
   balance?: number | string;
-  currency?: string;
+  
   status?: string;
   user?: {
     id?: number;
@@ -255,7 +255,7 @@ export default function WalletsPage() {
                           </TableCell>
                           <TableCell>
                             <div className="font-medium text-slate-900">
-                              {formatBalance(wallet.balance)} {wallet.currency ?? "MMK"}
+                              {formatBalance(wallet.balance)} MMK
                             </div>
                           </TableCell>
                           <TableCell>
@@ -389,7 +389,7 @@ export default function WalletsPage() {
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Balance</p>
                   <p className="mt-1 text-lg font-semibold text-slate-900">
-                    {formatBalance(selectedWallet.balance)} {selectedWallet.currency ?? "MMK"}
+                    {formatBalance(selectedWallet.balance)} MMK
                   </p>
                 </div>
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">

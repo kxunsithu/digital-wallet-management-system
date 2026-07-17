@@ -14,7 +14,6 @@ class UpdateCustomerRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'level' => ['nullable', 'string', 'max:100'],
             'custom_limit_override' => ['nullable', 'numeric'],
             'kyc_status' => ['nullable', 'string', 'in:pending,verified,rejected'],
             'referral_code' => ['nullable', 'string', 'max:100', 'unique:customer_profiles,referral_code,' . $this->route('id')],
