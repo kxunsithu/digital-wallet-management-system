@@ -284,7 +284,7 @@ const SystemWalletPage = () => {
     <MainLayout title="System Wallet">
       <div className="space-y-8">
         {/* ───────── Hero Wallet Card ───────── */}
-        <div className="overflow-hidden rounded bg-slate-900 ring-1 ring-slate-800">
+        <div className="overflow-hidden rounded-xl bg-slate-900 shadow-lg">
           <div className="p-6 md:p-8">
             {loading ? (
               <div className="flex items-center gap-3 py-8">
@@ -301,7 +301,7 @@ const SystemWalletPage = () => {
             ) : wallet ? (
               <>
                 <div className="mb-6 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20 ring-1 ring-indigo-500/30">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl">
                     <Wallet className="h-5 w-5 text-indigo-400" />
                   </div>
                   <div>
@@ -333,7 +333,7 @@ const SystemWalletPage = () => {
 
                 {/* Wallet meta row */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <div className="group flex items-start gap-3 rounded-xl bg-white/5 p-4 ring-1 ring-white/10 transition-all hover:bg-white/[0.07] hover:ring-white/20">
+                  <div className="group flex items-start gap-3 rounded-xl bg-slate-800/70 p-4 ring-1 ring-slate-700/70 transition-all hover:bg-slate-800 hover:ring-slate-600/70">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/15 text-blue-400">
                       <Hash className="h-4 w-4" />
                     </div>
@@ -346,7 +346,7 @@ const SystemWalletPage = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="group flex items-start gap-3 rounded-xl bg-white/5 p-4 ring-1 ring-white/10 transition-all hover:bg-white/[0.07] hover:ring-white/20">
+                  <div className="group flex items-start gap-3 rounded-xl bg-slate-800/70 p-4 ring-1 ring-slate-700/70 transition-all hover:bg-slate-800 hover:ring-slate-600/70">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-500/15 text-purple-400">
                       <CircleDollarSign className="h-4 w-4" />
                     </div>
@@ -359,7 +359,7 @@ const SystemWalletPage = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="group flex items-start gap-3 rounded-xl bg-white/5 p-4 ring-1 ring-white/10 transition-all hover:bg-white/[0.07] hover:ring-white/20">
+                  <div className="group flex items-start gap-3 rounded-xl bg-slate-800/70 p-4 ring-1 ring-slate-700/70 transition-all hover:bg-slate-800 hover:ring-slate-600/70">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
                       <ShieldCheck className="h-4 w-4" />
                     </div>

@@ -263,7 +263,7 @@ const ManagerTransferPage = () => {
     <AgentManagerLayout title="Transfer Money">
       <div className="space-y-8">
         {/* ───────── Hero Wallet Card ───────── */}
-        <div className="overflow-hidden rounded bg-slate-900 ring-1 ring-slate-800">
+        <div className="overflow-hidden rounded-xl shadow-sm ring-1 ring-slate-200/8">
           <div className="p-6 md:p-8">
             {loading ? (
               <div className="flex items-center gap-3 py-8">
