@@ -2,8 +2,8 @@ services:
   - type: web
     name: smart-wallet-backend-api
     env: docker
-    buildCommand: "composer install --no-dev --optimize-autoloader && php artisan key:generate && php artisan migrate --force"
-    startCommand: "php-fpm && nginx -g 'daemon off;'"
+    # Docker services on Render should use CMD in Dockerfile, not startCommand here
+    # buildCommand is also usually handled in the Dockerfile for Docker services
     healthCheckPath: /
     envVars:
       - key: APP_NAME
@@ -13,32 +13,27 @@ services:
       - key: APP_DEBUG
         value: false
       - key: APP_URL
-        value: https://smart-wallet-backend-api.onrender.com # Replace with your actual Render URL
+        value: https://smart-wallet-backend-api.onrender.com
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        fromService: 
-          type: pserv
+        fromDatabase:
           name: smart-wallet-db
           property: host
       - key: DB_PORT
-        fromService: 
-          type: pserv
+        fromDatabase:
           name: smart-wallet-db
           property: port
       - key: DB_DATABASE
-        fromService: 
-          type: pserv
+        fromDatabase:
           name: smart-wallet-db
           property: database
       - key: DB_USERNAME
-        fromService: 
-          type: pserv
+        fromDatabase:
           name: smart-wallet-db
           property: user
       - key: DB_PASSWORD
-        fromService: 
-          type: pserv
+        fromDatabase:
           name: smart-wallet-db
           property: password
       - key: INFINIREACH_API_KEY
@@ -58,8 +53,6 @@ services:
       - key: QUEUE_CONNECTION
         value: database
 
-  - type: pserv
-    name: smart-wallet-db
-    env: postgres
-    ipAllowList: [] # Only allow internal connections
+databases:
+  - name: smart-wallet-db
     plan: free

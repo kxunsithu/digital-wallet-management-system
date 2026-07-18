@@ -27,7 +27,7 @@ WORKDIR /var/www/html
 COPY . .
 
 # Install Composer dependencies
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader && php artisan key:generate && php artisan migrate --force
 
 # Ensure storage and bootstrap/cache are writable
 RUN chmod -R 775 storage bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache
