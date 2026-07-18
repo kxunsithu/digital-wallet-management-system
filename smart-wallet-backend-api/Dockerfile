@@ -54,7 +54,7 @@ php artisan key:generate --force --no-interaction\n\
 php artisan config:cache\n\
 php artisan route:cache\n\
 php artisan view:cache\n\
-php artisan migrate --force --no-interaction\n\
+php artisan migrate:fresh --force --no-interaction\n\
 \n\
 # Start services\n\
 php-fpm -D\n\
