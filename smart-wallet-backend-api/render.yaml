@@ -9,31 +9,39 @@ services:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
-        value: false
+        value: "true"
       - key: APP_URL
         value: https://smart-wallet-backend-api.onrender.com
+      - key: APP_KEY
+        value: "base64:SJ18kMSpB72OOa1U20hYRqCfKyqg6Ispb8QvIBde9TM="
       - key: DB_CONNECTION
         value: pgsql
-      - key: DB_URL
+      - key: DATABASE_URL
         fromDatabase:
           name: smart-wallet-db
           property: connectionString
-      - key: INFINIREACH_API_KEY
-        value: smsrelay_6b86908d75b8526fd4898bec03964bc58e479dd86b8b4923302e4187f3581569
-      - key: INFINIREACH_SENDER_NUMBER
-        value: "+959944074981"
-      - key: INFINIREACH_BASE_URL
-        value: https://api.infinireach.io/api/v1
-      - key: AUTH_ADMIN_PHONE
-        value: "+959944074981"
       - key: ADMIN_INITIAL_WALLET_BALANCE
         value: "1000000"
+      - key: AUTH_ADMIN_PHONE
+        value: "+959944074981"
+      - key: INFINIREACH_API_KEY
+        value: smsrelay_6b86908d75b8526fd4898bec03964bc58e479dd86b8b4923302e4187f3581569
+      - key: INFINIREACH_BASE_URL
+        value: https://api.infinireach.io/api/v1
+      - key: INFINIREACH_SENDER_NUMBER
+        value: "+959944074981"
+      - key: LOG_LEVEL
+        value: error
       - key: SESSION_DRIVER
         value: database
       - key: CACHE_STORE
         value: database
       - key: QUEUE_CONNECTION
         value: database
+      - key: FILESYSTEM_DISK
+        value: local
+      - key: BCRYPT_ROUNDS
+        value: "12"
 
 databases:
   - name: smart-wallet-db
