@@ -33,10 +33,11 @@ RUN composer install --no-dev --optimize-autoloader
 RUN chmod -R 775 storage bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache
 
 # Configure Nginx
-COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 
 # Create start script
 RUN printf "#!/bin/sh\n\
+touch .env\n\
 php artisan key:generate --force --no-interaction\n\
 php artisan migrate --force --no-interaction\n\
 php-fpm -D\n\
