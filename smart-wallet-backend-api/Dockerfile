@@ -27,7 +27,7 @@ WORKDIR /var/www/html
 COPY . .
 
 # Install Composer dependencies
-RUN composer install --no-dev --optimize-autoloader && php artisan key:generate && php artisan migrate --force
+RUN composer install --no-dev --optimize-autoloader
 
 # Ensure storage and bootstrap/cache are writable
 RUN chmod -R 775 storage bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache
@@ -38,5 +38,11 @@ COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 # Expose port 80
 EXPOSE 80
 
-# Start PHP-FPM and Nginx
-CMD sh -c "php-fpm && nginx -g 'daemon off;'"
+# Start script to handle migrations and key generation at runtime
+RUN echo '#!/bin/sh\n\
+php artisan key:generate --force --no-interaction\n\
+php artisan migrate --force --no-interaction\n\
+php-fpm && nginx -g "daemon off;"' > /usr/local/bin/start-app.sh \
+    && chmod +x /usr/local/bin/start-app.sh
+
+CMD ["/usr/local/bin/start-app.sh"]

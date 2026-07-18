@@ -2,8 +2,6 @@ services:
   - type: web
     name: smart-wallet-backend-api
     env: docker
-    # Docker services on Render should use CMD in Dockerfile, not startCommand here
-    # buildCommand is also usually handled in the Dockerfile for Docker services
     healthCheckPath: /
     envVars:
       - key: APP_NAME
@@ -16,26 +14,10 @@ services:
         value: https://smart-wallet-backend-api.onrender.com
       - key: DB_CONNECTION
         value: pgsql
-      - key: DB_HOST
+      - key: DB_URL
         fromDatabase:
           name: smart-wallet-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: smart-wallet-db
-          property: port
-      - key: DB_DATABASE
-        fromDatabase:
-          name: smart-wallet-db
-          property: database
-      - key: DB_USERNAME
-        fromDatabase:
-          name: smart-wallet-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: smart-wallet-db
-          property: password
+          property: connectionString
       - key: INFINIREACH_API_KEY
         value: smsrelay_6b86908d75b8526fd4898bec03964bc58e479dd86b8b4923302e4187f3581569
       - key: INFINIREACH_SENDER_NUMBER
