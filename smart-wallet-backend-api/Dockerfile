@@ -122,7 +122,7 @@ php artisan route:cache || true\n\
 php artisan view:cache || true\n\
 \n\
 echo "Running migrations..."\n\
-php artisan migrate --force --no-interaction\n\
+php artisan migrate --force --no-interaction || exit 1\n\
 \n\
 echo "Starting PHP-FPM..."\n\
 php-fpm -D\n\n\
