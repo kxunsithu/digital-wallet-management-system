@@ -37,10 +37,15 @@ COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 
 # Create start script
 RUN printf "#!/bin/sh\n\
-touch .env\n\
-php artisan key:generate --force --no-interaction\n\
-php artisan migrate --force --no-interaction\n\
-php-fpm -D\n\
+# Create .env from environment variables for Laravel to read
+printenv > .env
+# If DATABASE_URL is provided by Render, map it to DB_URL for Laravel
+if [ ! -z "$DATABASE_URL" ]; then
+    echo "DB_URL=$DATABASE_URL" >> .env
+fi
+php artisan key:generate --force --no-interaction
+php artisan migrate --force --no-interaction
+php-fpm -D
 nginx -g 'daemon off;'\n" > /usr/local/bin/start-app.sh \
     && chmod +x /usr/local/bin/start-app.sh
 
