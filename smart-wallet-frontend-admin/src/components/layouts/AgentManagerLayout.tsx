@@ -128,9 +128,6 @@ const AgentManagerLayout = ({ children, title = "Agent Manager" }: Props) => {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-950" style={{ color: "rgb(15 23 42)" }}>{title}</h1>
-        </div>
         {children}
       </main>
     </div>
