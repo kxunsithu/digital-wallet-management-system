@@ -6,12 +6,14 @@ services:
     startCommand: "php-fpm && nginx -g 'daemon off;'"
     healthCheckPath: /
     envVars:
-      - key: APP_KEY
-        generateValue: true
+      - key: APP_NAME
+        value: Laravel
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: false
+      - key: APP_URL
+        value: https://smart-wallet-backend-api.onrender.com # Replace with your actual Render URL
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
@@ -39,6 +41,22 @@ services:
           type: pserv
           name: smart-wallet-db
           property: password
+      - key: INFINIREACH_API_KEY
+        value: smsrelay_6b86908d75b8526fd4898bec03964bc58e479dd86b8b4923302e4187f3581569
+      - key: INFINIREACH_SENDER_NUMBER
+        value: "+959944074981"
+      - key: INFINIREACH_BASE_URL
+        value: https://api.infinireach.io/api/v1
+      - key: AUTH_ADMIN_PHONE
+        value: "+959944074981"
+      - key: ADMIN_INITIAL_WALLET_BALANCE
+        value: "1000000"
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
 
   - type: pserv
     name: smart-wallet-db

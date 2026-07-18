@@ -29,11 +29,8 @@ COPY . .
 # Install Composer dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Generate application key
-RUN php artisan key:generate
-
-# Run migrations and seeders (if any)
-RUN php artisan migrate --force
+# Ensure storage and bootstrap/cache are writable
+RUN chmod -R 775 storage bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache
 
 # Configure Nginx
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
