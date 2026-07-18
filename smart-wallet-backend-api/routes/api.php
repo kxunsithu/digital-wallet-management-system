@@ -14,6 +14,11 @@ use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\TransactionController;
 use Illuminate\Support\Facades\Route;
 
+/* Welcome Route */
+Route::get('/', function () {
+    return response()->json(['message' => 'Welcome to the Money Transfer API.'], 200);
+});
+
 Route::prefix('auth')->group(function () {
     Route::post('/request-otp', [AuthController::class, 'requestOtp']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
