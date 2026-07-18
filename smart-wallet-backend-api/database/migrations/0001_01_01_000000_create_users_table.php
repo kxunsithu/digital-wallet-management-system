@@ -11,8 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('users')) {
-            Schema::create('users', function (Blueprint $table) {
+        Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('phone_number')->nullable()->unique();
             $table->foreignId('role_id')->nullable()->constrained()->nullOnDelete();
@@ -24,27 +23,22 @@ return new class extends Migration
             $table->boolean('is_pin_created')->default(false);
             $table->timestamp('last_login_at')->nullable();
             $table->timestamps();
-            });
-        }
+        });
 
-        if (!Schema::hasTable('password_reset_tokens')) {
-            Schema::create('password_reset_tokens', function (Blueprint $table) {
+        Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
-            });
-        }
+        });
 
-        if (!Schema::hasTable('sessions')) {
-            Schema::create('sessions', function (Blueprint $table) {
+        Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');
             $table->integer('last_activity')->index();
-            });
-        }
+        });
     }
 
     /**

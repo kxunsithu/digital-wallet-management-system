@@ -12,8 +12,8 @@ fi
 # Generate application key
 php artisan key:generate --force --no-interaction
 
-# Run database migrations
-php artisan migrate --force --no-interaction
+# Run database migrations (fresh)
+php artisan migrate:fresh --force --no-interaction
 
 # Cache configuration, routes, and views
 php artisan config:cache
