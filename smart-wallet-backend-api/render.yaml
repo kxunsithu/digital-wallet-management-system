@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: smart-wallet-backend-api
+    env: docker
+    buildCommand: "composer install --no-dev --optimize-autoloader && php artisan key:generate && php artisan migrate --force"
+    startCommand: "php-fpm && nginx -g 'daemon off;'"
+    healthCheckPath: /
+    envVars:
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromService: 
+          type: pserv
+          name: smart-wallet-db
+          property: host
+      - key: DB_PORT
+        fromService: 
+          type: pserv
+          name: smart-wallet-db
+          property: port
+      - key: DB_DATABASE
+        fromService: 
+          type: pserv
+          name: smart-wallet-db
+          property: database
+      - key: DB_USERNAME
+        fromService: 
+          type: pserv
+          name: smart-wallet-db
+          property: user
+      - key: DB_PASSWORD
+        fromService: 
+          type: pserv
+          name: smart-wallet-db
+          property: password
+
+  - type: pserv
+    name: smart-wallet-db
+    env: postgres
+    ipAllowList: [] # Only allow internal connections
+    plan: free
