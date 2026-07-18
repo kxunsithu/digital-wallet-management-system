@@ -35,14 +35,16 @@ RUN chmod -R 775 storage bootstrap/cache && chown -R www-data:www-data storage b
 # Configure Nginx
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
+# Create start script
+RUN printf "#!/bin/sh\n\
+php artisan key:generate --force --no-interaction\n\
+php artisan migrate --force --no-interaction\n\
+php-fpm -D\n\
+nginx -g 'daemon off;'\n" > /usr/local/bin/start-app.sh \
+    && chmod +x /usr/local/bin/start-app.sh
+
 # Expose port 80
 EXPOSE 80
 
-# Start script to handle migrations and key generation at runtime
-RUN echo '#!/bin/sh\n\
-php artisan key:generate --force --no-interaction\n\
-php artisan migrate --force --no-interaction\n\
-php-fpm && nginx -g "daemon off;"' > /usr/local/bin/start-app.sh \
-    && chmod +x /usr/local/bin/start-app.sh
-
-CMD ["/usr/local/bin/start-app.sh"]
+# Use the start script as the entrypoint
+ENTRYPOINT ["/usr/local/bin/start-app.sh"]
