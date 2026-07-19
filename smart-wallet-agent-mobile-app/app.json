@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "smart-wallet-mobile-app",
-    "slug": "smart-wallet-mobile-app",
+    "name": "smart-wallet-agent-mobile-app",
+    "slug": "smart-wallet-agent-mobile-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "smartwalletmobileapp",
+    "scheme": "smartwalletagentmobileapp",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
