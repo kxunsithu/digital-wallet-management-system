@@ -1,36 +1,65 @@
 // app/auth/verify-otp.tsx
-import { Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
-import { verifyOtp, requestOtp } from '../../services/auth';
+import { 
+  Text, 
+  View, 
+  TextInput, 
+  TouchableOpacity, 
+  KeyboardAvoidingView, 
+  Platform, 
+  ScrollView, 
+  ActivityIndicator 
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useTheme } from '../../providers/ThemeProvider';
-import Toast from 'react-native-toast-message';
-import AppLogo from '../../components/AppLogo';
 import { Feather } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
+import { useTheme } from '../../providers/ThemeProvider';
+import { verifyOtp, requestOtp, setPendingAuthRoute, clearPendingAuthRoute } from '../../services/auth';
+import AppLogo from '../../components/AppLogo';
+
+// Constants
+const OTP_LENGTH = 6;
+const MAX_RESEND_ATTEMPTS = 3;
+const DEFAULT_EXPIRY_SECONDS = 120;
 
 export default function VerifyOtpScreen() {
+  // ─── Router & Theme ──────────────────────────────────────────────
+  const router = useRouter();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  // ─── Params ──────────────────────────────────────────────────────
   const params = useLocalSearchParams();
-  const phone = params.phone as string | undefined;
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const phone = params.phone as string;
+  const expiresAt = params.expiresAt as string | undefined;
+
+  // ─── State ──────────────────────────────────────────────────────
+  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
-  const [timeLeft, setTimeLeft] = useState(120);
+  const [timeLeft, setTimeLeft] = useState(() => {
+    if (expiresAt) {
+      return Math.max(0, Math.round((new Date(expiresAt).getTime() - Date.now()) / 1000));
+    }
+    return DEFAULT_EXPIRY_SECONDS;
+  });
   const [canResend, setCanResend] = useState(false);
   const [resendCount, setResendCount] = useState(0);
+
+  // ─── Refs ──────────────────────────────────────────────────────
   const inputRefs = useRef<(TextInput | null)[]>([]);
-  const router = useRouter();
-  const { theme } = useTheme();
 
-  const isDark = theme === 'dark';
-  const MAX_RESEND_ATTEMPTS = 3;
-
+  // ─── Effects ──────────────────────────────────────────────────
+  // Auto-focus first input on mount
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       inputRefs.current[0]?.focus();
-    }, 100);
+    }, 300);
+    return () => clearTimeout(timer);
   }, []);
 
+  // Timer countdown
   useEffect(() => {
     if (timeLeft <= 0) {
       setCanResend(true);
@@ -44,112 +73,21 @@ export default function VerifyOtpScreen() {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  const formatTime = (seconds: number) => {
+  // Clear pending route when OTP expires
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      clearPendingAuthRoute();
+    }
+  }, [timeLeft]);
+
+  // ─── Helper Functions ────────────────────────────────────────
+  const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleResendOtp = async () => {
-    if (!phone) {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Phone number not found' });
-      return;
-    }
-
-    if (resendCount >= MAX_RESEND_ATTEMPTS) {
-      Toast.show({ 
-        type: 'error', 
-        text1: 'Maximum attempts reached', 
-        text2: 'You have reached the maximum number of resend attempts. Please try again later.' 
-      });
-      return;
-    }
-
-    setResendLoading(true);
-    const res = await requestOtp(phone, undefined);
-    setResendLoading(false);
-    
-    if (res.status === 200 && res.body?.success) {
-      setTimeLeft(120);
-      setCanResend(false);
-      setResendCount(prev => prev + 1);
-      setOtp(['', '', '', '', '', '']);
-      setTimeout(() => {
-        inputRefs.current[0]?.focus();
-      }, 100);
-      Toast.show({ 
-        type: 'success', 
-        text1: 'OTP Resent', 
-        text2: `A new code has been sent to your phone (${resendCount + 1}/${MAX_RESEND_ATTEMPTS})` 
-      });
-    } else {
-      Toast.show({ 
-        type: 'error', 
-        text1: 'Failed to resend', 
-        text2: res.body?.message ?? 'Please try again later' 
-      });
-    }
-  };
-
-  const handleOtpChange = (text: string, index: number) => {
-    if (text.length > 1) {
-      const pasted = text.slice(0, 6).split('');
-      const newOtp = [...otp];
-      pasted.forEach((char, i) => {
-        if (i < 6) newOtp[i] = char;
-      });
-      setOtp(newOtp);
-      const nextEmpty = newOtp.findIndex((val) => val === '');
-      if (nextEmpty !== -1) {
-        inputRefs.current[nextEmpty]?.focus();
-      } else {
-        inputRefs.current[5]?.focus();
-      }
-      return;
-    }
-
-    const newOtp = [...otp];
-    newOtp[index] = text;
-    setOtp(newOtp);
-
-    if (text && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  async function onSubmit() {
-    const otpString = otp.join('');
-    if (!phone) {
-      Toast.show({ type: 'error', text1: 'Error', text2: 'Phone number not found' });
-      return;
-    }
-    if (!otpString || otpString.length < 6) {
-      Toast.show({ type: 'error', text1: 'Invalid code', text2: 'Please enter a 6-digit OTP' });
-      return;
-    }
-    setLoading(true);
-    const res = await verifyOtp(phone, otpString);
-    setLoading(false);
-    if (res.status === 200 && res.body?.success) {
-      const data = res.body.data || {};
-      Toast.show({ type: 'success', text1: 'OTP Verified', text2: 'Code verified successfully!' });
-      if (data.next_step === 'create_pin') {
-        router.push({ pathname: '/auth/create-pin', params: { user_id: data.user_id } });
-        return;
-      }
-      router.push({ pathname: '/auth/verify-pin', params: { user_id: data.user_id } });
-      return;
-    }
-    Toast.show({ type: 'error', text1: 'Verification Failed', text2: res.body?.message ?? 'Invalid OTP' });
-  }
-
-  const getInputStyle = (index: number) => {
+  const getInputStyle = (index: number): string => {
     const isFilled = otp[index] !== '';
     const isFocused = focusedIndex === index;
     
@@ -163,15 +101,179 @@ export default function VerifyOtpScreen() {
     return `${borderColor} ${bgColor}`;
   };
 
-  const otpString = otp.join('');
-  const isOtpComplete = otpString.length === 6;
-  const isOtpExpired = timeLeft <= 0;
+  // ─── Handlers ──────────────────────────────────────────────────
+  const handleOtpChange = (text: string, index: number): void => {
+    // Handle paste (multiple digits at once)
+    if (text.length > 1) {
+      const pasted = text.slice(0, OTP_LENGTH).split('');
+      const newOtp = [...otp];
+      pasted.forEach((char, i) => {
+        if (i < OTP_LENGTH) newOtp[i] = char;
+      });
+      setOtp(newOtp);
+      
+      // Focus next empty field or last field
+      const nextEmpty = newOtp.findIndex((val) => val === '');
+      if (nextEmpty !== -1) {
+        inputRefs.current[nextEmpty]?.focus();
+      } else {
+        inputRefs.current[OTP_LENGTH - 1]?.focus();
+      }
+      return;
+    }
 
+    // Handle single digit input
+    const newOtp = [...otp];
+    newOtp[index] = text;
+    setOtp(newOtp);
+
+    // Auto-advance to next input
+    if (text && index < OTP_LENGTH - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyPress = (event: any, index: number): void => {
+    // Handle backspace to go to previous field
+    if (event.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleResendOtp = async (): Promise<void> => {
+    if (!phone) {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Phone number not found' });
+      return;
+    }
+
+    if (resendCount >= MAX_RESEND_ATTEMPTS) {
+      Toast.show({ 
+        type: 'error', 
+        text1: 'Maximum Attempts Reached', 
+        text2: 'Please try again later' 
+      });
+      return;
+    }
+
+    setResendLoading(true);
+    const response = await requestOtp(phone);
+    setResendLoading(false);
+
+    if (response.status === 200 && response.body?.success) {
+      const newExpiresAt = response.body?.data?.expires_at ?? 
+        new Date(Date.now() + 5 * 60 * 1000).toISOString();
+      const remaining = Math.max(0, Math.round((new Date(newExpiresAt).getTime() - Date.now()) / 1000));
+      
+      // Update pending route with new expiry
+      await setPendingAuthRoute({
+        path: '/auth/verify-otp',
+        params: { phone, expiresAt: newExpiresAt },
+        expiresAt: newExpiresAt,
+      });
+
+      setTimeLeft(remaining);
+      setCanResend(false);
+      setResendCount((prev) => prev + 1);
+      setOtp(Array(OTP_LENGTH).fill(''));
+      
+      // Focus first input after reset
+      setTimeout(() => inputRefs.current[0]?.focus(), 100);
+      
+      Toast.show({ 
+        type: 'success', 
+        text1: 'OTP Resent', 
+        text2: `New code sent (${resendCount + 1}/${MAX_RESEND_ATTEMPTS})` 
+      });
+    } else {
+      Toast.show({ 
+        type: 'error', 
+        text1: 'Failed to Resend', 
+        text2: response.body?.message ?? 'Please try again' 
+      });
+    }
+  };
+
+  const handleSubmit = async (): Promise<void> => {
+    const otpString = otp.join('');
+    
+    if (!phone) {
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Phone number not found' });
+      return;
+    }
+
+    if (otpString.length !== OTP_LENGTH) {
+      Toast.show({ type: 'error', text1: 'Invalid Code', text2: 'Please enter a 6-digit OTP' });
+      return;
+    }
+
+    setLoading(true);
+    const response = await verifyOtp(phone, otpString);
+    setLoading(false);
+
+    if (response.status === 200 && response.body?.success) {
+      const data = response.body.data || {};
+      const userId = data.user_id;
+      
+      // Determine next step based on backend response
+      const nextStep = data.next_step === 'create_pin' ? '/auth/create-pin' : '/auth/verify-pin';
+      
+      // Set pending route with 10 minutes expiry (enough time to create PIN)
+      const pendingExpiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      const nextRoute = {
+        path: nextStep as '/auth/create-pin' | '/auth/verify-pin',
+        params: {
+          user_id: userId,
+          phone,
+          expiresAt: pendingExpiry,
+        },
+        expiresAt: pendingExpiry,
+      };
+
+      await setPendingAuthRoute(nextRoute);
+      
+      Toast.show({ 
+        type: 'success', 
+        text1: 'OTP Verified', 
+        text2: 'Code verified successfully!' 
+      });
+      
+      // Navigate to next step
+      router.push({ 
+        pathname: nextStep, 
+        params: { user_id: userId, phone } 
+      });
+    } else {
+      // Handle expired OTP
+      if (response.status === 422 && response.body?.message?.toLowerCase().includes('expired')) {
+        await clearPendingAuthRoute();
+        Toast.show({ 
+          type: 'error', 
+          text1: 'OTP Expired', 
+          text2: 'Please request a new OTP' 
+        });
+      } else {
+        Toast.show({ 
+          type: 'error', 
+          text1: 'Verification Failed', 
+          text2: response.body?.message ?? 'Invalid OTP' 
+        });
+      }
+    }
+  };
+
+  // ─── Computed Values ──────────────────────────────────────────
+  const otpString = otp.join('');
+  const isOtpComplete = otpString.length === OTP_LENGTH;
+  const isOtpExpired = timeLeft <= 0;
+  const isButtonDisabled = loading || !isOtpComplete || isOtpExpired;
+
+  // ─── Render ──────────────────────────────────────────────────
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className={isDark ? 'flex-1 bg-background' : 'flex-1 bg-white'}
     >
+      {/* ─── Header ────────────────────────────────────────────── */}
       <View className={`flex-row items-center justify-between px-6 pt-12 pb-4 ${
         isDark ? 'bg-background' : 'bg-white'
       }`}>
@@ -190,19 +292,25 @@ export default function VerifyOtpScreen() {
         <View style={{ width: 40 }} />
       </View>
 
+      {/* ─── Body ────────────────────────────────────────────────── */}
       <ScrollView 
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-1 items-center justify-center px-4">
-          <View className={`w-full max-w-md rounded-2xl p-6 ${isDark ? 'bg-surface border-border' : 'bg-white border-slate-200'}`}>
+          <View className={`w-full max-w-md rounded-2xl p-6 ${
+            isDark ? 'bg-surface border-border' : 'bg-white border-slate-200'
+          }`}>
+            
+            {/* Logo */}
             <View className="items-center mb-6">
               <View className="scale-75">
                 <AppLogo />
               </View>
             </View>
 
+            {/* Title */}
             <View className="w-full mb-6">
               <Text className={`text-2xl font-bold ${isDark ? 'text-text' : 'text-gray-900'} text-center`}>
                 Verify OTP
@@ -215,13 +323,14 @@ export default function VerifyOtpScreen() {
               </Text>
             </View>
 
+            {/* OTP Input */}
             <View className="w-full mb-6">
               <View className="flex-row justify-between gap-2">
                 {otp.map((digit, index) => (
                   <View key={index} className="flex-1 aspect-square">
                     <TextInput
                       ref={(ref) => { inputRefs.current[index] = ref; }}
-                      className={`w-full h-full text-center text-2xl font-bold rounded-xl border-2 transition-all duration-200 ${
+                      className={`w-full h-full text-center text-2xl font-bold rounded-xl border-2 ${
                         getInputStyle(index)
                       } ${isDark ? 'text-text' : 'text-gray-900'}`}
                       value={digit}
@@ -247,6 +356,7 @@ export default function VerifyOtpScreen() {
                 ))}
               </View>
               
+              {/* Timer & Resend */}
               <View className="flex-row justify-between items-center mt-4 px-1">
                 <View className="flex-row items-center">
                   <Feather 
@@ -296,13 +406,12 @@ export default function VerifyOtpScreen() {
               </View>
             </View>
 
+            {/* Submit Button */}
             <TouchableOpacity
-              className={`w-full py-4 rounded-xl ${
-                loading || !isOtpComplete || isOtpExpired ? 'opacity-60' : 'opacity-100'
-              }`}
+              className={`w-full py-4 rounded-xl ${isButtonDisabled ? 'opacity-60' : 'opacity-100'}`}
               style={{ backgroundColor: '#D5E726' }}
-              onPress={onSubmit}
-              disabled={loading || !isOtpComplete || isOtpExpired}
+              onPress={handleSubmit}
+              disabled={isButtonDisabled}
               activeOpacity={0.8}
             >
               <View className="flex-row items-center justify-center space-x-2">
@@ -331,6 +440,7 @@ export default function VerifyOtpScreen() {
               </View>
             </TouchableOpacity>
 
+            {/* Footer */}
             <View className="flex-row items-center justify-center mt-6">
               <Feather name="lock" size={14} color={isDark ? '#6B7280' : '#9CA3AF'} />
               <Text className={`text-xs ml-2 ${isDark ? 'text-textSecondary' : 'text-gray-400'}`}>
@@ -338,7 +448,7 @@ export default function VerifyOtpScreen() {
               </Text>
             </View>
 
-            {/* Resend info message */}
+            {/* Max attempts warning */}
             {resendCount >= MAX_RESEND_ATTEMPTS && (
               <View className="mt-4 px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20">
                 <Text className="text-xs text-red-500 text-center">

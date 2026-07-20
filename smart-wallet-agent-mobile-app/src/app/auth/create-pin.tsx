@@ -1,30 +1,43 @@
 // app/auth/create-pin.tsx
-import { Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
-import { createPin } from '../../services/auth';
+import { 
+  Text, 
+  View, 
+  TextInput, 
+  TouchableOpacity, 
+  KeyboardAvoidingView, 
+  Platform, 
+  ScrollView, 
+  ActivityIndicator 
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useTheme } from '../../providers/ThemeProvider';
-import Toast from 'react-native-toast-message';
-import AppLogo from '../../components/AppLogo';
 import { Feather } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
+import { useTheme } from '../../providers/ThemeProvider';
+import { createPin, setPendingAuthRoute } from '../../services/auth';
+import AppLogo from '../../components/AppLogo';
+
+const PIN_LENGTH = 4;
 
 export default function CreatePinScreen() {
   const params = useLocalSearchParams();
   const userId = Number(params.user_id || params.userId || 0);
-  const [pin, setPin] = useState(['', '', '', '']);
-  const [confirmPin, setConfirmPin] = useState(['', '', '', '']);
+  
+  const [pin, setPin] = useState<string[]>(Array(PIN_LENGTH).fill(''));
+  const [confirmPin, setConfirmPin] = useState<string[]>(Array(PIN_LENGTH).fill(''));
   const [step, setStep] = useState<'pin' | 'confirm'>('pin');
   const [loading, setLoading] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [confirmFocusedIndex, setConfirmFocusedIndex] = useState<number | null>(null);
+  const [showPin, setShowPin] = useState(false);
+  
   const pinRefs = useRef<(TextInput | null)[]>([]);
   const confirmRefs = useRef<(TextInput | null)[]>([]);
   const router = useRouter();
   const { theme } = useTheme();
-
   const isDark = theme === 'dark';
 
-  // Auto-focus first input on mount
+  // Auto-focus on step change
   useEffect(() => {
     setTimeout(() => {
       if (step === 'pin') {
@@ -37,18 +50,17 @@ export default function CreatePinScreen() {
 
   const handlePinChange = (text: string, index: number) => {
     if (text.length > 1) {
-      const pasted = text.slice(0, 4).split('');
+      const pasted = text.slice(0, PIN_LENGTH).split('');
       const newPin = [...pin];
       pasted.forEach((char, i) => {
-        if (i < 4) newPin[i] = char;
+        if (i < PIN_LENGTH) newPin[i] = char;
       });
       setPin(newPin);
       const nextEmpty = newPin.findIndex((val) => val === '');
       if (nextEmpty !== -1) {
         pinRefs.current[nextEmpty]?.focus();
       } else {
-        pinRefs.current[3]?.focus();
-        // Auto proceed to confirm step
+        pinRefs.current[PIN_LENGTH - 1]?.focus();
         setTimeout(() => {
           setStep('confirm');
           setTimeout(() => confirmRefs.current[0]?.focus(), 100);
@@ -61,10 +73,9 @@ export default function CreatePinScreen() {
     newPin[index] = text;
     setPin(newPin);
 
-    if (text && index < 3) {
+    if (text && index < PIN_LENGTH - 1) {
       pinRefs.current[index + 1]?.focus();
-    } else if (text && index === 3) {
-      // Auto proceed to confirm step when all filled
+    } else if (text && index === PIN_LENGTH - 1) {
       setTimeout(() => {
         setStep('confirm');
         setTimeout(() => confirmRefs.current[0]?.focus(), 100);
@@ -74,17 +85,15 @@ export default function CreatePinScreen() {
 
   const handleConfirmChange = (text: string, index: number) => {
     if (text.length > 1) {
-      const pasted = text.slice(0, 4).split('');
+      const pasted = text.slice(0, PIN_LENGTH).split('');
       const newPin = [...confirmPin];
       pasted.forEach((char, i) => {
-        if (i < 4) newPin[i] = char;
+        if (i < PIN_LENGTH) newPin[i] = char;
       });
       setConfirmPin(newPin);
       const nextEmpty = newPin.findIndex((val) => val === '');
       if (nextEmpty !== -1) {
         confirmRefs.current[nextEmpty]?.focus();
-      } else {
-        confirmRefs.current[3]?.focus();
       }
       return;
     }
@@ -93,13 +102,13 @@ export default function CreatePinScreen() {
     newPin[index] = text;
     setConfirmPin(newPin);
 
-    if (text && index < 3) {
+    if (text && index < PIN_LENGTH - 1) {
       confirmRefs.current[index + 1]?.focus();
     }
   };
 
-  const handleKeyPress = (e: any, index: number, type: 'pin' | 'confirm') => {
-    if (e.nativeEvent.key === 'Backspace') {
+  const handleKeyPress = (event: any, index: number, type: 'pin' | 'confirm') => {
+    if (event.nativeEvent.key === 'Backspace') {
       if (type === 'pin') {
         if (!pin[index] && index > 0) {
           pinRefs.current[index - 1]?.focus();
@@ -109,13 +118,13 @@ export default function CreatePinScreen() {
           confirmRefs.current[index - 1]?.focus();
         } else if (!confirmPin[index] && index === 0) {
           setStep('pin');
-          setTimeout(() => pinRefs.current[3]?.focus(), 100);
+          setTimeout(() => pinRefs.current[PIN_LENGTH - 1]?.focus(), 100);
         }
       }
     }
   };
 
-  async function onSubmit() {
+  const handleSubmit = async () => {
     const pinString = pin.join('');
     const confirmString = confirmPin.join('');
     
@@ -123,37 +132,41 @@ export default function CreatePinScreen() {
       Toast.show({ type: 'error', text1: 'Error', text2: 'Missing user ID' });
       return;
     }
-    if (pinString.length !== 4) {
+
+    if (pinString.length !== PIN_LENGTH) {
       Toast.show({ type: 'error', text1: 'Invalid PIN', text2: 'Please enter a 4-digit PIN' });
       return;
     }
-    if (confirmString.length !== 4) {
+
+    if (confirmString.length !== PIN_LENGTH) {
       Toast.show({ type: 'error', text1: 'Invalid PIN', text2: 'Please confirm your PIN' });
       return;
     }
+
     if (pinString !== confirmString) {
       Toast.show({ type: 'error', text1: 'PIN Mismatch', text2: 'PIN and confirm PIN do not match' });
-      // Reset confirm PIN
-      setConfirmPin(['', '', '', '']);
+      setConfirmPin(Array(PIN_LENGTH).fill(''));
       setStep('pin');
-      setTimeout(() => {
-        pinRefs.current[0]?.focus();
-      }, 100);
+      setTimeout(() => pinRefs.current[0]?.focus(), 100);
       return;
     }
     
     setLoading(true);
-    const res = await createPin(userId, pinString);
+    const response = await createPin(userId, pinString);
     setLoading(false);
     
-    if ((res.status === 201 || res.status === 200) && res.body?.success) {
+    if ((response.status === 201 || response.status === 200) && response.body?.success) {
       Toast.show({ type: 'success', text1: 'PIN Created', text2: 'Your PIN was created successfully.' });
+      await setPendingAuthRoute({ 
+        path: '/auth/verify-pin', 
+        params: { user_id: userId },
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+      });
       router.push({ pathname: '/auth/verify-pin', params: { user_id: userId } });
-      return;
+    } else {
+      Toast.show({ type: 'error', text1: 'Error', text2: response.body?.message ?? 'Failed to create PIN' });
     }
-
-    Toast.show({ type: 'error', text1: 'Error', text2: res.body?.message ?? 'Failed to create PIN' });
-  }
+  };
 
   const getInputStyle = (index: number, type: 'pin' | 'confirm') => {
     const currentPin = type === 'pin' ? pin : confirmPin;
@@ -226,7 +239,7 @@ export default function CreatePinScreen() {
                       <View key={index} className="flex-1 aspect-square">
                         <TextInput
                           ref={(ref) => { pinRefs.current[index] = ref; }}
-                          className={`w-full h-full text-center text-2xl font-bold rounded-xl border-2 transition-all duration-200 ${
+                          className={`w-full h-full text-center text-2xl font-bold rounded-xl border-2 ${
                             getInputStyle(index, 'pin')
                           } ${isDark ? 'text-text' : 'text-gray-900'}`}
                           value={digit}
@@ -239,9 +252,9 @@ export default function CreatePinScreen() {
                           editable={!loading}
                           autoFocus={index === 0}
                           selectionColor="#D5E726"
+                          secureTextEntry={!showPin}
                           textAlign="center"
                           textAlignVertical="center"
-                          secureTextEntry
                           style={{ 
                             textAlign: 'center',
                             textAlignVertical: 'center',
@@ -252,6 +265,15 @@ export default function CreatePinScreen() {
                       </View>
                     ))}
                   </View>
+                  <TouchableOpacity
+                    className="self-end mt-2"
+                    onPress={() => setShowPin((prev) => !prev)}
+                    activeOpacity={0.7}
+                  >
+                    <Text className={`text-sm font-medium text-primary`}>
+                      {showPin ? 'Hide PIN' : 'Show PIN'}
+                    </Text>
+                  </TouchableOpacity>
                   <Text className={`text-xs mt-4 text-center ${isDark ? 'text-textSecondary' : 'text-gray-400'}`}>
                     Enter your 4-digit PIN
                   </Text>
@@ -274,7 +296,7 @@ export default function CreatePinScreen() {
                       <View key={index} className="flex-1 aspect-square">
                         <TextInput
                           ref={(ref) => { confirmRefs.current[index] = ref; }}
-                          className={`w-full h-full text-center text-2xl font-bold rounded-xl border-2 transition-all duration-200 ${
+                          className={`w-full h-full text-center text-2xl font-bold rounded-xl border-2 ${
                             getInputStyle(index, 'confirm')
                           } ${isDark ? 'text-text' : 'text-gray-900'}`}
                           value={digit}
@@ -286,9 +308,9 @@ export default function CreatePinScreen() {
                           keyboardType="number-pad"
                           editable={!loading}
                           selectionColor="#D5E726"
+                          secureTextEntry={!showPin}
                           textAlign="center"
                           textAlignVertical="center"
-                          secureTextEntry
                           style={{ 
                             textAlign: 'center',
                             textAlignVertical: 'center',
@@ -299,6 +321,15 @@ export default function CreatePinScreen() {
                       </View>
                     ))}
                   </View>
+                  <TouchableOpacity
+                    className="self-end mt-2"
+                    onPress={() => setShowPin((prev) => !prev)}
+                    activeOpacity={0.7}
+                  >
+                    <Text className={`text-sm font-medium text-primary`}>
+                      {showPin ? 'Hide PIN' : 'Show PIN'}
+                    </Text>
+                  </TouchableOpacity>
                   <Text className={`text-xs mt-4 text-center ${isDark ? 'text-textSecondary' : 'text-gray-400'}`}>
                     Confirm your 4-digit PIN
                   </Text>
@@ -306,63 +337,51 @@ export default function CreatePinScreen() {
               </>
             )}
 
-            {step === 'confirm' && (
+            {step === 'confirm' ? (
               <TouchableOpacity
                 className={`w-full py-4 rounded-xl ${
                   loading || !isConfirmComplete ? 'opacity-60' : 'opacity-100'
                 }`}
                 style={{ backgroundColor: '#D5E726' }}
-                onPress={onSubmit}
+                onPress={handleSubmit}
                 disabled={loading || !isConfirmComplete}
                 activeOpacity={0.8}
               >
-                <View className="flex-row items-center justify-center space-x-2">
-                  {loading ? (
-                    <>
-                      <ActivityIndicator color="#10110E" size="small" />
-                      <Text className="text-secondary font-semibold text-base ml-2">
-                        Creating...
-                      </Text>
-                    </>
-                  ) : (
-                    <>
-                      <Text className="text-secondary font-semibold text-base">
-                        {isConfirmComplete ? 'Create PIN' : 'Enter confirm PIN'}
-                      </Text>
-                      {isConfirmComplete && (
-                        <Feather name="check" size={18} color="#10110E" />
-                      )}
-                    </>
-                  )}
-                </View>
+                {loading ? (
+                  <ActivityIndicator color="#10110E" size="small" />
+                ) : (
+                  <View className="flex-row items-center justify-center">
+                    <Text className="text-secondary font-semibold text-base">
+                      {isConfirmComplete ? 'Create PIN' : 'Enter confirm PIN'}
+                    </Text>
+                    {isConfirmComplete && (
+                      <Feather name="check" size={18} color="#10110E" style={{ marginLeft: 8 }} />
+                    )}
+                  </View>
+                )}
               </TouchableOpacity>
-            )}
-
-            {step === 'pin' && isPinComplete && (
+            ) : (
               <TouchableOpacity
-                className={`w-full py-4 rounded-xl`}
+                className={`w-full py-4 rounded-xl ${
+                  !isPinComplete ? 'opacity-60' : 'opacity-100'
+                }`}
                 style={{ backgroundColor: '#D5E726' }}
                 onPress={() => {
-                  setStep('confirm');
-                  setTimeout(() => confirmRefs.current[0]?.focus(), 100);
+                  if (isPinComplete) {
+                    setStep('confirm');
+                    setTimeout(() => confirmRefs.current[0]?.focus(), 100);
+                  }
                 }}
+                disabled={!isPinComplete}
                 activeOpacity={0.8}
               >
                 <View className="flex-row items-center justify-center">
                   <Text className="text-secondary font-semibold text-base mr-2">
-                    Continue to Confirm
+                    {isPinComplete ? 'Continue to Confirm' : 'Enter 4-digit PIN'}
                   </Text>
-                  <Feather name="arrow-right" size={18} color="#10110E" />
+                  {isPinComplete && <Feather name="arrow-right" size={18} color="#10110E" />}
                 </View>
               </TouchableOpacity>
-            )}
-
-            {!isPinComplete && step === 'pin' && (
-              <View className="w-full py-4 rounded-xl bg-primary/20">
-                <Text className="text-secondary font-semibold text-base text-center">
-                  Enter 4-digit PIN
-                </Text>
-              </View>
             )}
 
             <View className="flex-row items-center justify-center mt-6">

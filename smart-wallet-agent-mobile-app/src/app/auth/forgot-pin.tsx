@@ -1,12 +1,21 @@
 // app/auth/forgot-pin.tsx
-import { Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useState } from 'react';
-import { forgotPin } from '../../services/auth';
+import { 
+  Text, 
+  View, 
+  TextInput, 
+  TouchableOpacity, 
+  KeyboardAvoidingView, 
+  Platform, 
+  ScrollView,
+  ActivityIndicator 
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { useTheme } from '../../providers/ThemeProvider';
-import Toast from 'react-native-toast-message';
-import AppLogo from '../../components/AppLogo';
 import { Feather } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
+import { useTheme } from '../../providers/ThemeProvider';
+import { forgotPin } from '../../services/auth';
+import AppLogo from '../../components/AppLogo';
 
 export default function ForgotPinScreen() {
   const [phone, setPhone] = useState('');
@@ -14,52 +23,39 @@ export default function ForgotPinScreen() {
   const [isFocused, setIsFocused] = useState(false);
   const router = useRouter();
   const { theme } = useTheme();
-  
   const isDark = theme === 'dark';
-  
-  const containerClass = isDark 
-    ? 'flex-1 bg-background' 
-    : 'flex-1 bg-white';
-  
-  const inputClass = isDark 
-    ? 'w-full bg-surface text-text p-4 rounded-xl border text-base' 
-    : 'w-full bg-slate-50 text-black p-4 rounded-xl border text-base';
 
-  const borderClass = isFocused 
-    ? 'border-primary' 
-    : (isDark ? 'border-border' : 'border-slate-200');
-
-  async function onSubmit() {
-    if (!phone.trim()) {
+  const handleSubmit = async () => {
+    const trimmedPhone = phone.trim();
+    if (!trimmedPhone) {
       Toast.show({ type: 'error', text1: 'Error', text2: 'Please enter your phone number' });
       return;
     }
     
     setLoading(true);
-    const res = await forgotPin(phone);
+    const response = await forgotPin(trimmedPhone);
     setLoading(false);
     
-    if (res.status === 200 && res.body?.success) {
+    if (response.status === 200 && response.body?.success) {
       Toast.show({ 
         type: 'success', 
         text1: 'OTP Sent', 
         text2: 'A verification code has been sent to your phone number.' 
       });
-      router.push({ pathname: '/auth/reset-pin', params: { phone } });
-      return;
+      router.push({ pathname: '/auth/reset-pin', params: { phone: trimmedPhone } });
+    } else {
+      Toast.show({ 
+        type: 'error', 
+        text1: 'Error', 
+        text2: response.body?.message ?? 'Failed to send OTP. Please try again.' 
+      });
     }
-
-    Toast.show({ 
-      type: 'error', 
-      text1: 'Error', 
-      text2: res.body?.message ?? 'Failed to send OTP. Please try again.' 
-    });
-  }
+  };
 
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className={containerClass}
+      className={isDark ? 'flex-1 bg-background' : 'flex-1 bg-white'}
     >
       <View className="flex-row items-center justify-between px-6 pt-12 pb-2">
         <TouchableOpacity 
@@ -103,7 +99,9 @@ export default function ForgotPinScreen() {
               <TextInput
                 placeholder="09xxxxxxxx"
                 placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
-                className={`${inputClass} ${borderClass} pl-12`}
+                className={`w-full bg-surface text-text p-4 rounded-xl border text-base pl-12 ${
+                  isFocused ? 'border-primary' : (isDark ? 'border-border' : 'border-slate-200')
+                } ${isDark ? 'bg-surface text-text' : 'bg-slate-50 text-black'}`}
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
@@ -121,23 +119,18 @@ export default function ForgotPinScreen() {
           <TouchableOpacity
             className={`w-full py-4 rounded-xl ${loading ? 'opacity-70' : ''}`}
             style={{ backgroundColor: '#D5E726' }}
-            onPress={onSubmit}
+            onPress={handleSubmit}
             disabled={loading}
             activeOpacity={0.8}
           >
-            <View className="flex-row items-center justify-center">
-              {loading ? (
-                <View className="flex-row items-center">
-                  <Text className="text-secondary font-semibold text-base mr-2">Sending...</Text>
-                  <View className="w-5 h-5 border-2 border-secondary/30 border-t-secondary rounded-full animate-spin" />
-                </View>
-              ) : (
-                <>
-                  <Text className="text-secondary font-semibold text-base mr-2">Send OTP</Text>
-                  <Feather name="send" size={20} color="#10110E" />
-                </>
-              )}
-            </View>
+            {loading ? (
+              <ActivityIndicator color="#10110E" size="small" />
+            ) : (
+              <View className="flex-row items-center justify-center">
+                <Text className="text-secondary font-semibold text-base mr-2">Send OTP</Text>
+                <Feather name="send" size={20} color="#10110E" />
+              </View>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity 

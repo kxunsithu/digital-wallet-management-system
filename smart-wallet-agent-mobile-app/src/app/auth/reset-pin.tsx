@@ -1,48 +1,63 @@
 // app/auth/reset-pin.tsx
-import { Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
+import { 
+  Text, 
+  View, 
+  TextInput, 
+  TouchableOpacity, 
+  KeyboardAvoidingView, 
+  Platform, 
+  ScrollView, 
+  ActivityIndicator 
+} from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useTheme } from '../../providers/ThemeProvider';
-import Toast from 'react-native-toast-message';
-import AppLogo from '../../components/AppLogo';
 import { Feather } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
+import { useTheme } from '../../providers/ThemeProvider';
+import { forgotPin, resetPin } from '../../services/auth';
 import apiFetch from '../../lib/api';
-import { forgotPin } from '../../services/auth';
+import AppLogo from '../../components/AppLogo';
+
+const OTP_LENGTH = 6;
+const PIN_LENGTH = 4;
+const MAX_RESEND_ATTEMPTS = 3;
+const DEFAULT_EXPIRY_SECONDS = 120;
 
 export default function ResetPinScreen() {
   const params = useLocalSearchParams();
   const phone = params.phone as string | undefined;
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-  const [newPin, setNewPin] = useState(['', '', '', '']);
-  const [confirmPin, setConfirmPin] = useState(['', '', '', '']);
+  
+  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
+  const [newPin, setNewPin] = useState<string[]>(Array(PIN_LENGTH).fill(''));
+  const [confirmPin, setConfirmPin] = useState<string[]>(Array(PIN_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [step, setStep] = useState<'otp' | 'pin'>('otp');
   const [focusedField, setFocusedField] = useState<string | null>(null);
-  const [timeLeft, setTimeLeft] = useState(120);
+  const [timeLeft, setTimeLeft] = useState(DEFAULT_EXPIRY_SECONDS);
   const [canResend, setCanResend] = useState(false);
   const [resendCount, setResendCount] = useState(0);
+  
   const otpRefs = useRef<(TextInput | null)[]>([]);
   const pinRefs = useRef<(TextInput | null)[]>([]);
   const confirmRefs = useRef<(TextInput | null)[]>([]);
+  
   const router = useRouter();
   const { theme } = useTheme();
-
   const isDark = theme === 'dark';
-  const MAX_RESEND_ATTEMPTS = 3;
 
+  // Auto-focus on step change
   useEffect(() => {
-    if (step === 'otp') {
-      setTimeout(() => {
+    setTimeout(() => {
+      if (step === 'otp') {
         otpRefs.current[0]?.focus();
-      }, 100);
-    } else if (step === 'pin') {
-      setTimeout(() => {
+      } else {
         pinRefs.current[0]?.focus();
-      }, 100);
-    }
+      }
+    }, 100);
   }, [step]);
 
+  // Timer logic
   useEffect(() => {
     if (timeLeft <= 0) {
       setCanResend(true);
@@ -62,19 +77,18 @@ export default function ResetPinScreen() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // OTP handlers
   const handleOtpChange = (text: string, index: number) => {
     if (text.length > 1) {
-      const pasted = text.slice(0, 6).split('');
+      const pasted = text.slice(0, OTP_LENGTH).split('');
       const newOtp = [...otp];
       pasted.forEach((char, i) => {
-        if (i < 6) newOtp[i] = char;
+        if (i < OTP_LENGTH) newOtp[i] = char;
       });
       setOtp(newOtp);
-      const nextEmpty = newOtp.findIndex((val: string) => val === '');
+      const nextEmpty = newOtp.findIndex((val) => val === '');
       if (nextEmpty !== -1) {
         otpRefs.current[nextEmpty]?.focus();
-      } else {
-        otpRefs.current[5]?.focus();
       }
       return;
     }
@@ -83,30 +97,30 @@ export default function ResetPinScreen() {
     newOtp[index] = text;
     setOtp(newOtp);
 
-    if (text && index < 5) {
+    if (text && index < OTP_LENGTH - 1) {
       otpRefs.current[index + 1]?.focus();
     }
   };
 
-  const handleOtpKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
+  const handleOtpKeyPress = (event: any, index: number) => {
+    if (event.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
       otpRefs.current[index - 1]?.focus();
     }
   };
 
+  // PIN handlers
   const handlePinChange = (text: string, index: number) => {
     if (text.length > 1) {
-      const pasted = text.slice(0, 4).split('');
+      const pasted = text.slice(0, PIN_LENGTH).split('');
       const updatedPin = [...newPin];
       pasted.forEach((char, i) => {
-        if (i < 4) updatedPin[i] = char;
+        if (i < PIN_LENGTH) updatedPin[i] = char;
       });
       setNewPin(updatedPin);
-      const nextEmpty = updatedPin.findIndex((val: string) => val === '');
+      const nextEmpty = updatedPin.findIndex((val) => val === '');
       if (nextEmpty !== -1) {
         pinRefs.current[nextEmpty]?.focus();
       } else {
-        pinRefs.current[3]?.focus();
         setTimeout(() => confirmRefs.current[0]?.focus(), 200);
       }
       return;
@@ -116,26 +130,24 @@ export default function ResetPinScreen() {
     updatedPin[index] = text;
     setNewPin(updatedPin);
 
-    if (text && index < 3) {
+    if (text && index < PIN_LENGTH - 1) {
       pinRefs.current[index + 1]?.focus();
-    } else if (text && index === 3) {
+    } else if (text && index === PIN_LENGTH - 1) {
       setTimeout(() => confirmRefs.current[0]?.focus(), 200);
     }
   };
 
   const handleConfirmChange = (text: string, index: number) => {
     if (text.length > 1) {
-      const pasted = text.slice(0, 4).split('');
+      const pasted = text.slice(0, PIN_LENGTH).split('');
       const updatedPin = [...confirmPin];
       pasted.forEach((char, i) => {
-        if (i < 4) updatedPin[i] = char;
+        if (i < PIN_LENGTH) updatedPin[i] = char;
       });
       setConfirmPin(updatedPin);
-      const nextEmpty = updatedPin.findIndex((val: string) => val === '');
+      const nextEmpty = updatedPin.findIndex((val) => val === '');
       if (nextEmpty !== -1) {
         confirmRefs.current[nextEmpty]?.focus();
-      } else {
-        confirmRefs.current[3]?.focus();
       }
       return;
     }
@@ -144,13 +156,13 @@ export default function ResetPinScreen() {
     updatedPin[index] = text;
     setConfirmPin(updatedPin);
 
-    if (text && index < 3) {
+    if (text && index < PIN_LENGTH - 1) {
       confirmRefs.current[index + 1]?.focus();
     }
   };
 
-  const handlePinKeyPress = (e: any, index: number, type: 'pin' | 'confirm') => {
-    if (e.nativeEvent.key === 'Backspace') {
+  const handlePinKeyPress = (event: any, index: number, type: 'pin' | 'confirm') => {
+    if (event.nativeEvent.key === 'Backspace') {
       if (type === 'pin') {
         if (!newPin[index] && index > 0) {
           pinRefs.current[index - 1]?.focus();
@@ -160,7 +172,7 @@ export default function ResetPinScreen() {
           confirmRefs.current[index - 1]?.focus();
         } else if (!confirmPin[index] && index === 0) {
           setStep('pin');
-          setTimeout(() => pinRefs.current[3]?.focus(), 100);
+          setTimeout(() => pinRefs.current[PIN_LENGTH - 1]?.focus(), 100);
         }
       }
     }
@@ -182,17 +194,15 @@ export default function ResetPinScreen() {
     }
 
     setResendLoading(true);
-    const res = await forgotPin(phone);
+    const response = await forgotPin(phone);
     setResendLoading(false);
     
-    if (res.status === 200 && res.body?.success) {
-      setTimeLeft(120);
+    if (response.status === 200 && response.body?.success) {
+      setTimeLeft(DEFAULT_EXPIRY_SECONDS);
       setCanResend(false);
-      setResendCount(prev => prev + 1);
-      setOtp(['', '', '', '', '', '']);
-      setTimeout(() => {
-        otpRefs.current[0]?.focus();
-      }, 100);
+      setResendCount((prev) => prev + 1);
+      setOtp(Array(OTP_LENGTH).fill(''));
+      setTimeout(() => otpRefs.current[0]?.focus(), 100);
       Toast.show({ 
         type: 'success', 
         text1: 'OTP Resent', 
@@ -202,48 +212,51 @@ export default function ResetPinScreen() {
       Toast.show({ 
         type: 'error', 
         text1: 'Failed to resend', 
-        text2: res.body?.message ?? 'Please try again' 
+        text2: response.body?.message ?? 'Please try again' 
       });
     }
   };
 
   const verifyOtp = async () => {
     const otpString = otp.join('');
+    
     if (!phone) {
       Toast.show({ type: 'error', text1: 'Error', text2: 'Missing phone number' });
       return;
     }
-    if (!otpString || otpString.length < 6) {
+
+    if (otpString.length !== OTP_LENGTH) {
       Toast.show({ type: 'error', text1: 'Invalid OTP', text2: 'Please enter a 6-digit OTP' });
       return;
     }
 
     setLoading(true);
-    const res = await apiFetch('/auth/verify-otp', {
+    const response = await apiFetch('/auth/verify-otp', {
       method: 'POST',
       body: JSON.stringify({ phone_number: phone, otp_code: otpString }),
     });
     setLoading(false);
 
-    if (res.status === 200 && res.body?.success) {
+    if (response.status === 200 && response.body?.success) {
       Toast.show({ type: 'success', text1: 'OTP Verified', text2: 'You can now reset your PIN.' });
       setStep('pin');
     } else {
-      Toast.show({ type: 'error', text1: 'Error', text2: res.body?.message ?? 'Invalid OTP' });
+      Toast.show({ type: 'error', text1: 'Error', text2: response.body?.message ?? 'Invalid OTP' });
     }
   };
 
-  const resetPin = async () => {
+  const handleResetPin = async () => {
     const pinString = newPin.join('');
     const confirmString = confirmPin.join('');
     
-    if (pinString.length !== 4) {
+    if (pinString.length !== PIN_LENGTH) {
       Toast.show({ type: 'error', text1: 'Invalid PIN', text2: 'PIN must be exactly 4 digits' });
       return;
     }
+
     if (pinString !== confirmString) {
       Toast.show({ type: 'error', text1: 'PIN Mismatch', text2: 'PIN and confirm PIN do not match' });
-      setConfirmPin(['', '', '', '']);
+      setConfirmPin(Array(PIN_LENGTH).fill(''));
       setStep('pin');
       setTimeout(() => pinRefs.current[0]?.focus(), 100);
       return;
@@ -251,7 +264,7 @@ export default function ResetPinScreen() {
 
     const otpString = otp.join('');
     setLoading(true);
-    const res = await apiFetch('/auth/reset-pin', {
+    const response = await apiFetch('/auth/reset-pin', {
       method: 'POST',
       body: JSON.stringify({
         phone_number: phone,
@@ -261,23 +274,12 @@ export default function ResetPinScreen() {
     });
     setLoading(false);
 
-    if (res.status === 200 && res.body?.success) {
+    if (response.status === 200 && response.body?.success) {
       Toast.show({ type: 'success', text1: 'PIN Reset', text2: 'Your PIN has been reset successfully.' });
       router.push('/auth');
     } else {
-      Toast.show({ type: 'error', text1: 'Error', text2: res.body?.message ?? 'Failed to reset PIN' });
+      Toast.show({ type: 'error', text1: 'Error', text2: response.body?.message ?? 'Failed to reset PIN' });
     }
-  };
-
-  const containerClass = isDark ? 'flex-1 bg-background' : 'flex-1 bg-white';
-  const inputClass = isDark 
-    ? 'w-full bg-surface text-text p-4 rounded-xl border text-base' 
-    : 'w-full bg-slate-50 text-black p-4 rounded-xl border text-base';
-
-  const getBorderClass = (fieldName: string) => {
-    return focusedField === fieldName
-      ? 'border-primary'
-      : (isDark ? 'border-border' : 'border-slate-200');
   };
 
   const getOtpInputStyle = (index: number) => {
@@ -294,14 +296,23 @@ export default function ResetPinScreen() {
     return `${borderColor} ${bgColor}`;
   };
 
+  const getPinInputStyle = (fieldName: string) => {
+    const isFocused = focusedField === fieldName;
+    let borderColor = isDark ? 'border-border' : 'border-slate-200';
+    if (isFocused) borderColor = 'border-primary';
+    let bgColor = isDark ? 'bg-surface' : 'bg-slate-50';
+    if (isFocused) bgColor = isDark ? 'bg-surface/80' : 'bg-white';
+    return `${borderColor} ${bgColor}`;
+  };
+
   const otpString = otp.join('');
-  const isOtpComplete = otpString.length === 6;
+  const isOtpComplete = otpString.length === OTP_LENGTH;
   const isOtpExpired = timeLeft <= 0;
 
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className={containerClass}
+      className={isDark ? 'flex-1 bg-background' : 'flex-1 bg-white'}
     >
       <View className="flex-row items-center justify-between px-6 pt-12 pb-2">
         <TouchableOpacity 
@@ -325,6 +336,7 @@ export default function ResetPinScreen() {
           <AppLogo />
 
           {step === 'otp' ? (
+            // OTP Step
             <>
               <View className="w-full mb-6">
                 <Text className={`text-2xl font-bold ${isDark ? 'text-text' : 'text-gray-900'} text-center`}>
@@ -344,7 +356,7 @@ export default function ResetPinScreen() {
                     <View key={index} className="flex-1 aspect-square">
                       <TextInput
                         ref={(ref) => { otpRefs.current[index] = ref; }}
-                        className={`w-full h-full text-center text-2xl font-bold rounded-xl border-2 transition-all duration-200 ${
+                        className={`w-full h-full text-center text-2xl font-bold rounded-xl border-2 ${
                           getOtpInputStyle(index)
                         } ${isDark ? 'text-text' : 'text-gray-900'}`}
                         value={digit}
@@ -428,22 +440,18 @@ export default function ResetPinScreen() {
                 disabled={loading || !isOtpComplete || isOtpExpired}
                 activeOpacity={0.8}
               >
-                <View className="flex-row items-center justify-center">
-                  {loading ? (
-                    <View className="flex-row items-center">
-                      <Text className="text-secondary font-semibold text-base mr-2">Verifying...</Text>
-                      <View className="w-5 h-5 border-2 border-secondary/30 border-t-secondary rounded-full animate-spin" />
-                    </View>
-                  ) : (
-                    <>
-                      <Text className="text-secondary font-semibold text-base mr-2">Verify OTP</Text>
-                      <Feather name="check" size={20} color="#10110E" />
-                    </>
-                  )}
-                </View>
+                {loading ? (
+                  <ActivityIndicator color="#10110E" size="small" />
+                ) : (
+                  <View className="flex-row items-center justify-center">
+                    <Text className="text-secondary font-semibold text-base mr-2">Verify OTP</Text>
+                    <Feather name="check" size={20} color="#10110E" />
+                  </View>
+                )}
               </TouchableOpacity>
             </>
           ) : (
+            // PIN Reset Step
             <>
               <View className="w-full mb-6">
                 <Text className={`text-2xl font-bold ${isDark ? 'text-text' : 'text-gray-900'} text-center`}>
@@ -463,8 +471,8 @@ export default function ResetPinScreen() {
                     <View key={index} className="flex-1 aspect-square">
                       <TextInput
                         ref={(ref) => { pinRefs.current[index] = ref; }}
-                        className={`w-full h-full text-center text-2xl font-bold rounded-xl border-2 transition-all duration-200 ${
-                          getBorderClass(`pin${index}`)
+                        className={`w-full h-full text-center text-2xl font-bold rounded-xl border-2 ${
+                          getPinInputStyle(`pin${index}`)
                         } ${isDark ? 'bg-surface text-text' : 'bg-slate-50 text-gray-900'}`}
                         value={digit}
                         onChangeText={(text) => handlePinChange(text, index)}
@@ -497,8 +505,8 @@ export default function ResetPinScreen() {
                     <View key={index} className="flex-1 aspect-square">
                       <TextInput
                         ref={(ref) => { confirmRefs.current[index] = ref; }}
-                        className={`w-full h-full text-center text-2xl font-bold rounded-xl border-2 transition-all duration-200 ${
-                          getBorderClass(`confirm${index}`)
+                        className={`w-full h-full text-center text-2xl font-bold rounded-xl border-2 ${
+                          getPinInputStyle(`confirm${index}`)
                         } ${isDark ? 'bg-surface text-text' : 'bg-slate-50 text-gray-900'}`}
                         value={digit}
                         onChangeText={(text) => handleConfirmChange(text, index)}
@@ -527,23 +535,18 @@ export default function ResetPinScreen() {
               <TouchableOpacity
                 className={`w-full py-4 rounded-xl ${loading ? 'opacity-70' : ''}`}
                 style={{ backgroundColor: '#D5E726' }}
-                onPress={resetPin}
+                onPress={handleResetPin}
                 disabled={loading}
                 activeOpacity={0.8}
               >
-                <View className="flex-row items-center justify-center">
-                  {loading ? (
-                    <View className="flex-row items-center">
-                      <Text className="text-secondary font-semibold text-base mr-2">Resetting...</Text>
-                      <View className="w-5 h-5 border-2 border-secondary/30 border-t-secondary rounded-full animate-spin" />
-                    </View>
-                  ) : (
-                    <>
-                      <Text className="text-secondary font-semibold text-base mr-2">Reset PIN</Text>
-                      <Feather name="refresh-cw" size={20} color="#10110E" />
-                    </>
-                  )}
-                </View>
+                {loading ? (
+                  <ActivityIndicator color="#10110E" size="small" />
+                ) : (
+                  <View className="flex-row items-center justify-center">
+                    <Text className="text-secondary font-semibold text-base mr-2">Reset PIN</Text>
+                    <Feather name="refresh-cw" size={20} color="#10110E" />
+                  </View>
+                )}
               </TouchableOpacity>
             </>
           )}

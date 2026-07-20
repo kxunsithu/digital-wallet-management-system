@@ -163,6 +163,7 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // Update OTP status to verified
         DB::table('otp_verifications')->where('id', $otp->id)->update([
             'status' => 'verified',
             'verified_at' => now(),
@@ -181,6 +182,7 @@ class AuthController extends Controller
                 'user_id' => $user->id,
                 'phone_number' => $user->phone_number,
                 'next_step' => $nextStep,
+                'otp_verified_at' => now()->toISOString(),
             ],
         ], 200);
     }
@@ -190,6 +192,21 @@ class AuthController extends Controller
         $data = $request->validated();
 
         $user = User::findOrFail($data['user_id']);
+
+        // 🔒 SECURITY: Verify that OTP was recently verified (within last 10 minutes)
+        $validOtp = DB::table('otp_verifications')
+            ->where('user_id', $user->id)
+            ->where('status', 'verified')
+            ->where('expires_at', '>', Carbon::now())
+            ->latest('created_at')
+            ->first();
+
+        if (! $validOtp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'OTP verification required. Please verify your OTP first.',
+            ], 401);
+        }
 
         DB::table('pins')->updateOrInsert(
             ['user_id' => $user->id],
@@ -239,6 +256,15 @@ class AuthController extends Controller
 
         $this->qrCodeService->ensureForUser($user->fresh());
 
+        // Invalidate the OTP after PIN creation (prevent reuse)
+        DB::table('otp_verifications')
+            ->where('user_id', $user->id)
+            ->where('status', 'verified')
+            ->update([
+                'status' => 'used',
+                'updated_at' => now(),
+            ]);
+
         return response()->json([
             'success' => true,
             'message' => 'PIN created successfully.',
@@ -261,6 +287,30 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'Invalid PIN.',
             ], 401);
+        }
+
+        // Check if OTP was verified recently (for first-time PIN verification)
+        // For existing users, they can login with PIN without OTP
+        $hasExistingPin = DB::table('pins')->where('user_id', $user->id)->exists();
+        
+        if ($user->is_pin_created && $hasExistingPin) {
+            // User already has PIN - normal login flow
+            // No OTP required
+        } else {
+            // New user or first-time PIN verification - require OTP
+            $validOtp = DB::table('otp_verifications')
+                ->where('user_id', $user->id)
+                ->where('status', 'verified')
+                ->where('expires_at', '>', Carbon::now())
+                ->latest('created_at')
+                ->first();
+
+            if (! $validOtp) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'OTP verification required. Please verify your OTP first.',
+                ], 401);
+            }
         }
 
         $token = $user->createToken('auth-token')->plainTextToken;
@@ -334,6 +384,68 @@ class AuthController extends Controller
     public function forgotPin(RequestOtpRequest $request): JsonResponse
     {
         return $this->requestOtp($request);
+    }
+
+    public function resetPin(ForgotPinRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+
+        $user = $this->findUserByPhoneNumber($data['phone_number']);
+
+        if (! $user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found.',
+            ], 422);
+        }
+
+        $otp = DB::table('otp_verifications')
+            ->where('user_id', $user->id)
+            ->where('otp_code', $data['otp_code'])
+            ->where('status', 'verified')
+            ->latest('created_at')
+            ->first();
+
+        if (! $otp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid OTP.',
+            ], 422);
+        }
+
+        // Check if OTP is expired (for reset pin)
+        if (Carbon::parse($otp->expires_at)->isPast()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'OTP has expired. Please request a new OTP.',
+            ], 422);
+        }
+
+        DB::table('pins')->updateOrInsert(
+            ['user_id' => $user->id],
+            [
+                'pin_hash' => Hash::make($data['new_pin']),
+                'failed_attempts' => 0,
+                'is_locked' => false,
+                'locked_until' => null,
+                'last_changed_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        // Invalidate the OTP after PIN reset
+        DB::table('otp_verifications')
+            ->where('user_id', $user->id)
+            ->where('status', 'verified')
+            ->update([
+                'status' => 'used',
+                'updated_at' => now(),
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'PIN reset successfully.',
+        ], 200);
     }
 
     protected function sendOtpCode(string $phoneNumber, string $otpCode): array
@@ -429,51 +541,6 @@ class AuthController extends Controller
         }
 
         return $phoneNumber;
-    }
-
-    public function resetPin(ForgotPinRequest $request): JsonResponse
-    {
-        $data = $request->validated();
-
-        $user = $this->findUserByPhoneNumber($data['phone_number']);
-
-        if (! $user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found.',
-            ], 422);
-        }
-
-        $otp = DB::table('otp_verifications')
-            ->where('user_id', $user->id)
-            ->where('otp_code', $data['otp_code'])
-            ->where('status', 'verified')
-            ->latest('created_at')
-            ->first();
-
-        if (! $otp) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid OTP.',
-            ], 422);
-        }
-
-        DB::table('pins')->updateOrInsert(
-            ['user_id' => $user->id],
-            [
-                'pin_hash' => Hash::make($data['new_pin']),
-                'failed_attempts' => 0,
-                'is_locked' => false,
-                'locked_until' => null,
-                'last_changed_at' => now(),
-                'updated_at' => now(),
-            ]
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => 'PIN reset successfully.',
-        ], 200);
     }
 
     protected function findUserByPhoneNumber(string $phoneNumber): ?User

@@ -1,10 +1,10 @@
 // app/auth/_layout.tsx
 import { Stack } from 'expo-router';
-import '../../../global.css';
 import { View, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../providers/ThemeProvider';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import '../../../global.css';
 
 export default function AuthLayout() {
   const { theme, toggleTheme } = useTheme();
