@@ -204,7 +204,28 @@ class AgentManagerController extends Controller
             return response()->json(['success' => false, 'message' => 'Not found.'], 404);
         }
 
-        $profile->delete();
+        DB::beginTransaction();
+        try {
+            $user = $profile->user;
+
+            if ($user) {
+                Image::where('user_id', $user->id)->delete();
+
+                if (method_exists($user, 'wallet') && $user->wallet) {
+                    $user->wallet()->delete();
+                }
+
+                $profile->delete();
+                $user->delete();
+            } else {
+                $profile->delete();
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Failed to delete: ' . $e->getMessage()], 500);
+        }
 
         return response()->json(['success' => true, 'message' => 'Deleted.'], 200);
     }

@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CustomerResource;
 use App\Models\CustomerProfile;
+use App\Models\Image;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CustomerController extends Controller
 {
@@ -68,7 +70,28 @@ class CustomerController extends Controller
             return response()->json(['success' => false, 'message' => 'Not found.'], 404);
         }
 
-        $profile->delete();
+        DB::beginTransaction();
+        try {
+            $user = $profile->user;
+
+            if ($user) {
+                Image::where('user_id', $user->id)->delete();
+
+                if (method_exists($user, 'wallet') && $user->wallet) {
+                    $user->wallet()->delete();
+                }
+
+                $profile->delete();
+                $user->delete();
+            } else {
+                $profile->delete();
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Failed to delete: '.$e->getMessage()], 500);
+        }
 
         return response()->json(['success' => true, 'message' => 'Customer profile deleted.'], 200);
     }

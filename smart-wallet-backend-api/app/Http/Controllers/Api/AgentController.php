@@ -254,7 +254,28 @@ class AgentController extends Controller
             return $accessError;
         }
 
-        $agent->delete();
+        DB::beginTransaction();
+        try {
+            $user = $agent->user;
+
+            if ($user) {
+                Image::where('user_id', $user->id)->delete();
+
+                if (method_exists($user, 'wallet') && $user->wallet) {
+                    $user->wallet()->delete();
+                }
+
+                $agent->delete();
+                $user->delete();
+            } else {
+                $agent->delete();
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Failed to delete: '.$e->getMessage()], 500);
+        }
 
         return response()->json(['success' => true, 'message' => 'Deleted.'], 200);
     }
