@@ -46,17 +46,11 @@ class MoneyTransferController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
         }
 
-        $adminPhone = config('app.admin_phone') ?: env('AUTH_ADMIN_PHONE');
-        $adminUser = User::where('phone_number', $adminPhone)->first();
-        if (! $adminUser) {
-            return response()->json(['success' => false, 'message' => 'Admin user not found.'], 422);
-        }
-
         if (! $this->verifyPin($authUser->id, $data['pin'])) {
             return response()->json(['success' => false, 'message' => 'Invalid PIN.'], 422);
         }
 
-        return $this->prepareAndExecute($adminUser->id, $data, 'admin');
+        return $this->prepareAndExecute($authUser->id, $data, 'admin');
     }
 
     /**

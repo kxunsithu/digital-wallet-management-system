@@ -24,6 +24,9 @@ class UserResource extends JsonResource
             ];
         })->values();
 
+        $agentProfile = $this->relationLoaded('agentProfile') ? $this->agentProfile : $this->loadMissing('agentProfile')->agentProfile;
+        $wallet = $this->relationLoaded('wallet') ? $this->wallet : $this->loadMissing('wallet')->wallet;
+
         return [
             'id' => $this->id,
             'phone_number' => $this->phone_number,
@@ -36,6 +39,20 @@ class UserResource extends JsonResource
             'role_id' => $this->role_id,
             'images' => $formattedImages,
             'nrc_images' => $formattedImages->filter(fn ($image) => in_array($image['image_type'], ['nrc_front_image', 'nrc_back_image'], true))->values(),
+            'agent_profile' => $agentProfile ? [
+                'id' => $agentProfile->id,
+                'agent_code' => $agentProfile->agent_code,
+                'shop_name' => $agentProfile->shop_name,
+                'shop_address' => $agentProfile->shop_address,
+                'float_balance' => (float) $agentProfile->float_balance,
+                'total_volume_monthly' => (float) $agentProfile->total_volume_monthly,
+            ] : null,
+            'wallet' => $wallet ? [
+                'id' => $wallet->id,
+                'wallet_number' => $wallet->wallet_number,
+                'balance' => (float) $wallet->balance,
+                'status' => $wallet->status,
+            ] : null,
             'created_at' => $this->created_at ? (string) $this->created_at : null,
             'updated_at' => $this->updated_at ? (string) $this->updated_at : null,
         ];

@@ -1,6 +1,6 @@
+// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  // Include all locations where NativeWind classes may appear (app/router, src, components)
   content: [
     "./App.{js,jsx,ts,tsx}",
     "./src/**/*.{js,jsx,ts,tsx}",
@@ -8,8 +8,19 @@ module.exports = {
     "./src/app/**/*.{js,jsx,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
+  darkMode: 'class',
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: '#D5E726',
+        secondary: '#10110E',
+        background: '#0A0B09',
+        surface: '#161814',
+        text: '#FFFFFF',
+        textSecondary: '#C7C7C7',
+        border: '#2F332B',
+      }
+    },
   },
   plugins: [],
 }

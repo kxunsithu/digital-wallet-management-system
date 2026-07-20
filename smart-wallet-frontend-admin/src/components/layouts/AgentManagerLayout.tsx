@@ -73,7 +73,7 @@ const AgentManagerLayout = ({ children, title = "Agent Manager" }: Props) => {
               <Wallet className="h-4 w-4" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-950">Agent Manager</p>
+              <p className="text-sm font-semibold text-slate-950">{title}</p>
               <p className="text-xs text-slate-500">
                 {userName ? `Signed in as ${userName}` : "Manage your agents & transfers"}
               </p>

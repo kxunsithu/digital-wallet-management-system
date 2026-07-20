@@ -205,7 +205,7 @@ const ManagerTransferPage = () => {
   };
 
   const resolveQrLookup = async (value: string) => {
-    const lookupValue = value.trim();
+    const lookupValue = normalizeQrValue(value);
     if (!lookupValue) {
       toast.error("Enter or paste a QR code value.");
       return;
@@ -232,6 +232,22 @@ const ManagerTransferPage = () => {
     } finally {
       setLookupLoading(false);
     }
+  };
+
+  const normalizeQrValue = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed && typeof parsed === "object" && "qr_code_value" in parsed) {
+        return String((parsed as any).qr_code_value).trim();
+      }
+    } catch {
+      // not JSON, keep raw string
+    }
+
+    return trimmed;
   };
 
   const handleScannedQr = (value: string) => {
@@ -372,7 +388,7 @@ const ManagerTransferPage = () => {
               <div className="group flex-shrink-0">
                 <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/70 transition-shadow group-hover:shadow-md">
                   <QRCode
-                    value={String(myQrCode.qr_code_value ?? myQrCode.qr_payload ?? "") || ""}
+                    value={String(myQrCode.qr_payload ?? myQrCode.qr_code_value ?? "") || ""}
                     size={150}
                   />
                 </div>
@@ -394,7 +410,7 @@ const ManagerTransferPage = () => {
                       QR Value
                     </p>
                     <p className="mt-0.5 truncate font-mono text-xs text-slate-700">
-                      {String(myQrCode.qr_code_value ?? myQrCode.qr_payload ?? "")}
+                      {String(myQrCode.qr_payload ?? myQrCode.qr_code_value ?? "")}
                     </p>
                   </div>
                   <Button
@@ -405,7 +421,7 @@ const ManagerTransferPage = () => {
                     onClick={async () => {
                       try {
                         await navigator.clipboard.writeText(
-                          String(myQrCode.qr_code_value ?? myQrCode.qr_payload ?? "")
+                          String(myQrCode.qr_payload ?? myQrCode.qr_code_value ?? "")
                         );
                         toast.success("QR value copied to clipboard");
                       } catch {

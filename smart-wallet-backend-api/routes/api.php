@@ -42,13 +42,14 @@ Route::prefix('locations')->group(function () {
     Route::delete('/townships/{id}', [LocationController::class, 'deleteTownship'])->middleware(['auth:sanctum', 'ensure.admin']);
 });
 
-Route::prefix('agent-managers')->group(function () {
+Route::prefix('agent-managers')->middleware('auth:sanctum')->group(function () {
+    // Listing and show require authentication (who can view can be controlled later)
     Route::get('/', [AgentManagerController::class, 'index']);
-    Route::post('/', [AgentManagerController::class, 'store'])->middleware(['auth:sanctum', 'ensure.admin']);
+    Route::post('/', [AgentManagerController::class, 'store'])->middleware('ensure.admin');
     Route::get('/{id}', [AgentManagerController::class, 'show']);
-    Route::put('/{id}', [AgentManagerController::class, 'update']);
-    Route::delete('/{id}', [AgentManagerController::class, 'destroy']);
-    Route::post('/{id}/toggle-status', [AgentManagerController::class, 'toggleStatus'])->middleware(['auth:sanctum', 'ensure.admin']);
+    Route::put('/{id}', [AgentManagerController::class, 'update'])->middleware('ensure.admin');
+    Route::delete('/{id}', [AgentManagerController::class, 'destroy'])->middleware('ensure.admin');
+    Route::post('/{id}/toggle-status', [AgentManagerController::class, 'toggleStatus'])->middleware('ensure.admin');
 });
 
 Route::prefix('agents')->middleware('auth:sanctum')->group(function () {
