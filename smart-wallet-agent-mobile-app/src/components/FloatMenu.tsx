@@ -1,12 +1,13 @@
 // components/FloatMenu.tsx
-import { 
-  Text, 
-  View, 
-  TouchableOpacity, 
+import {
+  Text,
+  View,
+  TouchableOpacity,
   Modal,
   Animated,
   Pressable,
   ScrollView,
+  Platform,
 } from "react-native";
 import { useState, useEffect } from "react";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -23,313 +24,246 @@ export default function FloatMenu({ isVisible, onClose }: FloatMenuProps) {
   const router = useRouter();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  
+
   const [animation] = useState(new Animated.Value(0));
-  const [scale] = useState(new Animated.Value(0.9));
 
   useEffect(() => {
-    if (isVisible) {
-      Animated.parallel([
-        Animated.spring(animation, {
-          toValue: 1,
-          useNativeDriver: true,
-          tension: 65,
-          friction: 8,
-        }),
-        Animated.spring(scale, {
-          toValue: 1,
-          useNativeDriver: true,
-          tension: 65,
-          friction: 8,
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.spring(animation, {
-          toValue: 0,
-          useNativeDriver: true,
-          tension: 65,
-          friction: 8,
-        }),
-        Animated.spring(scale, {
-          toValue: 0.9,
-          useNativeDriver: true,
-          tension: 65,
-          friction: 8,
-        }),
-      ]).start();
-    }
+    Animated.spring(animation, {
+      toValue: isVisible ? 1 : 0,
+      useNativeDriver: true,
+      tension: 60,
+      friction: 9,
+    }).start();
   }, [isVisible]);
 
   const handleNavigate = (route: string) => {
     onClose();
-    setTimeout(() => {
-      router.push(route as any);
-    }, 250);
+    setTimeout(() => router.push(route as any), 200);
   };
 
-  const translateY = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [120, 0],
-  });
+  const translateY = animation.interpolate({ inputRange: [0, 1], outputRange: [300, 0] });
+  const backdropOpacity = animation.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
 
-  const backdropOpacity = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 0.65],
-  });
+  // ── Section config ──────────────────────────────────────────────────────────
+  const customerActions = [
+    {
+      label: 'Phone Transfer',
+      sub: 'Deposit via phone number',
+      icon: 'phone-call' as const,
+      color: '#D5E726',
+      bg: isDark ? '#1C1F14' : '#F8FAF0',
+      border: isDark ? '#2D3318' : '#E8F0C0',
+      route: '/cash-in',
+    },
+    {
+      label: 'Scan QR Code',
+      sub: 'Scan customer QR to deposit',
+      icon: 'camera' as const,
+      color: '#D5E726',
+      bg: isDark ? '#1C1F14' : '#F8FAF0',
+      border: isDark ? '#2D3318' : '#E8F0C0',
+      route: '/cash-in?scan=true',
+    },
+  ];
+
+  const managerActions = [
+    {
+      label: 'Phone Transfer',
+      sub: 'Return float via phone',
+      icon: 'user-check' as const,
+      color: '#10b981',
+      bg: isDark ? '#14221B' : '#F0FDF4',
+      border: isDark ? '#1A3328' : '#DCFCE7',
+      route: '/cash-out',
+    },
+    {
+      label: 'Scan QR Code',
+      sub: 'Scan manager QR code',
+      icon: 'camera' as const,
+      color: '#10b981',
+      bg: isDark ? '#14221B' : '#F0FDF4',
+      border: isDark ? '#1A3328' : '#DCFCE7',
+      route: '/cash-out?scan=true',
+    },
+  ];
+
+  const utilityActions = [
+    {
+      label: 'My QR Code',
+      sub: 'Share to receive',
+      icon: 'grid' as const,
+      color: '#8b5cf6',
+      bg: isDark ? '#1A1628' : '#F5F3FF',
+      border: isDark ? '#2D2455' : '#EDE9FE',
+      route: '/qr-code',
+    },
+    {
+      label: 'Transactions',
+      sub: 'View history',
+      icon: 'clock' as const,
+      color: '#f59e0b',
+      bg: isDark ? '#231A10' : '#FFFBEB',
+      border: isDark ? '#3D2E14' : '#FEF3C7',
+      route: '/(tabs)/transactions',
+    },
+  ];
+
+  const SectionHeader = ({ label, color }: { label: string; color: string }) => (
+    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+      <View style={{ width: 4, height: 14, borderRadius: 2, backgroundColor: color, marginRight: 8 }} />
+      <Text style={{
+        fontSize: 10, fontWeight: '800', letterSpacing: 1,
+        textTransform: 'uppercase',
+        color: isDark ? '#6B7280' : '#9CA3AF',
+      }}>
+        {label}
+      </Text>
+    </View>
+  );
+
+  const ActionCard = ({ item }: { item: typeof customerActions[0] }) => (
+    <TouchableOpacity
+      onPress={() => handleNavigate(item.route)}
+      activeOpacity={0.8}
+      style={{
+        flex: 1, padding: 16, borderRadius: 20,
+        backgroundColor: item.bg,
+        borderWidth: 1.5, borderColor: item.border,
+      }}
+    >
+      <View style={{
+        width: 40, height: 40, borderRadius: 12,
+        backgroundColor: `${item.color}22`,
+        alignItems: 'center', justifyContent: 'center',
+        marginBottom: 10,
+      }}>
+        <Feather name={item.icon} size={18} color={item.color} />
+      </View>
+      <Text style={{ fontSize: 12, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09', marginBottom: 3 }}>
+        {item.label}
+      </Text>
+      <Text style={{ fontSize: 10, color: isDark ? '#6B7280' : '#9CA3AF', lineHeight: 14 }}>
+        {item.sub}
+      </Text>
+    </TouchableOpacity>
+  );
 
   return (
-    <Modal
-      transparent
-      visible={isVisible}
-      animationType="none"
-      onRequestClose={onClose}
-    >
+    <Modal transparent visible={isVisible} animationType="none" onRequestClose={onClose}>
       <View style={{ flex: 1 }}>
-        {/* Backdrop */}
-        <Animated.View 
+        {/* ── Frosted / Blurred Backdrop ── */}
+        <Animated.View
           style={{
-            position: 'absolute', inset: 0,
-            backgroundColor: '#000000',
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
             opacity: backdropOpacity,
           }}
         >
-          <Pressable style={{ flex: 1 }} onPress={onClose} />
+          {/* Dark overlay layer */}
+          <View style={{
+            flex: 1,
+            backgroundColor: isDark ? 'rgba(0,0,0,0.75)' : 'rgba(10,11,9,0.55)',
+          }}>
+            <Pressable style={{ flex: 1 }} onPress={onClose} />
+          </View>
         </Animated.View>
 
-        {/* Bottom Sheet Modal */}
+        {/* ── Bottom Sheet Panel ── */}
         <Animated.View
           style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
             borderTopLeftRadius: 32, borderTopRightRadius: 32,
-            backgroundColor: isDark ? '#141612' : '#FFFFFF',
+            // Frosted-glass card
+            backgroundColor: isDark
+              ? 'rgba(16,18,14,0.97)'
+              : 'rgba(255,255,255,0.97)',
             borderTopWidth: 1,
-            borderTopColor: isDark ? '#2F332B' : '#E2E8F0',
-            paddingTop: 12,
-            paddingBottom: 24,
-            maxHeight: '85%',
-            transform: [{ translateY }, { scale }],
+            borderTopColor: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+            // iOS shadow to give depth
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: -8 },
+            shadowOpacity: isDark ? 0.5 : 0.12,
+            shadowRadius: 24,
+            elevation: 20,
+            transform: [{ translateY }],
+            paddingBottom: Platform.OS === 'ios' ? 36 : 24,
           }}
         >
-          {/* Handle Bar */}
-          <View style={{ alignItems: 'center', paddingVertical: 8 }}>
-            <View style={{ width: 44, height: 4.5, borderRadius: 3, backgroundColor: isDark ? '#2F332B' : '#E2E8F0' }} />
+          {/* ── Handle ── */}
+          <View style={{ alignItems: 'center', paddingTop: 14, paddingBottom: 6 }}>
+            <View style={{
+              width: 40, height: 4, borderRadius: 2,
+              backgroundColor: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)',
+            }} />
           </View>
 
-          {/* Modal Header */}
-          <View style={{ paddingHorizontal: 24, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* ── Title row ── */}
+          <View style={{
+            paddingHorizontal: 24, paddingVertical: 14,
+            flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+          }}>
             <View>
-              <Text style={{ fontSize: 20, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09', letterSpacing: -0.4 }}>
-                Money Transfer & Actions
+              <Text style={{
+                fontSize: 20, fontWeight: '900', letterSpacing: -0.5,
+                color: isDark ? '#FFFFFF' : '#0A0B09',
+              }}>
+                Actions
               </Text>
               <Text style={{ fontSize: 12, color: isDark ? '#6B7280' : '#9CA3AF', marginTop: 2 }}>
-                Select transfer recipient type
+                Select a transfer type
               </Text>
             </View>
             <TouchableOpacity
               onPress={onClose}
+              activeOpacity={0.7}
               style={{
                 width: 36, height: 36, borderRadius: 18,
-                backgroundColor: isDark ? '#1F221B' : '#F1F5F9',
+                backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
                 alignItems: 'center', justifyContent: 'center',
               }}
-              activeOpacity={0.7}
             >
-              <Feather name="x" size={18} color={isDark ? '#FFFFFF' : '#0A0B09'} />
+              <Feather name="x" size={17} color={isDark ? '#FFFFFF' : '#0A0B09'} />
             </TouchableOpacity>
           </View>
 
-          <ScrollView 
+          <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 16 }}
+            contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 8 }}
           >
-            {/* ── SECTION 1: CUSTOMER TRANSFERS ── */}
-            <View style={{ marginTop: 12 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                <View style={{ width: 6, height: 14, borderRadius: 3, backgroundColor: '#D5E726', marginRight: 8 }} />
-                <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280', textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                  Customer Money Transfer (Cash In)
-                </Text>
-              </View>
-
+            {/* ── Customer Section ── */}
+            <View style={{ marginBottom: 20 }}>
+              <SectionHeader label="Customer Transfer (Cash In)" color="#D5E726" />
               <View style={{ flexDirection: 'row', gap: 12 }}>
-                {/* Customer Phone Transfer */}
-                <TouchableOpacity
-                  onPress={() => handleNavigate('/cash-in')}
-                  activeOpacity={0.8}
-                  style={{
-                    flex: 1, padding: 16, borderRadius: 20,
-                    backgroundColor: isDark ? '#1C1F18' : '#F8FAF5',
-                    borderWidth: 1.5, borderColor: isDark ? '#2F3624' : '#E6F0C2',
-                  }}
-                >
-                  <View style={{
-                    width: 44, height: 44, borderRadius: 14,
-                    backgroundColor: 'rgba(213,231,38,0.2)',
-                    alignItems: 'center', justifyContent: 'center',
-                    marginBottom: 12,
-                  }}>
-                    <Feather name="phone-call" size={20} color="#D5E726" />
-                  </View>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: isDark ? '#FFFFFF' : '#0A0B09' }}>
-                    Phone Transfer
-                  </Text>
-                  <Text style={{ fontSize: 11, color: isDark ? '#6B7280' : '#9CA3AF', marginTop: 3 }}>
-                    Deposit via customer phone number
-                  </Text>
-                </TouchableOpacity>
-
-                {/* Customer QR Scan Transfer */}
-                <TouchableOpacity
-                  onPress={() => handleNavigate('/cash-in?scan=true')}
-                  activeOpacity={0.8}
-                  style={{
-                    flex: 1, padding: 16, borderRadius: 20,
-                    backgroundColor: isDark ? '#1C1F18' : '#F8FAF5',
-                    borderWidth: 1.5, borderColor: isDark ? '#2F3624' : '#E6F0C2',
-                  }}
-                >
-                  <View style={{
-                    width: 44, height: 44, borderRadius: 14,
-                    backgroundColor: 'rgba(213,231,38,0.2)',
-                    alignItems: 'center', justifyContent: 'center',
-                    marginBottom: 12,
-                  }}>
-                    <MaterialCommunityIcons name="qrcode-scan" size={22} color="#D5E726" />
-                  </View>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: isDark ? '#FFFFFF' : '#0A0B09' }}>
-                    Scan QR
-                  </Text>
-                  <Text style={{ fontSize: 11, color: isDark ? '#6B7280' : '#9CA3AF', marginTop: 3 }}>
-                    Scan customer QR code to cash in
-                  </Text>
-                </TouchableOpacity>
+                {customerActions.map((a) => <ActionCard key={a.label} item={a} />)}
               </View>
             </View>
 
-            {/* ── SECTION 2: AGENT MANAGER TRANSFERS ── */}
-            <View style={{ marginTop: 24 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                <View style={{ width: 6, height: 14, borderRadius: 3, backgroundColor: '#10b981', marginRight: 8 }} />
-                <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280', textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                  Agent Manager Transfer (Return Float)
-                </Text>
-              </View>
+            {/* ── Divider ── */}
+            <View style={{
+              height: 1, marginBottom: 20,
+              backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+            }} />
 
+            {/* ── Manager Section ── */}
+            <View style={{ marginBottom: 20 }}>
+              <SectionHeader label="Agent Manager Transfer (Float Return)" color="#10b981" />
               <View style={{ flexDirection: 'row', gap: 12 }}>
-                {/* Manager Phone Transfer */}
-                <TouchableOpacity
-                  onPress={() => handleNavigate('/cash-out')}
-                  activeOpacity={0.8}
-                  style={{
-                    flex: 1, padding: 16, borderRadius: 20,
-                    backgroundColor: isDark ? '#18241D' : '#F0FDF4',
-                    borderWidth: 1.5, borderColor: isDark ? '#224230' : '#DCFCE7',
-                  }}
-                >
-                  <View style={{
-                    width: 44, height: 44, borderRadius: 14,
-                    backgroundColor: 'rgba(16,185,129,0.18)',
-                    alignItems: 'center', justifyContent: 'center',
-                    marginBottom: 12,
-                  }}>
-                    <Feather name="user-check" size={20} color="#10b981" />
-                  </View>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: isDark ? '#FFFFFF' : '#0A0B09' }}>
-                    Phone Transfer
-                  </Text>
-                  <Text style={{ fontSize: 11, color: isDark ? '#6B7280' : '#9CA3AF', marginTop: 3 }}>
-                    Return float via manager phone
-                  </Text>
-                </TouchableOpacity>
-
-                {/* Manager QR Scan Transfer */}
-                <TouchableOpacity
-                  onPress={() => handleNavigate('/cash-out?scan=true')}
-                  activeOpacity={0.8}
-                  style={{
-                    flex: 1, padding: 16, borderRadius: 20,
-                    backgroundColor: isDark ? '#18241D' : '#F0FDF4',
-                    borderWidth: 1.5, borderColor: isDark ? '#224230' : '#DCFCE7',
-                  }}
-                >
-                  <View style={{
-                    width: 44, height: 44, borderRadius: 14,
-                    backgroundColor: 'rgba(16,185,129,0.18)',
-                    alignItems: 'center', justifyContent: 'center',
-                    marginBottom: 12,
-                  }}>
-                    <MaterialCommunityIcons name="qrcode-scan" size={22} color="#10b981" />
-                  </View>
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: isDark ? '#FFFFFF' : '#0A0B09' }}>
-                    Scan QR
-                  </Text>
-                  <Text style={{ fontSize: 11, color: isDark ? '#6B7280' : '#9CA3AF', marginTop: 3 }}>
-                    Scan agent manager QR code
-                  </Text>
-                </TouchableOpacity>
+                {managerActions.map((a) => <ActionCard key={a.label} item={a} />)}
               </View>
             </View>
 
-            {/* ── SECTION 3: OTHER UTILITIES ── */}
-            <View style={{ marginTop: 24 }}>
-              <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#6B7280' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>
-                My Wallet Tools
-              </Text>
+            {/* ── Divider ── */}
+            <View style={{
+              height: 1, marginBottom: 20,
+              backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+            }} />
 
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                {/* My QR Code */}
-                <TouchableOpacity
-                  onPress={() => handleNavigate('/qr-code')}
-                  activeOpacity={0.8}
-                  style={{
-                    flex: 1, padding: 14, borderRadius: 16,
-                    backgroundColor: isDark ? '#1E1B2E' : '#F5F3FF',
-                    borderWidth: 1, borderColor: isDark ? '#382D5C' : '#DDD6FE',
-                    flexDirection: 'row', alignItems: 'center',
-                  }}
-                >
-                  <View style={{
-                    width: 36, height: 36, borderRadius: 12,
-                    backgroundColor: 'rgba(139,92,246,0.2)',
-                    alignItems: 'center', justifyContent: 'center',
-                    marginRight: 10,
-                  }}>
-                    <Feather name="grid" size={18} color="#8b5cf6" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: isDark ? '#FFFFFF' : '#0A0B09' }}>My QR</Text>
-                    <Text style={{ fontSize: 10, color: isDark ? '#6B7280' : '#9CA3AF' }}>Receive</Text>
-                  </View>
-                </TouchableOpacity>
-
-                {/* History */}
-                <TouchableOpacity
-                  onPress={() => handleNavigate('/(tabs)/transactions')}
-                  activeOpacity={0.8}
-                  style={{
-                    flex: 1, padding: 14, borderRadius: 16,
-                    backgroundColor: isDark ? '#261F17' : '#FFFBEB',
-                    borderWidth: 1, borderColor: isDark ? '#4A3B22' : '#FDE68A',
-                    flexDirection: 'row', alignItems: 'center',
-                  }}
-                >
-                  <View style={{
-                    width: 36, height: 36, borderRadius: 12,
-                    backgroundColor: 'rgba(245,158,11,0.2)',
-                    alignItems: 'center', justifyContent: 'center',
-                    marginRight: 10,
-                  }}>
-                    <Feather name="clock" size={18} color="#f59e0b" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: isDark ? '#FFFFFF' : '#0A0B09' }}>History</Text>
-                    <Text style={{ fontSize: 10, color: isDark ? '#6B7280' : '#9CA3AF' }}>Logs</Text>
-                  </View>
-                </TouchableOpacity>
+            {/* ── Utilities ── */}
+            <View style={{ marginBottom: 4 }}>
+              <SectionHeader label="Wallet Tools" color="#8b5cf6" />
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                {utilityActions.map((a) => <ActionCard key={a.label} item={a} />)}
               </View>
             </View>
-
           </ScrollView>
         </Animated.View>
       </View>

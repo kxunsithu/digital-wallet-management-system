@@ -50,8 +50,12 @@ export default function CashOutScreen() {
   const [managerPhone, setManagerPhone] = useState("");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [pin, setPin] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // PIN Modal state
+  const [pinModalVisible, setPinModalVisible] = useState(false);
+  const [pin, setPin] = useState("");
+
   const [selectedManagerQr, setSelectedManagerQr] = useState<QrLookupResult | null>(null);
   const [scannerVisible, setScannerVisible] = useState(shouldAutoScan);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -102,7 +106,8 @@ export default function CashOutScreen() {
     return true;
   };
 
-  const handleSubmit = async () => {
+  // Step 1: Click Initiate -> Validate fields & open PIN Modal
+  const handleInitiateTransfer = async () => {
     if (!managerPhone.trim()) {
       Toast.show({ type: "error", text1: "Error", text2: "Please enter manager phone number" });
       return;
@@ -123,14 +128,21 @@ export default function CashOutScreen() {
       return;
     }
 
-    if (!pin.trim() || pin.length !== 4) {
-      Toast.show({ type: "error", text1: "Error", text2: "Please enter your 4-digit PIN" });
-      return;
-    }
-
     // Perform final role check before submission
     const isValid = await validateManagerPhone(managerPhone);
     if (!isValid) return;
+
+    // Open PIN Modal
+    setPin("");
+    setPinModalVisible(true);
+  };
+
+  // Step 2: Submit inside PIN Modal with PIN
+  const handleExecuteTransfer = async (enteredPin: string) => {
+    if (!enteredPin || enteredPin.length !== 4) {
+      Toast.show({ type: "error", text1: "Invalid PIN", text2: "Please enter your 4-digit PIN" });
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -139,12 +151,13 @@ export default function CashOutScreen() {
         body: JSON.stringify({
           receiver_phone: managerPhone,
           amount: Number(amount),
-          pin: pin,
+          pin: enteredPin,
           description: description || undefined,
         }),
       });
 
       if (res.status === 200 && res.body?.success) {
+        setPinModalVisible(false);
         Toast.show({ 
           type: "success", 
           text1: "Float Returned Successfully", 
@@ -201,16 +214,22 @@ export default function CashOutScreen() {
       if (res.status === 200 && res.body?.success) {
         const qrData = res.body.data as QrLookupResult;
 
-        // STRICT ROLE CONTROL: Agent Manager Transfer must ONLY accept agent_manager role
         if (qrData.user?.role && qrData.user.role !== "agent_manager") {
-          const roleDisplay = qrData.user.role.replace(/_/g, ' ');
+          const role = qrData.user.role;
+          let msg: string;
+          if (role === 'agent') {
+            msg = 'This is an Agent QR code. Float Return only accepts Agent Manager QR codes.';
+          } else {
+            const roleDisplay = role.replace(/_/g, ' ');
+            msg = `This is a ${roleDisplay} QR code. Float Return ONLY accepts Agent Manager accounts.`;
+          }
           Toast.show({ 
             type: "error", 
-            text1: "Role Restricted 🛑", 
-            text2: `Scanned user is an ${roleDisplay}. Float Return ONLY accepts Agent Manager accounts.` 
+            text1: "Wrong QR Code 🛑", 
+            text2: msg,
           });
           setSelectedManagerQr(null);
-          setRoleValidationError(`Scanned user is an ${roleDisplay}. Float Return ONLY accepts Agent Manager accounts.`);
+          setRoleValidationError(msg);
           setScannerVisible(false);
           return;
         }
@@ -303,7 +322,7 @@ export default function CashOutScreen() {
 
             {/* Manager Phone Input */}
             <View>
-              <View style={{ flexDirection: 'row', justifyURI: 'space-between', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280', textTransform: 'uppercase', letterSpacing: 0.8 }}>
                   Manager Phone Number
                 </Text>
@@ -476,54 +495,124 @@ export default function CashOutScreen() {
               />
             </View>
 
-            {/* PIN */}
-            <View>
-              <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
-                Your 4-Digit Security PIN
-              </Text>
-              <TextInput
-                placeholder="• • • •"
-                placeholderTextColor={isDark ? "#4B5563" : "#94A3B8"}
-                style={{
-                  padding: 14, borderRadius: 16, borderWidth: 1.5,
-                  borderColor: isDark ? '#2F332B' : '#E2E8F0',
-                  backgroundColor: isDark ? '#161814' : '#FFFFFF',
-                  fontSize: 22, fontWeight: '800', textAlign: 'center', letterSpacing: 10,
-                  color: isDark ? "#FFFFFF" : "#0A0B09",
-                }}
-                value={pin}
-                onChangeText={setPin}
-                keyboardType="numeric"
-                maxLength={4}
-                secureTextEntry
-              />
-            </View>
-
-            {/* Submit Button */}
+            {/* Initiate Float Return Button */}
             <TouchableOpacity
-              onPress={handleSubmit}
-              disabled={submitting || !!roleValidationError}
+              onPress={handleInitiateTransfer}
+              disabled={!!roleValidationError}
               activeOpacity={0.85}
-              style={{ marginTop: 10, opacity: (submitting || !!roleValidationError) ? 0.6 : 1 }}
+              style={{ marginTop: 14, opacity: roleValidationError ? 0.6 : 1 }}
             >
               <LinearGradient
                 colors={['#10b981', '#059669']}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}
               >
-                {submitting ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : (
-                  <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFFFFF' }}>
-                    Authorize Float Return
-                  </Text>
-                )}
+                <Text style={{ fontSize: 16, fontWeight: '800', color: '#FFFFFF' }}>
+                  Proceed to Float Return
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
 
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* ── VERIFY PIN MODAL BOX ── */}
+      <Modal visible={pinModalVisible} animationType="slide" transparent onRequestClose={() => setPinModalVisible(false)}>
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.7)' }}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <View style={{
+              borderTopLeftRadius: 28, borderTopRightRadius: 28,
+              padding: 24,
+              backgroundColor: isDark ? '#161814' : '#FFFFFF',
+              borderTopWidth: 1, borderTopColor: isDark ? '#2F332B' : '#E2E8F0',
+            }}>
+              <View style={{ alignItems: 'center', marginBottom: 16 }}>
+                <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: isDark ? '#2F332B' : '#E2E8F0' }} />
+              </View>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <View>
+                  <Text style={{ fontSize: 18, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09' }}>
+                    Verify Security PIN
+                  </Text>
+                  <Text style={{ fontSize: 12, color: isDark ? '#6B7280' : '#9CA3AF', marginTop: 2 }}>
+                    Confirm float return of {Number(amount).toLocaleString()} MMK
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => setPinModalVisible(false)}>
+                  <Feather name="x" size={20} color={isDark ? '#FFFFFF' : '#0A0B09'} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={{ marginBottom: 20 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8, textAlign: 'center' }}>
+                  Enter 4-Digit Security PIN
+                </Text>
+                <TextInput
+                  placeholder="• • • •"
+                  placeholderTextColor={isDark ? '#4B5563' : '#9CA3AF'}
+                  style={{
+                    padding: 16, borderRadius: 16, borderWidth: 2,
+                    borderColor: '#10b981',
+                    backgroundColor: isDark ? '#0A0B09' : '#F8FAFC',
+                    fontSize: 24, fontWeight: '900', textAlign: 'center', letterSpacing: 14,
+                    color: isDark ? '#FFFFFF' : '#0A0B09',
+                  }}
+                  value={pin}
+                  onChangeText={(val) => {
+                    setPin(val);
+                    if (val.length === 4) {
+                      handleExecuteTransfer(val);
+                    }
+                  }}
+                  keyboardType="numeric"
+                  maxLength={4}
+                  secureTextEntry
+                  autoFocus
+                />
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <TouchableOpacity
+                  onPress={() => setPinModalVisible(false)}
+                  disabled={submitting}
+                  style={{
+                    flex: 1, paddingVertical: 14, borderRadius: 14,
+                    backgroundColor: isDark ? '#232620' : '#F1F5F9',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => handleExecuteTransfer(pin)}
+                  disabled={submitting || pin.length !== 4}
+                  style={{
+                    flex: 1, opacity: (submitting || pin.length !== 4) ? 0.6 : 1,
+                  }}
+                >
+                  <LinearGradient
+                    colors={['#10b981', '#059669']}
+                    style={{ paddingVertical: 14, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    {submitting ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>
+                        Confirm Return
+                      </Text>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
 
       {/* QR Scanner Modal */}
       <Modal visible={scannerVisible} animationType="slide" transparent>

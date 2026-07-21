@@ -223,9 +223,16 @@ const ManagerTransferPage = () => {
         return;
       }
 
+      if (qrData.user.role && qrData.user.role !== "agent") {
+        const roleDisplay = qrData.user.role.replace(/_/g, ' ');
+        toast.error(`Scanned recipient is an ${roleDisplay}. Agent Managers can only transfer money to Agents.`);
+        setSelectedQr(null);
+        return;
+      }
+
       setSelectedQr(qrData);
       setQrLookupValue(lookupValue);
-      toast.success("Recipient QR code recognized.");
+      toast.success(`Agent QR code recognized: ${qrData.user.full_name || qrData.user.phone_number}`);
     } catch (err: any) {
       setSelectedQr(null);
       toast.error(err?.response?.data?.message || "QR code lookup failed.");

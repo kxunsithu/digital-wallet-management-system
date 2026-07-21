@@ -11,13 +11,13 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTheme } from "../../providers/ThemeProvider";
 import { Feather } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import apiFetch from "../../lib/api";
 import { logout } from "../../services/auth";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
 
 interface UserProfile {
@@ -52,8 +52,12 @@ export default function ProfileScreen() {
   const [confirmPin, setConfirmPin] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchProfile = async () => {
-    setLoading(true);
+  // Logout Modal state
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const fetchProfile = useCallback(async (isRefresh = false) => {
+    if (!isRefresh && !profile) setLoading(true);
     try {
       const res = await apiFetch("/profile");
       if (res.status === 200 && res.body?.success) {
@@ -62,21 +66,32 @@ export default function ProfileScreen() {
         router.replace("/auth");
       }
     } catch (e) {
-      Toast.show({ type: "error", text1: "Error", text2: "Failed to load profile" });
+      // silent
     } finally {
       setLoading(false);
     }
-  };
+  }, [profile]);
 
   useEffect(() => { fetchProfile(); }, []);
 
-  const handleLogout = async () => {
+  // Real-time balance refresh when profile tab comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfile(true);
+    }, [fetchProfile])
+  );
+
+  const handleConfirmLogout = async () => {
+    setLoggingOut(true);
     try {
       await logout();
+      setLogoutModalVisible(false);
       Toast.show({ type: "success", text1: "Logged Out", text2: "Successfully signed out" });
       router.replace("/auth");
     } catch (e) {
       Toast.show({ type: "error", text1: "Error", text2: "Failed to sign out" });
+    } finally {
+      setLoggingOut(false);
     }
   };
 
@@ -105,7 +120,7 @@ export default function ProfileScreen() {
     }
   };
 
-  if (loading) {
+  if (loading && !profile) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? '#0A0B09' : '#FAFAFA' }}>
         <ActivityIndicator size="large" color="#D5E726" />
@@ -308,7 +323,7 @@ export default function ProfileScreen() {
           <SettingRow
             icon="log-out"
             label="Sign Out"
-            onPress={handleLogout}
+            onPress={() => setLogoutModalVisible(true)}
             danger
           />
         </View>
@@ -325,7 +340,6 @@ export default function ProfileScreen() {
               borderTopWidth: 1,
               borderTopColor: isDark ? '#2F332B' : '#E2E8F0',
             }}>
-              {/* Handle Bar */}
               <View style={{ alignItems: 'center', marginBottom: 20 }}>
                 <View style={{
                   width: 40, height: 4, borderRadius: 2,
@@ -371,6 +385,70 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           </KeyboardAvoidingView>
+        </View>
+      </Modal>
+
+      {/* ── LOGOUT CONFIRMATION MODAL BOX ── */}
+      <Modal visible={logoutModalVisible} animationType="fade" transparent onRequestClose={() => setLogoutModalVisible(false)}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', paddingHorizontal: 24 }}>
+          <View style={{
+            width: '100%', maxWidth: 340, borderRadius: 24, padding: 24,
+            backgroundColor: isDark ? '#161814' : '#FFFFFF',
+            borderWidth: 1, borderColor: isDark ? '#2F332B' : '#E2E8F0',
+            alignItems: 'center',
+          }}>
+            <View style={{
+              width: 56, height: 56, borderRadius: 28,
+              backgroundColor: 'rgba(239,68,68,0.12)',
+              alignItems: 'center', justifyContent: 'center',
+              marginBottom: 16,
+            }}>
+              <Feather name="log-out" size={24} color="#EF4444" />
+            </View>
+
+            <Text style={{ fontSize: 18, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09', textAlign: 'center' }}>
+              Sign Out
+            </Text>
+            <Text style={{ fontSize: 13, color: isDark ? '#9CA3AF' : '#6B7280', textAlign: 'center', marginTop: 6, marginBottom: 24 }}>
+              Are you sure you want to sign out of your account?
+            </Text>
+
+            <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
+              <TouchableOpacity
+                onPress={() => setLogoutModalVisible(false)}
+                disabled={loggingOut}
+                style={{
+                  flex: 1, paddingVertical: 14, borderRadius: 14,
+                  backgroundColor: isDark ? '#232620' : '#F1F5F9',
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 14, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleConfirmLogout}
+                disabled={loggingOut}
+                style={{ flex: 1 }}
+              >
+                <View style={{
+                  paddingVertical: 14, borderRadius: 14,
+                  backgroundColor: '#EF4444',
+                  alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {loggingOut ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>
+                      Sign Out
+                    </Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </Modal>
     </SafeAreaView>

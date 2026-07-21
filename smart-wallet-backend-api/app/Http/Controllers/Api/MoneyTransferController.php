@@ -271,15 +271,11 @@ class MoneyTransferController extends Controller
         }
 
         if ($type === 'manager_to_agent') {
-            $allowed = DB::table('agent_profiles')
-                ->where('created_by_manager_id', $senderUserId)
-                ->pluck('user_id')
-                ->toArray();
-
-            if (! in_array($receiverUserId, $allowed, true)) {
+            $receiverRole = $this->resolveUserRole($receiverUserId);
+            if ($receiverRole !== 'agent') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Receiver must be an agent created by this manager.',
+                    'message' => 'Receiver must be an agent.',
                 ], 403);
             }
         }
