@@ -1,24 +1,29 @@
 // app/(tabs)/index.tsx
+import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Text,
-  View,
-  TouchableOpacity,
-  ScrollView,
   ActivityIndicator,
-  RefreshControl,
   Modal,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter, useFocusEffect } from "expo-router";
-import { useTheme } from "../../providers/ThemeProvider";
-import { Feather } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import apiFetch from "../../lib/api";
+import { useTheme } from "../../providers/ThemeProvider";
 import { logout } from "../../services/auth";
-import { LinearGradient } from 'expo-linear-gradient';
-import FloatMenu from "../../components/FloatMenu";
-import FloatMenuButton from "../../components/FloatMenuButton";
+import {
+  addMoneyReceivedNotification,
+  AppNotification,
+  clearAllNotifications,
+  getNotifications,
+  markAllNotificationsAsRead,
+} from "../../services/notificationStore";
 
 interface UserProfile {
   id: number;
@@ -59,18 +64,49 @@ interface Transaction {
   created_at: string;
 }
 
-const getTxMeta = (tx: Transaction) => {
+// This function uses colors from the theme config
+const getTxMeta = (tx: Transaction, colors: any) => {
   const type = tx.transaction_type;
-  if (type === 'agent_to_customer') return { label: 'Cash In', icon: 'arrow-up-right' as const, color: '#D5E726', bg: 'rgba(213,231,38,0.12)', sign: '-' };
-  if (type === 'agent_to_agent_manager') return { label: 'Float Return', icon: 'corner-right-up' as const, color: '#10b981', bg: 'rgba(16,185,129,0.12)', sign: '-' };
-  if (type === 'agent_manager_to_agent') return { label: 'Float Received', icon: 'corner-left-down' as const, color: '#10b981', bg: 'rgba(16,185,129,0.12)', sign: '+' };
-  if (type === 'customer_to_agent') return { label: 'Cash Out', icon: 'arrow-down-left' as const, color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', sign: '+' };
-  return { label: type.replace(/_/g, ' '), icon: 'activity' as const, color: '#6B7280', bg: 'rgba(107,114,128,0.12)', sign: '' };
+  if (type === 'agent_to_customer') return {
+    label: 'Cash In',
+    icon: 'arrow-up-right' as const,
+    color: colors.primary,
+    bg: `${colors.primary}1F`,
+    sign: '-'
+  };
+  if (type === 'agent_to_agent_manager') return {
+    label: 'Float Return',
+    icon: 'corner-right-up' as const,
+    color: colors.success,
+    bg: `${colors.success}1F`,
+    sign: '-'
+  };
+  if (type === 'agent_manager_to_agent') return {
+    label: 'Float Received',
+    icon: 'corner-left-down' as const,
+    color: colors.success,
+    bg: `${colors.success}1F`,
+    sign: '+'
+  };
+  if (type === 'customer_to_agent') return {
+    label: 'Cash Out',
+    icon: 'arrow-down-left' as const,
+    color: colors.primary,
+    bg: `${colors.primary}1F`,
+    sign: '+'
+  };
+  return {
+    label: type.replace(/_/g, ' '),
+    icon: 'activity' as const,
+    color: colors.textSecondary,
+    bg: `${colors.textSecondary}1F`,
+    sign: ''
+  };
 };
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { theme } = useTheme();
+  const { theme, colors } = useTheme(); // Get colors from theme
   const isDark = theme === 'dark';
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -78,14 +114,27 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showBalance, setShowBalance] = useState(true);
-  const [floatMenuVisible, setFloatMenuVisible] = useState(false);
 
   // Logout Modal state
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
+  // Notifications state
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [notificationsModalVisible, setNotificationsModalVisible] = useState(false);
+
   // Ref to track balance for real-time incoming transfer notifications
   const prevBalanceRef = useRef<number | null>(null);
+
+  // Load notifications
+  const loadNotifs = useCallback(async () => {
+    const list = await getNotifications();
+    setNotifications(list);
+  }, []);
+
+  useEffect(() => {
+    loadNotifs();
+  }, [loadNotifs]);
 
   // Real-time balance polling (3 seconds interval)
   const pollData = useCallback(async (showInitialSpinner = false) => {
@@ -101,9 +150,16 @@ export default function DashboardScreen() {
           const diff = newBalance - prevBalanceRef.current;
           Toast.show({
             type: "success",
-            text1: "Money Received! 💰",
+            text1: "Money Received!",
             text2: `+${diff.toLocaleString()} MMK added to your wallet`,
           });
+
+          // Add to Notification Store
+          const updatedNotifs = await addMoneyReceivedNotification({
+            amount: diff,
+            type: 'money_received',
+          });
+          setNotifications(updatedNotifs);
         }
 
         prevBalanceRef.current = newBalance;
@@ -130,7 +186,7 @@ export default function DashboardScreen() {
     pollData(true);
   }, []);
 
-  // Poll every 3 seconds for real-time balance updates
+  // Poll every 3 seconds for real-time balance updates & incoming money notifications
   useEffect(() => {
     const interval = setInterval(() => {
       pollData(false);
@@ -143,10 +199,11 @@ export default function DashboardScreen() {
   useFocusEffect(
     useCallback(() => {
       pollData(false);
-    }, [pollData])
+      loadNotifs();
+    }, [pollData, loadNotifs])
   );
 
-  const onRefresh = () => { setRefreshing(true); pollData(true); };
+  const onRefresh = () => { setRefreshing(true); pollData(true); loadNotifs(); };
 
   const handleConfirmLogout = async () => {
     setLoggingOut(true);
@@ -162,11 +219,23 @@ export default function DashboardScreen() {
     }
   };
 
+  const handleMarkAllRead = async () => {
+    const updated = await markAllNotificationsAsRead();
+    setNotifications(updated);
+  };
+
+  const handleClearAllNotifs = async () => {
+    await clearAllNotifications();
+    setNotifications([]);
+  };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
   if (loading && !refreshing && !profile) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? '#0A0B09' : '#FAFAFA' }}>
-        <ActivityIndicator size="large" color="#D5E726" />
-        <Text style={{ marginTop: 12, fontSize: 13, color: isDark ? '#6B7280' : '#9CA3AF' }}>Loading dashboard...</Text>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ marginTop: 12, fontSize: 13, color: colors.textSecondary }}>Loading dashboard...</Text>
       </View>
     );
   }
@@ -175,47 +244,84 @@ export default function DashboardScreen() {
   const formattedDate = today.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: isDark ? '#0A0B09' : '#FAFAFA' }}>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#D5E726" colors={["#D5E726"]} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
         }
         contentContainerStyle={{ paddingBottom: 120 }}
       >
         {/* ── Header ── */}
         <View style={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 12, color: isDark ? '#6B7280' : '#9CA3AF' }}>{formattedDate}</Text>
-            <Text style={{ fontSize: 22, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09', marginTop: 2, letterSpacing: -0.5 }}>
-              {profile?.full_name ?? 'Agent User'} 👋
+            <Text style={{ fontSize: 12, color: colors.textSecondary }}>{formattedDate}</Text>
+            <Text style={{ fontSize: 22, fontWeight: '800', color: colors.text, marginTop: 2, letterSpacing: -0.5 }}>
+              {profile?.full_name ?? 'Agent User'}
             </Text>
           </View>
-          <TouchableOpacity
-            onPress={() => setLogoutModalVisible(true)}
-            activeOpacity={0.7}
-            style={{
-              width: 44, height: 44, borderRadius: 22,
-              backgroundColor: isDark ? '#161814' : '#FFFFFF',
-              alignItems: 'center', justifyContent: 'center',
-              borderWidth: 1, borderColor: isDark ? '#2F332B' : '#E2E8F0',
-              shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
-            }}
-          >
-            <Feather name="log-out" size={18} color={isDark ? '#D5E726' : '#6B7280'} />
-          </TouchableOpacity>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            {/* 🔔 Notification Bell Button */}
+            <TouchableOpacity
+              onPress={() => {
+                setNotificationsModalVisible(true);
+                handleMarkAllRead();
+              }}
+              activeOpacity={0.7}
+              style={{
+                width: 44, height: 44, borderRadius: 22,
+                backgroundColor: colors.surface,
+                alignItems: 'center', justifyContent: 'center',
+                borderWidth: 1, borderColor: colors.border,
+                shadowColor: colors.secondary, shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
+              }}
+            >
+              <Feather name="bell" size={19} color={colors.primary} />
+              {unreadCount > 0 && (
+                <View style={{
+                  position: 'absolute', top: -2, right: -2,
+                  backgroundColor: colors.error,
+                  borderRadius: 10, minWidth: 18, height: 18,
+                  alignItems: 'center', justifyContent: 'center',
+                  paddingHorizontal: 4, borderWidth: 1.5,
+                  borderColor: colors.background,
+                }}>
+                  <Text style={{ fontSize: 10, fontWeight: '900', color: '#FFFFFF' }}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            {/* Logout Button */}
+            <TouchableOpacity
+              onPress={() => setLogoutModalVisible(true)}
+              activeOpacity={0.7}
+              style={{
+                width: 44, height: 44, borderRadius: 22,
+                backgroundColor: colors.surface,
+                alignItems: 'center', justifyContent: 'center',
+                borderWidth: 1, borderColor: colors.border,
+                shadowColor: colors.secondary, shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
+              }}
+            >
+              <Feather name="log-out" size={18} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* ── Wallet Balance Card (real-time balance update) ── */}
         <View style={{ paddingHorizontal: 24, paddingTop: 16 }}>
           <LinearGradient
-            colors={['#D5E726', '#B0C110']}
+            colors={[colors.primary, `${colors.primary}`]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{
               borderRadius: 28, padding: 28,
-              shadowColor: '#D5E726', shadowOpacity: 0.45,
+              shadowColor: colors.primary, shadowOpacity: 0.45,
               shadowRadius: 28, shadowOffset: { width: 0, height: 14 },
               elevation: 14,
             }}
@@ -225,44 +331,34 @@ export default function DashboardScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View style={{
                   width: 32, height: 32, borderRadius: 10,
-                  backgroundColor: 'rgba(0,0,0,0.12)',
                   alignItems: 'center', justifyContent: 'center',
                   marginRight: 10,
                 }}>
-                  <Feather name="credit-card" size={16} color="#0A0B09" />
+                  <Feather name="credit-card" size={16} color={colors.secondary} />
                 </View>
-                <Text style={{ fontSize: 12, fontWeight: '700', color: 'rgba(0,0,0,0.55)', letterSpacing: 0.6, textTransform: 'uppercase' }}>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: colors.secondary, letterSpacing: 0.6, textTransform: 'uppercase' }}>
                   Wallet Balance
                 </Text>
               </View>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                {/* Live Indicator */}
-                <View style={{
-                  paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12,
-                  backgroundColor: 'rgba(0,0,0,0.12)', flexDirection: 'row', alignItems: 'center',
-                }}>
-                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#0A0B09', marginRight: 5 }} />
-                  <Text style={{ fontSize: 10, fontWeight: '700', color: '#0A0B09' }}>LIVE</Text>
-                </View>
-
                 <TouchableOpacity
                   onPress={() => setShowBalance(!showBalance)}
                   style={{
                     width: 38, height: 38, borderRadius: 19,
-                    backgroundColor: 'rgba(0,0,0,0.1)',
+                    backgroundColor: `${colors.secondary}1A`,
                     alignItems: 'center', justifyContent: 'center',
                   }}
                   activeOpacity={0.7}
                 >
-                  <Feather name={showBalance ? "eye" : "eye-off"} size={16} color="#0A0B09" />
+                  <Feather name={showBalance ? "eye" : "eye-off"} size={16} color={colors.secondary} />
                 </TouchableOpacity>
               </View>
             </View>
 
             {/* Big balance */}
             <Text style={{
-              fontSize: 42, fontWeight: '900', color: '#0A0B09',
+              fontSize: 42, fontWeight: '900', color: colors.secondary,
               letterSpacing: -1.5, marginBottom: 6,
             }}>
               {showBalance
@@ -270,7 +366,7 @@ export default function DashboardScreen() {
                 : '• • • •'
               }
             </Text>
-            <Text style={{ fontSize: 15, fontWeight: '700', color: 'rgba(0,0,0,0.45)', marginBottom: 20 }}>
+            <Text style={{ fontSize: 15, fontWeight: '700', color: colors.secondary, marginBottom: 20 }}>
               MMK
             </Text>
 
@@ -280,17 +376,17 @@ export default function DashboardScreen() {
                 <Text style={{ fontSize: 10, fontWeight: '600', color: 'rgba(0,0,0,0.4)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
                   Wallet No.
                 </Text>
-                <Text style={{ fontSize: 13, fontWeight: '800', color: '#0A0B09', marginTop: 2 }}>
+                <Text style={{ fontSize: 13, fontWeight: '800', color: colors.secondary, marginTop: 2 }}>
                   {profile?.wallet?.wallet_number ?? '—'}
                 </Text>
               </View>
               <View style={{
                 paddingHorizontal: 12, paddingVertical: 6,
-                borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.12)',
+                borderRadius: 20, backgroundColor: `${colors.secondary}1F`,
                 flexDirection: 'row', alignItems: 'center',
               }}>
-                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#0A0B09', marginRight: 6 }} />
-                <Text style={{ fontSize: 11, fontWeight: '700', color: '#0A0B09', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.secondary, marginRight: 6 }} />
+                <Text style={{ fontSize: 11, fontWeight: '700', color: colors.secondary, textTransform: 'uppercase', letterSpacing: 0.4 }}>
                   {profile?.wallet?.status ?? 'Active'}
                 </Text>
               </View>
@@ -303,34 +399,34 @@ export default function DashboardScreen() {
           <View style={{ paddingHorizontal: 24, marginTop: 16 }}>
             <View style={{
               padding: 16, borderRadius: 20,
-              backgroundColor: isDark ? '#161814' : '#FFFFFF',
-              borderWidth: 1, borderColor: isDark ? '#2F332B' : '#E2E8F0',
+              backgroundColor: colors.surface,
+              borderWidth: 1, borderColor: colors.border,
               flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
             }}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View style={{
                   width: 40, height: 40, borderRadius: 12,
-                  backgroundColor: 'rgba(139,92,246,0.12)',
+                  backgroundColor: `${colors.success}1F`,
                   alignItems: 'center', justifyContent: 'center',
                   marginRight: 14,
                 }}>
-                  <Feather name="tag" size={18} color="#8b5cf6" />
+                  <Feather name="tag" size={18} color={colors.success} />
                 </View>
                 <View>
-                  <Text style={{ fontSize: 10, fontWeight: '700', color: isDark ? '#6B7280' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                  <Text style={{ fontSize: 10, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6 }}>
                     Agent Code
                   </Text>
-                  <Text style={{ fontSize: 16, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09', marginTop: 2 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '800', color: colors.text, marginTop: 2 }}>
                     {profile.agent_profile.agent_code}
                   </Text>
                 </View>
               </View>
               {profile.agent_profile.shop_name && (
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ fontSize: 10, color: isDark ? '#6B7280' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                  <Text style={{ fontSize: 10, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6 }}>
                     Shop
                   </Text>
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: isDark ? '#FFFFFF' : '#0A0B09', marginTop: 2 }}>
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text, marginTop: 2 }}>
                     {profile.agent_profile.shop_name}
                   </Text>
                 </View>
@@ -341,24 +437,25 @@ export default function DashboardScreen() {
 
         {/* ── Quick Actions ── */}
         <View style={{ paddingHorizontal: 24, marginTop: 24 }}>
-          <Text style={{ fontSize: 13, fontWeight: '700', color: isDark ? '#6B7280' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 }}>
+          <Text style={{ fontSize: 13, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 }}>
             Quick Actions
           </Text>
-          <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
             {[
-              { label: 'Cash In', icon: 'arrow-up-right', color: '#D5E726', bg: 'rgba(213,231,38,0.12)', route: '/cash-in' },
-              { label: 'Return Float', icon: 'corner-right-up', color: '#10b981', bg: 'rgba(16,185,129,0.12)', route: '/cash-out' },
-              { label: 'My QR', icon: 'grid', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', route: '/qr-code' },
-              { label: 'Scan QR', icon: 'camera', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', route: '/cash-in?scan=true' },
-            ].map((action) => (
+              { label: 'Cash In', icon: 'arrow-up-right', color: colors.primary, bg: `${colors.primary}1F`, route: '/cash-in' },
+              { label: 'Return Float', icon: 'corner-right-up', color: colors.success, bg: `${colors.success}1F`, route: '/cash-out' },
+              { label: 'My QR', icon: 'grid', color: colors.primary, bg: `${colors.primary}1F`, route: '/qr-code' },
+              { label: 'Scan QR', icon: 'camera', color: colors.success, bg: `${colors.success}1F`, route: '/cash-in?scan=true' },
+            ].map((action, idx) => (
               <TouchableOpacity
                 key={action.label}
                 onPress={() => router.push(action.route as any)}
                 activeOpacity={0.75}
                 style={{
-                  flex: 1, padding: 14, borderRadius: 18, alignItems: 'center',
-                  backgroundColor: isDark ? '#161814' : '#FFFFFF',
-                  borderWidth: 1, borderColor: isDark ? '#2F332B' : '#E2E8F0',
+                  width: '48%', padding: 14, borderRadius: 18, alignItems: 'center',
+                  backgroundColor: colors.surface,
+                  borderWidth: 1, borderColor: colors.border,
+                  marginBottom: 12,
                 }}
               >
                 <View style={{
@@ -369,7 +466,7 @@ export default function DashboardScreen() {
                 }}>
                   <Feather name={action.icon as any} size={20} color={action.color} />
                 </View>
-                <Text style={{ fontSize: 10, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280', textAlign: 'center' }}>
+                <Text style={{ fontSize: 10, fontWeight: '700', color: colors.text, textAlign: 'center' }}>
                   {action.label}
                 </Text>
               </TouchableOpacity>
@@ -377,103 +474,147 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* ── Recent Transactions ── */}
-        <View style={{ paddingHorizontal: 24, marginTop: 28 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <Text style={{ fontSize: 16, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09', letterSpacing: -0.3 }}>
-              Recent Activity
-            </Text>
-            <TouchableOpacity
-              onPress={() => router.push('/(tabs)/transactions')}
-              activeOpacity={0.7}
-              style={{ flexDirection: 'row', alignItems: 'center' }}
-            >
-              <Text style={{ fontSize: 12, fontWeight: '700', color: '#D5E726', marginRight: 4 }}>See All</Text>
-              <Feather name="arrow-right" size={13} color="#D5E726" />
-            </TouchableOpacity>
-          </View>
-
-          {transactions.length === 0 ? (
-            <View style={{
-              paddingVertical: 36, borderRadius: 20, alignItems: 'center',
-              backgroundColor: isDark ? '#161814' : '#FFFFFF',
-              borderWidth: 1, borderColor: isDark ? '#2F332B' : '#E2E8F0',
-            }}>
-              <Feather name="inbox" size={28} color={isDark ? '#2F332B' : '#E2E8F0'} />
-              <Text style={{ fontSize: 13, fontWeight: '600', color: isDark ? '#4B5563' : '#9CA3AF', marginTop: 10 }}>
-                No transactions yet
-              </Text>
-            </View>
-          ) : (
-            <View style={{ gap: 10 }}>
-              {transactions.map((tx) => {
-                const meta = getTxMeta(tx);
-                const date = new Date(tx.created_at);
-                const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-
-                return (
-                  <View
-                    key={tx.id}
-                    style={{
-                      padding: 14, borderRadius: 18,
-                      backgroundColor: isDark ? '#161814' : '#FFFFFF',
-                      borderWidth: 1, borderColor: isDark ? '#2F332B' : '#E2E8F0',
-                      flexDirection: 'row', alignItems: 'center',
-                    }}
-                  >
-                    <View style={{
-                      width: 44, height: 44, borderRadius: 14,
-                      backgroundColor: meta.bg, alignItems: 'center', justifyContent: 'center',
-                      marginRight: 12,
-                    }}>
-                      <Feather name={meta.icon} size={19} color={meta.color} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 13, fontWeight: '700', color: isDark ? '#FFFFFF' : '#0A0B09' }}>
-                        {meta.label}
-                      </Text>
-                      <Text style={{ fontSize: 11, color: isDark ? '#6B7280' : '#9CA3AF', marginTop: 2 }}>
-                        {dateStr} · {timeStr}
-                      </Text>
-                    </View>
-                    <Text style={{ fontSize: 14, fontWeight: '800', color: meta.color }}>
-                      {meta.sign}{tx.amount.toLocaleString()} Ks
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-          )}
-        </View>
+        {/* Recent Activity removed per user request */}
       </ScrollView>
 
-      {/* Float Menu Button */}
-      <FloatMenuButton onPress={() => setFloatMenuVisible(true)} />
-      <FloatMenu isVisible={floatMenuVisible} onClose={() => setFloatMenuVisible(false)} />
+
+      {/* ── NOTIFICATIONS MODAL ── */}
+      <Modal visible={notificationsModalVisible} animationType="slide" transparent onRequestClose={() => setNotificationsModalVisible(false)}>
+        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: `${colors.background}B3` }}>
+          <View style={{
+            maxHeight: '80%', borderTopLeftRadius: 28, borderTopRightRadius: 28,
+            backgroundColor: colors.surface,
+            borderTopWidth: 1, borderTopColor: colors.border,
+            paddingTop: 12, paddingBottom: 24,
+          }}>
+            {/* Handle */}
+            <View style={{ alignItems: 'center', paddingVertical: 6 }}>
+              <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
+            </View>
+
+            {/* Title row */}
+            <View style={{ paddingHorizontal: 24, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={{ fontSize: 20, fontWeight: '800', color: colors.text }}>
+                  Notifications
+                </Text>
+                {notifications.length > 0 && (
+                  <View style={{
+                    marginLeft: 8, paddingHorizontal: 8, paddingVertical: 2,
+                    borderRadius: 10, backgroundColor: `${colors.primary}33`,
+                  }}>
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: colors.primary }}>
+                      {notifications.length}
+                    </Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                {notifications.length > 0 && (
+                  <TouchableOpacity onPress={handleClearAllNotifs} activeOpacity={0.7}>
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: colors.error }}>
+                      Clear All
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={() => setNotificationsModalVisible(false)} activeOpacity={0.7}>
+                  <View style={{
+                    width: 32, height: 32, borderRadius: 16,
+                    backgroundColor: isDark ? colors.background : `${colors.border}33`,
+                    alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Feather name="x" size={16} color={colors.text} />
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Notification List */}
+            <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 10, paddingBottom: 20 }}>
+              {notifications.length === 0 ? (
+                <View style={{ paddingVertical: 48, alignItems: 'center' }}>
+                  <View style={{
+                    width: 56, height: 56, borderRadius: 28,
+                    backgroundColor: `${colors.border}33`,
+                    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+                  }}>
+                    <Feather name="bell-off" size={24} color={colors.textSecondary} />
+                  </View>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textSecondary }}>
+                    No notifications yet
+                  </Text>
+                  <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 4 }}>
+                    Incoming money alerts will appear here
+                  </Text>
+                </View>
+              ) : (
+                notifications.map((n) => {
+                  const date = new Date(n.timestamp);
+                  const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                  const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+                  return (
+                    <View
+                      key={n.id}
+                      style={{
+                        padding: 14, borderRadius: 16,
+                        backgroundColor: isDark ? colors.background : `${colors.border}22`,
+                        borderWidth: 1, borderColor: colors.border,
+                        marginBottom: 10,
+                        flexDirection: 'row', alignItems: 'center',
+                      }}
+                    >
+                      <View style={{
+                        width: 42, height: 42, borderRadius: 14,
+                        backgroundColor: `${colors.primary}26`,
+                        alignItems: 'center', justifyContent: 'center',
+                        marginRight: 12,
+                      }}>
+                        <Feather name="arrow-down-left" size={20} color={colors.primary} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 13, fontWeight: '800', color: colors.text }}>
+                          {n.title}
+                        </Text>
+                        <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
+                          {n.message}
+                        </Text>
+                        <Text style={{ fontSize: 10, color: colors.textSecondary, marginTop: 4 }}>
+                          {dateStr} • {timeStr}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       {/* ── LOGOUT CONFIRMATION MODAL BOX ── */}
       <Modal visible={logoutModalVisible} animationType="fade" transparent onRequestClose={() => setLogoutModalVisible(false)}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', paddingHorizontal: 24 }}>
           <View style={{
             width: '100%', maxWidth: 340, borderRadius: 24, padding: 24,
-            backgroundColor: isDark ? '#161814' : '#FFFFFF',
-            borderWidth: 1, borderColor: isDark ? '#2F332B' : '#E2E8F0',
+            backgroundColor: colors.surface,
+            borderWidth: 1, borderColor: colors.border,
             alignItems: 'center',
           }}>
             <View style={{
               width: 56, height: 56, borderRadius: 28,
-              backgroundColor: 'rgba(239,68,68,0.12)',
+              backgroundColor: `${colors.error}1F`,
               alignItems: 'center', justifyContent: 'center',
               marginBottom: 16,
             }}>
-              <Feather name="log-out" size={24} color="#EF4444" />
+              <Feather name="log-out" size={24} color={colors.error} />
             </View>
 
-            <Text style={{ fontSize: 18, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09', textAlign: 'center' }}>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text, textAlign: 'center' }}>
               Sign Out
             </Text>
-            <Text style={{ fontSize: 13, color: isDark ? '#9CA3AF' : '#6B7280', textAlign: 'center', marginTop: 6, marginBottom: 24 }}>
+            <Text style={{ fontSize: 13, color: colors.textSecondary, textAlign: 'center', marginTop: 6, marginBottom: 24 }}>
               Are you sure you want to sign out of your account?
             </Text>
 
@@ -483,11 +624,11 @@ export default function DashboardScreen() {
                 disabled={loggingOut}
                 style={{
                   flex: 1, paddingVertical: 14, borderRadius: 14,
-                  backgroundColor: isDark ? '#232620' : '#F1F5F9',
+                  backgroundColor: colors.border,
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ fontSize: 14, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textSecondary }}>
                   Cancel
                 </Text>
               </TouchableOpacity>
@@ -499,13 +640,13 @@ export default function DashboardScreen() {
               >
                 <View style={{
                   paddingVertical: 14, borderRadius: 14,
-                  backgroundColor: '#EF4444',
+                  backgroundColor: colors.error,
                   alignItems: 'center', justifyContent: 'center',
                 }}>
                   {loggingOut ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <ActivityIndicator size="small" color={colors.text} />
                   ) : (
-                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>
+                    <Text style={{ fontSize: 14, fontWeight: '800', color: colors.text }}>
                       Sign Out
                     </Text>
                   )}

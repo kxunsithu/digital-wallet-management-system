@@ -1,10 +1,37 @@
+// providers/ThemeProvider.tsx
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import * as SecureStore from 'expo-secure-store';
 
 type Theme = 'dark' | 'light';
 
+// Colors from tailwind.config.js - central source of truth
+const COLORS = {
+  primary: '#D5E726',
+  secondary: '#10110E',
+  background: '#0A0B09',
+  surface: '#161814',
+  text: '#FFFFFF',
+  textSecondary: '#C7C7C7',
+  border: '#2F332B',
+  error: '#FF4D4F',
+  success: '#52C41A',
+};
+
+// Light theme overrides
+const LIGHT_COLORS = {
+  ...COLORS,
+  background: '#FAFAFA',
+  surface: '#FFFFFF',
+  text: '#0A0B09',
+  textSecondary: '#6B7280',
+  border: '#E2E8F0',
+};
+
+type ThemeColors = typeof COLORS;
+
 type ThemeContextValue = {
   theme: Theme;
+  colors: ThemeColors;
   toggleTheme: () => Promise<void>;
   setTheme: (t: Theme) => Promise<void>;
 };
@@ -14,6 +41,9 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<Theme>('dark');
   const mountedRef = useRef(true);
+
+  // Get colors based on current theme
+  const colors = theme === 'dark' ? COLORS : LIGHT_COLORS;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -47,7 +77,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, colors, toggleTheme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );

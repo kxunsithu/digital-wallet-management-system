@@ -1,10 +1,10 @@
 // app/cash-in.tsx
-import { 
-  Text, 
-  View, 
-  TextInput, 
-  TouchableOpacity, 
-  ScrollView, 
+import {
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
@@ -19,6 +19,7 @@ import { CameraView, Camera } from "expo-camera";
 import Toast from "react-native-toast-message";
 import apiFetch from "../lib/api";
 import { LinearGradient } from "expo-linear-gradient";
+import TransferReceiptModal, { ReceiptTransaction } from "../components/TransferReceiptModal";
 
 type QrLookupResult = {
   id: number;
@@ -44,7 +45,7 @@ export default function CashInScreen() {
   const params = useLocalSearchParams();
   const shouldAutoScan = params.scan === 'true';
 
-  const { theme } = useTheme();
+  const { theme, colors } = useTheme();
   const isDark = theme === 'dark';
 
   const [customerPhone, setCustomerPhone] = useState("");
@@ -55,6 +56,10 @@ export default function CashInScreen() {
   // PIN Modal state
   const [pinModalVisible, setPinModalVisible] = useState(false);
   const [pin, setPin] = useState("");
+
+  // Receipt Modal state
+  const [receiptVisible, setReceiptVisible] = useState(false);
+  const [receiptTransaction, setReceiptTransaction] = useState<ReceiptTransaction | null>(null);
 
   const [selectedCustomerQr, setSelectedCustomerQr] = useState<QrLookupResult | null>(null);
   const [scannerVisible, setScannerVisible] = useState(shouldAutoScan);
@@ -158,12 +163,27 @@ export default function CashInScreen() {
 
       if (res.status === 200 && res.body?.success) {
         setPinModalVisible(false);
-        Toast.show({ 
-          type: "success", 
-          text1: "Customer Cash In Successful", 
-          text2: `Transferred ${Number(amount).toLocaleString()} MMK to customer` 
+        const txData = res.body.data;
+        setReceiptTransaction({
+          id: txData?.id,
+          transaction_number: txData?.transaction_number || 'N/A',
+          transaction_type: txData?.transaction_type || 'agent_to_customer',
+          amount: Number(txData?.amount || amount),
+          fee: Number(txData?.fee || 0),
+          sender_name: txData?.sender_name,
+          sender_phone: txData?.sender_phone,
+          receiver_name: txData?.receiver_name || selectedCustomerQr?.user?.full_name,
+          receiver_phone: txData?.receiver_phone || customerPhone,
+          description: txData?.description || description,
+          status: txData?.status || 'completed',
+          created_at: txData?.created_at,
         });
-        router.back();
+        setReceiptVisible(true);
+        Toast.show({
+          type: "success",
+          text1: "Customer Cash In Successful",
+          text2: `Transferred ${Number(amount).toLocaleString()} MMK to customer`
+        });
       } else {
         const msg = res.body?.message ?? "Could not complete transfer";
         if (msg.toLowerCase().includes("only transfer to customers")) {
@@ -216,10 +236,10 @@ export default function CashInScreen() {
 
         if (qrData.user?.role && qrData.user.role !== "customer") {
           const roleDisplay = qrData.user.role.replace(/_/g, ' ');
-          Toast.show({ 
-            type: "error", 
-            text1: "Role Restricted 🛑", 
-            text2: `Scanned user is an ${roleDisplay}. Customer Transfer ONLY accepts Customer accounts.` 
+          Toast.show({
+            type: "error",
+            text1: "Role Restricted 🛑",
+            text2: `Scanned user is an ${roleDisplay}. Customer Transfer ONLY accepts Customer accounts.`
           });
           setSelectedCustomerQr(null);
           setRoleValidationError(`Scanned user is an ${roleDisplay}. Customer Transfer ONLY accepts Customer accounts.`);
@@ -232,10 +252,10 @@ export default function CashInScreen() {
         setPhoneLookupUser({ full_name: qrData.user?.full_name, role: 'customer' });
         setRoleValidationError(null);
         setScannerVisible(false);
-        Toast.show({ 
-          type: "success", 
-          text1: "Customer QR Scanned", 
-          text2: `${qrData.user?.full_name ?? qrData.user?.phone_number ?? "Customer"} verified.` 
+        Toast.show({
+          type: "success",
+          text1: "Customer QR Scanned",
+          text2: `${qrData.user?.full_name ?? qrData.user?.phone_number ?? "Customer"} verified.`
         });
       } else {
         Toast.show({ type: "error", text1: "Lookup Failed", text2: res.body?.message ?? "Could not recognize QR code." });
@@ -264,48 +284,44 @@ export default function CashInScreen() {
   }, [scannerVisible]);
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: isDark ? '#0A0B09' : '#FAFAFA' }}>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
       <View style={{
         paddingHorizontal: 24, paddingTop: 16, paddingBottom: 16,
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        borderBottomWidth: 1, borderBottomColor: isDark ? '#1F221B' : '#E2E8F0',
+        borderBottomWidth: 1, borderBottomColor: colors.border,
       }}>
         <TouchableOpacity
           onPress={() => router.back()}
           style={{
             width: 40, height: 40, borderRadius: 20,
-            backgroundColor: isDark ? '#161814' : '#FFFFFF',
+            backgroundColor: colors.surface,
             alignItems: 'center', justifyContent: 'center',
-            borderWidth: 1, borderColor: isDark ? '#2F332B' : '#E2E8F0',
+            borderWidth: 1, borderColor: colors.border,
           }}
           activeOpacity={0.7}
         >
-          <Feather name="arrow-left" size={20} color={isDark ? "#FFFFFF" : "#0A0B09"} />
+          <Feather name="arrow-left" size={20} color={colors.text} />
         </TouchableOpacity>
 
         <View style={{ alignItems: 'center' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Feather name="user" size={16} color="#D5E726" style={{ marginRight: 6 }} />
-            <Text style={{ fontSize: 18, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09' }}>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text }}>
               Customer Money Transfer
             </Text>
           </View>
-          <Text style={{ fontSize: 11, color: isDark ? '#6B7280' : '#9CA3AF', marginTop: 2 }}>
-            Transfer funds exclusively to Customer wallets
-          </Text>
         </View>
 
         <TouchableOpacity
           onPress={() => setScannerVisible(true)}
           style={{
             width: 40, height: 40, borderRadius: 20,
-            backgroundColor: 'rgba(213,231,38,0.15)',
+            backgroundColor: `${colors.primary}26`,
             alignItems: 'center', justifyContent: 'center',
           }}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="qrcode-scan" size={20} color="#D5E726" />
+          <MaterialCommunityIcons name="qrcode-scan" size={20} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -316,7 +332,7 @@ export default function CashInScreen() {
             {/* Phone & QR Selector */}
             <View>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8 }}>
                   Customer Phone Number
                 </Text>
                 <TouchableOpacity
@@ -324,8 +340,8 @@ export default function CashInScreen() {
                   style={{ flexDirection: 'row', alignItems: 'center' }}
                   activeOpacity={0.7}
                 >
-                  <MaterialCommunityIcons name="qrcode-scan" size={14} color="#D5E726" />
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#D5E726', marginLeft: 4 }}>
+                  <MaterialCommunityIcons name="qrcode-scan" size={14} color={colors.primary} />
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary, marginLeft: 4 }}>
                     Scan Customer QR
                   </Text>
                 </TouchableOpacity>
@@ -335,19 +351,19 @@ export default function CashInScreen() {
                 flexDirection: 'row', alignItems: 'center',
                 borderRadius: 16, borderWidth: 1.5,
                 borderColor: roleValidationError
-                  ? '#EF4444'
-                  : isDark ? '#2F332B' : '#E2E8F0',
-                backgroundColor: isDark ? '#161814' : '#FFFFFF',
+                  ? colors.error
+                  : colors.border,
+                backgroundColor: colors.surface,
                 paddingHorizontal: 16,
               }}>
-                <Feather name="phone" size={18} color={roleValidationError ? '#EF4444' : (isDark ? '#6B7280' : '#9CA3AF')} style={{ marginRight: 10 }} />
+                <Feather name="phone" size={18} color={roleValidationError ? colors.error : colors.textSecondary} style={{ marginRight: 10 }} />
                 <TextInput
                   placeholder="09xxxxxxxx"
-                  placeholderTextColor={isDark ? "#4B5563" : "#94A3B8"}
+                  placeholderTextColor={colors.textSecondary}
                   style={{
                     flex: 1, paddingVertical: 14,
                     fontSize: 16, fontWeight: '600',
-                    color: roleValidationError ? '#EF4444' : (isDark ? "#FFFFFF" : "#0A0B09"),
+                    color: roleValidationError ? colors.error : (colors.text),
                   }}
                   value={customerPhone}
                   onChangeText={(val) => {
@@ -359,7 +375,7 @@ export default function CashInScreen() {
                   keyboardType="phone-pad"
                 />
                 {phoneLookupLoading && (
-                  <ActivityIndicator size="small" color="#D5E726" style={{ marginLeft: 8 }} />
+                  <ActivityIndicator size="small" color={colors.primary} style={{ marginLeft: 8 }} />
                 )}
               </View>
 
@@ -367,12 +383,12 @@ export default function CashInScreen() {
               {roleValidationError && (
                 <View style={{
                   marginTop: 8, padding: 10, borderRadius: 12,
-                  backgroundColor: 'rgba(239,68,68,0.1)',
-                  borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)',
+                  backgroundColor: `${colors.error}1A`,
+                  borderWidth: 1, borderColor: `${colors.error}33`,
                   flexDirection: 'row', alignItems: 'center',
                 }}>
-                  <Feather name="alert-circle" size={15} color="#EF4444" style={{ marginRight: 6 }} />
-                  <Text style={{ fontSize: 11, color: '#EF4444', flex: 1, fontWeight: '600' }}>
+                  <Feather name="alert-circle" size={15} color={colors.error} style={{ marginRight: 6 }} />
+                  <Text style={{ fontSize: 11, color: colors.error, flex: 1, fontWeight: '600' }}>
                     {roleValidationError}
                   </Text>
                 </View>
@@ -382,18 +398,18 @@ export default function CashInScreen() {
               {!roleValidationError && (phoneLookupUser || selectedCustomerQr) && (
                 <View style={{
                   marginTop: 10, padding: 12, borderRadius: 14,
-                  backgroundColor: 'rgba(213,231,38,0.1)',
-                  borderWidth: 1, borderColor: 'rgba(213,231,38,0.3)',
+                  backgroundColor: `${colors.primary}1A`,
+                  borderWidth: 1, borderColor: `${colors.primary}4D`,
                   flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
                 }}>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Feather name="check-circle" size={14} color="#D5E726" style={{ marginRight: 6 }} />
-                      <Text style={{ fontSize: 12, fontWeight: '700', color: isDark ? '#D5E726' : '#718300' }}>
+                      <Feather name="check-circle" size={14} color={colors.primary} style={{ marginRight: 6 }} />
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>
                         Customer: {selectedCustomerQr?.user?.full_name ?? phoneLookupUser?.full_name ?? selectedCustomerQr?.user?.phone_number ?? customerPhone}
                       </Text>
                     </View>
-                    <Text style={{ fontSize: 10, color: isDark ? '#9CA3AF' : '#6B7280', marginTop: 2, marginLeft: 20 }}>
+                    <Text style={{ fontSize: 10, color: colors.textSecondary, marginTop: 2, marginLeft: 20 }}>
                       Verified Customer Account ✓
                     </Text>
                   </View>
@@ -406,7 +422,7 @@ export default function CashInScreen() {
                     }}
                     style={{ padding: 4 }}
                   >
-                    <Feather name="x" size={16} color={isDark ? '#D5E726' : '#718300'} />
+                    <Feather name="x" size={16} color={colors.primary} />
                   </TouchableOpacity>
                 </View>
               )}
@@ -414,26 +430,26 @@ export default function CashInScreen() {
 
             {/* Amount Input */}
             <View>
-              <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
                 Cash In Amount (MMK)
               </Text>
               <View style={{
                 flexDirection: 'row', alignItems: 'center',
                 borderRadius: 16, borderWidth: 1.5,
-                borderColor: isDark ? '#2F332B' : '#E2E8F0',
-                backgroundColor: isDark ? '#161814' : '#FFFFFF',
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
                 paddingHorizontal: 16,
               }}>
-                <Text style={{ fontSize: 18, fontWeight: '800', color: '#D5E726', marginRight: 10 }}>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: colors.primary, marginRight: 10 }}>
                   Ks
                 </Text>
                 <TextInput
                   placeholder="0"
-                  placeholderTextColor={isDark ? "#4B5563" : "#94A3B8"}
+                  placeholderTextColor={colors.textSecondary}
                   style={{
                     flex: 1, paddingVertical: 14,
                     fontSize: 22, fontWeight: '800',
-                    color: isDark ? "#FFFFFF" : "#0A0B09",
+                    color: colors.text,
                   }}
                   value={amount}
                   onChangeText={setAmount}
@@ -452,14 +468,14 @@ export default function CashInScreen() {
                       style={{
                         paddingHorizontal: 12, paddingVertical: 6,
                         borderRadius: 12,
-                        backgroundColor: amount === amt.toString() ? '#D5E726' : (isDark ? '#161814' : '#FFFFFF'),
+                        backgroundColor: amount === amt.toString() ? colors.primary : (colors.surface),
                         borderWidth: 1,
-                        borderColor: amount === amt.toString() ? '#D5E726' : (isDark ? '#2F332B' : '#E2E8F0'),
+                        borderColor: amount === amt.toString() ? colors.primary : colors.border,
                       }}
                     >
                       <Text style={{
                         fontSize: 11, fontWeight: '700',
-                        color: amount === amt.toString() ? '#0A0B09' : (isDark ? '#9CA3AF' : '#6B7280'),
+                        color: amount === amt.toString() ? colors.secondary : colors.textSecondary,
                       }}>
                         +{amt.toLocaleString()}
                       </Text>
@@ -471,17 +487,17 @@ export default function CashInScreen() {
 
             {/* Description */}
             <View>
-              <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+              <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
                 Description (Optional)
               </Text>
               <TextInput
                 placeholder="e.g. Deposit, Service payment"
-                placeholderTextColor={isDark ? "#4B5563" : "#94A3B8"}
+                placeholderTextColor={colors.textSecondary}
                 style={{
                   padding: 14, borderRadius: 16, borderWidth: 1.5,
-                  borderColor: isDark ? '#2F332B' : '#E2E8F0',
-                  backgroundColor: isDark ? '#161814' : '#FFFFFF',
-                  fontSize: 14, color: isDark ? "#FFFFFF" : "#0A0B09",
+                  borderColor: colors.border,
+                  backgroundColor: colors.surface,
+                  fontSize: 14, color: colors.text,
                 }}
                 value={description}
                 onChangeText={setDescription}
@@ -496,11 +512,11 @@ export default function CashInScreen() {
               style={{ marginTop: 14, opacity: roleValidationError ? 0.6 : 1 }}
             >
               <LinearGradient
-                colors={['#D5E726', '#C4D420']}
+                colors={[colors.primary, `${colors.primary}CC`]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}
               >
-                <Text style={{ fontSize: 16, fontWeight: '800', color: '#0A0B09' }}>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: colors.secondary }}>
                   Proceed to Deposit
                 </Text>
               </LinearGradient>
@@ -517,40 +533,40 @@ export default function CashInScreen() {
             <View style={{
               borderTopLeftRadius: 28, borderTopRightRadius: 28,
               padding: 24,
-              backgroundColor: isDark ? '#161814' : '#FFFFFF',
-              borderTopWidth: 1, borderTopColor: isDark ? '#2F332B' : '#E2E8F0',
+              backgroundColor: colors.surface,
+              borderTopWidth: 1, borderTopColor: colors.border,
             }}>
               <View style={{ alignItems: 'center', marginBottom: 16 }}>
-                <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: isDark ? '#2F332B' : '#E2E8F0' }} />
+                <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
               </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <View>
-                  <Text style={{ fontSize: 18, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09' }}>
+                  <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text }}>
                     Verify Security PIN
                   </Text>
-                  <Text style={{ fontSize: 12, color: isDark ? '#6B7280' : '#9CA3AF', marginTop: 2 }}>
+                  <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
                     Confirm deposit of {Number(amount).toLocaleString()} MMK
                   </Text>
                 </View>
                 <TouchableOpacity onPress={() => setPinModalVisible(false)}>
-                  <Feather name="x" size={20} color={isDark ? '#FFFFFF' : '#0A0B09'} />
+                  <Feather name="x" size={20} color={colors.text} />
                 </TouchableOpacity>
               </View>
 
               <View style={{ marginBottom: 20 }}>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8, textAlign: 'center' }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8, textAlign: 'center' }}>
                   Enter 4-Digit Security PIN
                 </Text>
                 <TextInput
                   placeholder="• • • •"
-                  placeholderTextColor={isDark ? '#4B5563' : '#9CA3AF'}
+                  placeholderTextColor={colors.textSecondary}
                   style={{
                     padding: 16, borderRadius: 16, borderWidth: 2,
-                    borderColor: '#D5E726',
-                    backgroundColor: isDark ? '#0A0B09' : '#F8FAFC',
+                    borderColor: colors.primary,
+                    backgroundColor: isDark ? colors.background : `${colors.border}22`,
                     fontSize: 24, fontWeight: '900', textAlign: 'center', letterSpacing: 14,
-                    color: isDark ? '#FFFFFF' : '#0A0B09',
+                    color: colors.text,
                   }}
                   value={pin}
                   onChangeText={(val) => {
@@ -572,11 +588,11 @@ export default function CashInScreen() {
                   disabled={submitting}
                   style={{
                     flex: 1, paddingVertical: 14, borderRadius: 14,
-                    backgroundColor: isDark ? '#232620' : '#F1F5F9',
+                    backgroundColor: colors.border,
                     alignItems: 'center',
                   }}
                 >
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textSecondary }}>
                     Cancel
                   </Text>
                 </TouchableOpacity>
@@ -589,13 +605,13 @@ export default function CashInScreen() {
                   }}
                 >
                   <LinearGradient
-                    colors={['#D5E726', '#C4D420']}
+                    colors={[colors.primary, `${colors.primary}CC`]}
                     style={{ paddingVertical: 14, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}
                   >
                     {submitting ? (
-                      <ActivityIndicator size="small" color="#0A0B09" />
+                      <ActivityIndicator size="small" color={colors.secondary} />
                     ) : (
-                      <Text style={{ fontSize: 14, fontWeight: '800', color: '#0A0B09' }}>
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: colors.secondary }}>
                         Confirm Deposit
                       </Text>
                     )}
@@ -609,24 +625,24 @@ export default function CashInScreen() {
 
       {/* QR Scanner Modal */}
       <Modal visible={scannerVisible} animationType="slide" transparent>
-        <View style={{ flex: 1, backgroundColor: '#000000' }}>
+        <View style={{ flex: 1, backgroundColor: colors.background }}>
           {hasCameraPermission === false ? (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
               <View style={{
                 borderRadius: 24, padding: 24, width: '100%',
-                backgroundColor: isDark ? '#161814' : '#FFFFFF',
+                backgroundColor: colors.surface,
               }}>
-                <Text style={{ fontSize: 18, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09', marginBottom: 8 }}>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text, marginBottom: 8 }}>
                   Camera Access Needed
                 </Text>
-                <Text style={{ fontSize: 13, color: isDark ? '#9CA3AF' : '#6B7280', marginBottom: 20 }}>
+                <Text style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 20 }}>
                   Please enable camera permission to scan customer QR codes.
                 </Text>
                 <TouchableOpacity
                   onPress={() => setScannerVisible(false)}
-                  style={{ paddingVertical: 12, borderRadius: 14, backgroundColor: '#D5E726', alignItems: 'center' }}
+                  style={{ paddingVertical: 12, borderRadius: 14, backgroundColor: colors.primary, alignItems: 'center' }}
                 >
-                  <Text style={{ fontWeight: '700', color: '#0A0B09' }}>Close</Text>
+                  <Text style={{ fontWeight: '700', color: colors.secondary }}>Close</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -640,28 +656,28 @@ export default function CashInScreen() {
                 active
               />
               <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 24 }}>
-                <View style={{ borderRadius: 24, backgroundColor: 'rgba(0,0,0,0.85)', padding: 20 }}>
+                <View style={{ borderRadius: 24, backgroundColor: `${colors.background}EE`, padding: 20 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#FFFFFF' }}>Scan Customer QR Code</Text>
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text }}>Scan Customer QR Code</Text>
                     <TouchableOpacity onPress={() => setScannerVisible(false)}>
-                      <Feather name="x" size={20} color="#FFFFFF" />
+                      <Feather name="x" size={20} color={colors.text} />
                     </TouchableOpacity>
                   </View>
                   {scanError ? (
-                    <Text style={{ fontSize: 12, color: '#EF4444', marginBottom: 12 }}>{scanError}</Text>
+                    <Text style={{ fontSize: 12, color: colors.error, marginBottom: 12 }}>{scanError}</Text>
                   ) : (
-                    <Text style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 12 }}>
+                    <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 12 }}>
                       Align the customer's QR code within the frame to scan.
                     </Text>
                   )}
                   {qrScanLoading && (
-                    <ActivityIndicator size="small" color="#D5E726" style={{ marginBottom: 12 }} />
+                    <ActivityIndicator size="small" color={colors.primary} style={{ marginBottom: 12 }} />
                   )}
                   <TouchableOpacity
                     onPress={() => setScannerVisible(false)}
-                    style={{ borderRadius: 14, backgroundColor: '#FFFFFF', paddingVertical: 12, alignItems: 'center' }}
+                    style={{ borderRadius: 14, backgroundColor: colors.primary, paddingVertical: 12, alignItems: 'center' }}
                   >
-                    <Text style={{ fontWeight: '700', color: '#0A0B09' }}>Cancel</Text>
+                    <Text style={{ fontWeight: '700', color: colors.text }}>Cancel</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -669,6 +685,18 @@ export default function CashInScreen() {
           )}
         </View>
       </Modal>
+
+      {/* ── RECEIPT MODAL ── */}
+      <TransferReceiptModal
+        visible={receiptVisible}
+        onClose={() => {
+          setReceiptVisible(false);
+          setReceiptTransaction(null);
+          router.back();
+        }}
+        transaction={receiptTransaction}
+        isDark={isDark}
+      />
     </SafeAreaView>
   );
 }

@@ -1,22 +1,22 @@
 // app/auth/verify-otp.tsx
-import { useState, useRef, useEffect } from 'react';
-import {
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import {
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { useTheme } from '../../providers/ThemeProvider';
-import { verifyOtp, requestOtp, setPendingAuthRoute, clearPendingAuthRoute } from '../../services/auth';
-import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { clearPendingAuthRoute, requestOtp, setPendingAuthRoute, verifyOtp } from '../../services/auth';
 
 // Constants
 const OTP_LENGTH = 6;
@@ -27,7 +27,7 @@ const STEPS = ['Phone', 'OTP', 'PIN'];
 
 export default function VerifyOtpScreen() {
   const router = useRouter();
-  const { theme } = useTheme();
+  const { theme, colors } = useTheme();
   const isDark = theme === 'dark';
 
   const params = useLocalSearchParams();
@@ -179,7 +179,7 @@ export default function VerifyOtpScreen() {
   return (
     <SafeAreaView
       edges={['top', 'bottom']}
-      style={{ flex: 1, backgroundColor: isDark ? '#0A0B09' : '#FAFAFA' }}
+      style={{ flex: 1, backgroundColor: colors.background }}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -187,7 +187,7 @@ export default function VerifyOtpScreen() {
       >
         {/* Header */}
         <LinearGradient
-          colors={['#D5E726', '#A8B81A']}
+          colors={[colors.primary, `${colors.primary}CC`]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ paddingTop: 20, paddingBottom: 32, paddingHorizontal: 24 }}
@@ -197,13 +197,13 @@ export default function VerifyOtpScreen() {
             onPress={() => router.back()}
             style={{
               width: 40, height: 40, borderRadius: 20,
-              backgroundColor: 'rgba(0,0,0,0.15)',
+              backgroundColor: `${colors.secondary}26`,
               alignItems: 'center', justifyContent: 'center',
               marginBottom: 20,
             }}
             activeOpacity={0.7}
           >
-            <Feather name="arrow-left" size={20} color="#0A0B09" />
+            <Feather name="arrow-left" size={20} color={colors.secondary} />
           </TouchableOpacity>
 
           {/* Step Indicator */}
@@ -212,19 +212,19 @@ export default function VerifyOtpScreen() {
               <View key={step} style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View style={{
                   width: 28, height: 28, borderRadius: 14,
-                  backgroundColor: i <= 1 ? '#0A0B09' : 'rgba(0,0,0,0.2)',
+                  backgroundColor: i <= 1 ? colors.secondary : `${colors.secondary}33`,
                   alignItems: 'center', justifyContent: 'center',
                 }}>
                   {i < 1
-                    ? <Feather name="check" size={13} color="#D5E726" />
+                    ? <Feather name="check" size={13} color={colors.primary} />
                     : i === 1
-                      ? <Feather name="message-circle" size={13} color="#D5E726" />
-                      : <Text style={{ fontSize: 11, fontWeight: '700', color: 'rgba(0,0,0,0.5)' }}>{i + 1}</Text>
+                      ? <Feather name="message-circle" size={13} color={colors.primary} />
+                      : <Text style={{ fontSize: 11, fontWeight: '700', color: `${colors.secondary}80` }}>{i + 1}</Text>
                   }
                 </View>
                 <Text style={{
                   fontSize: 12, fontWeight: i === 1 ? '700' : '500',
-                  color: i <= 1 ? '#0A0B09' : 'rgba(0,0,0,0.5)',
+                  color: i <= 1 ? colors.secondary : `${colors.secondary}80`,
                   marginLeft: 6,
                 }}>
                   {step}
@@ -232,7 +232,7 @@ export default function VerifyOtpScreen() {
                 {i < STEPS.length - 1 && (
                   <View style={{
                     width: 24, height: 1.5,
-                    backgroundColor: i < 1 ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.2)',
+                    backgroundColor: i < 1 ? `${colors.secondary}66` : `${colors.secondary}33`,
                     marginHorizontal: 8,
                   }} />
                 )}
@@ -240,12 +240,12 @@ export default function VerifyOtpScreen() {
             ))}
           </View>
 
-          <Text style={{ fontSize: 22, fontWeight: '800', color: '#0A0B09', letterSpacing: -0.5 }}>
+          <Text style={{ fontSize: 22, fontWeight: '800', color: colors.secondary, letterSpacing: -0.5 }}>
             Verify Code
           </Text>
-          <Text style={{ fontSize: 13, color: 'rgba(0,0,0,0.6)', marginTop: 4 }}>
+          <Text style={{ fontSize: 13, color: `${colors.secondary}99`, marginTop: 4 }}>
             6-digit code sent to{' '}
-            <Text style={{ fontWeight: '700' }}>{phone}</Text>
+            <Text style={{ fontWeight: '700', color: colors.secondary }}>{phone}</Text>
           </Text>
         </LinearGradient>
 
@@ -273,7 +273,7 @@ export default function VerifyOtpScreen() {
                       maxLength={1}
                       keyboardType="number-pad"
                       editable={!loading && !resendLoading}
-                      selectionColor="#D5E726"
+                      selectionColor={colors.primary}
                       style={{
                         height: 56,
                         textAlign: 'center',
@@ -281,13 +281,13 @@ export default function VerifyOtpScreen() {
                         fontWeight: '800',
                         borderRadius: 14,
                         borderWidth: 2,
-                        borderColor: isFoc ? '#D5E726' : isFilled ? 'rgba(213,231,38,0.4)' : (isDark ? '#2F332B' : '#E2E8F0'),
+                        borderColor: isFoc ? colors.primary : isFilled ? `${colors.primary}66` : colors.border,
                         backgroundColor: isFoc
-                          ? (isDark ? '#1A1E10' : '#FAFFF0')
+                          ? `${colors.primary}1A`
                           : isFilled
-                            ? (isDark ? '#1A1E10' : '#F8FFE0')
-                            : (isDark ? '#161814' : '#FFFFFF'),
-                        color: isDark ? '#FFFFFF' : '#0A0B09',
+                            ? `${colors.primary}14`
+                            : (colors.surface),
+                        color: colors.text,
                       }}
                     />
                   </View>
@@ -301,12 +301,12 @@ export default function VerifyOtpScreen() {
                 <Feather
                   name="clock"
                   size={13}
-                  color={isOtpExpired ? '#EF4444' : '#D5E726'}
+                  color={isOtpExpired ? colors.error : colors.primary}
                 />
                 <Text style={{
                   fontSize: 12,
                   marginLeft: 5,
-                  color: isOtpExpired ? '#EF4444' : (isDark ? '#6B7280' : '#9CA3AF'),
+                  color: isOtpExpired ? colors.error : colors.textSecondary,
                   fontWeight: isOtpExpired ? '600' : '400',
                 }}>
                   {isOtpExpired ? 'Code expired' : `Expires in ${formatTime(timeLeft)}`}
@@ -315,7 +315,7 @@ export default function VerifyOtpScreen() {
 
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 {resendCount > 0 && (
-                  <Text style={{ fontSize: 11, color: isDark ? '#4B5563' : '#9CA3AF', marginRight: 6 }}>
+                  <Text style={{ fontSize: 11, color: colors.textSecondary, marginRight: 6 }}>
                     ({resendCount}/{MAX_RESEND_ATTEMPTS})
                   </Text>
                 )}
@@ -326,19 +326,19 @@ export default function VerifyOtpScreen() {
                     activeOpacity={0.7}
                   >
                     {resendLoading ? (
-                      <ActivityIndicator size="small" color="#D5E726" />
+                      <ActivityIndicator size="small" color={colors.primary} />
                     ) : (
                       <Text style={{
                         fontSize: 13,
                         fontWeight: '700',
-                        color: resendCount >= MAX_RESEND_ATTEMPTS ? (isDark ? '#4B5563' : '#CBD5E1') : '#D5E726',
+                        color: resendCount >= MAX_RESEND_ATTEMPTS ? colors.textSecondary : colors.primary,
                       }}>
                         {resendCount >= MAX_RESEND_ATTEMPTS ? 'Max attempts' : 'Resend OTP'}
                       </Text>
                     )}
                   </TouchableOpacity>
                 ) : (
-                  <Text style={{ fontSize: 12, color: isDark ? '#4B5563' : '#CBD5E1' }}>
+                  <Text style={{ fontSize: 12, color: colors.textSecondary }}>
                     {resendCount >= MAX_RESEND_ATTEMPTS ? 'Max attempts reached' : 'Wait to resend'}
                   </Text>
                 )}
@@ -353,7 +353,7 @@ export default function VerifyOtpScreen() {
               style={{ marginBottom: 16, opacity: isButtonDisabled ? 0.6 : 1 }}
             >
               <LinearGradient
-                colors={['#D5E726', '#C4D420']}
+                colors={[colors.primary, `${colors.primary}CC`]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{
@@ -366,18 +366,18 @@ export default function VerifyOtpScreen() {
               >
                 {loading ? (
                   <>
-                    <ActivityIndicator color="#0A0B09" size="small" />
-                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#0A0B09', marginLeft: 8 }}>
+                    <ActivityIndicator color={colors.secondary} size="small" />
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: colors.secondary, marginLeft: 8 }}>
                       Verifying...
                     </Text>
                   </>
                 ) : (
                   <>
-                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#0A0B09', marginRight: 8 }}>
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: colors.secondary, marginRight: 8 }}>
                       {isOtpExpired ? 'Code Expired' : isOtpComplete ? 'Verify & Continue' : 'Enter OTP'}
                     </Text>
                     {isOtpComplete && !isOtpExpired && (
-                      <Feather name="arrow-right" size={18} color="#0A0B09" />
+                      <Feather name="arrow-right" size={18} color={colors.secondary} />
                     )}
                   </>
                 )}
@@ -385,9 +385,9 @@ export default function VerifyOtpScreen() {
             </TouchableOpacity>
 
             {/* Security Note */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyURI: 'center', justifyContent: 'center' }}>
-              <Feather name="lock" size={12} color={isDark ? '#4B5563' : '#CBD5E1'} />
-              <Text style={{ fontSize: 11, marginLeft: 6, color: isDark ? '#4B5563' : '#9CA3AF' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+              <Feather name="lock" size={12} color={colors.textSecondary} />
+              <Text style={{ fontSize: 11, marginLeft: 6, color: colors.textSecondary }}>
                 Your code is encrypted and secure
               </Text>
             </View>
@@ -398,11 +398,11 @@ export default function VerifyOtpScreen() {
                 marginTop: 16,
                 padding: 12,
                 borderRadius: 12,
-                backgroundColor: 'rgba(239,68,68,0.1)',
+                backgroundColor: `${colors.error}1A`,
                 borderWidth: 1,
-                borderColor: 'rgba(239,68,68,0.2)',
+                borderColor: `${colors.error}33`,
               }}>
-                <Text style={{ fontSize: 12, color: '#EF4444', textAlign: 'center' }}>
+                <Text style={{ fontSize: 12, color: colors.error, textAlign: 'center' }}>
                   Maximum resend attempts reached. Please try again later.
                 </Text>
               </View>

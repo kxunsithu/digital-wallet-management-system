@@ -7,28 +7,28 @@ import { Feather } from '@expo/vector-icons';
 
 export default function CustomToast(props: BaseToastProps) {
   const { text1, text2, onPress } = props;
-  const { theme } = useTheme();
+  const { theme, colors } = useTheme();
   const type = (props as any)?.type as string | undefined;
   
   const isDark = theme === 'dark';
   const isError = type === 'error';
   const isSuccess = type === 'success';
 
-  const backgroundColor = isDark ? '#161814' : '#ffffff';
-  const textColor = isDark ? '#ffffff' : '#0a0b09';
-  const subTextColor = isDark ? '#c7c7c7' : '#64748b';
-  const borderColor = isDark ? '#2f332b' : '#e2e8f0';
+  const backgroundColor = colors.surface;
+  const textColor = colors.text;
+  const subTextColor = colors.textSecondary;
+  const borderColor = colors.border;
 
-  let statusColor = '#D5E726';
+  let statusColor = colors.primary;
   let iconName: keyof typeof Feather.glyphMap = 'info';
   let defaultTitle = 'Information';
 
   if (isSuccess) {
-    statusColor = '#D5E726';
+    statusColor = colors.primary;
     iconName = 'check-circle';
     defaultTitle = 'Success';
   } else if (isError) {
-    statusColor = '#ef4444';
+    statusColor = colors.error;
     iconName = 'alert-circle';
     defaultTitle = 'Error';
   }
@@ -44,7 +44,7 @@ export default function CustomToast(props: BaseToastProps) {
         styles.container, 
         { backgroundColor, borderColor },
         {
-          shadowColor: isDark ? '#D5E726' : '#000000',
+          shadowColor: isDark ? colors.primary : colors.secondary,
           shadowOpacity: isDark ? 0.1 : 0.06,
           shadowRadius: isDark ? 10 : 8,
           elevation: isDark ? 4 : 3,

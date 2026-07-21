@@ -14,6 +14,7 @@ import { useTheme } from "../../providers/ThemeProvider";
 import { Feather } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import apiFetch from "../../lib/api";
+import TransferReceiptModal, { ReceiptTransaction } from "../../components/TransferReceiptModal";
 
 interface Transaction {
   id: number;
@@ -38,20 +39,20 @@ const FILTER_OPTIONS = [
   { label: "Cash Out", value: "customer_to_agent" },
 ];
 
-const getTxMeta = (type: string) => {
+const getTxMeta = (type: string, colors: any) => {
   switch (type) {
     case 'agent_to_customer':
-      return { label: 'Cash In', icon: 'arrow-up-right' as const, color: '#D5E726', bg: 'rgba(213,231,38,0.12)', sign: '-' };
+      return { label: 'Cash In', icon: 'arrow-up-right' as const, color: colors.primary, bg: `${colors.primary}1F`, sign: '-' };
     case 'agent_to_agent_manager':
-      return { label: 'Float Return', icon: 'corner-right-up' as const, color: '#10b981', bg: 'rgba(16,185,129,0.12)', sign: '-' };
+      return { label: 'Float Return', icon: 'corner-right-up' as const, color: colors.success, bg: `${colors.success}1F`, sign: '-' };
     case 'agent_manager_to_agent':
-      return { label: 'Float Received', icon: 'corner-left-down' as const, color: '#10b981', bg: 'rgba(16,185,129,0.12)', sign: '+' };
+      return { label: 'Float Received', icon: 'corner-left-down' as const, color: colors.success, bg: `${colors.success}1F`, sign: '+' };
     case 'customer_to_agent':
-      return { label: 'Cash Out', icon: 'arrow-down-left' as const, color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', sign: '+' };
+      return { label: 'Cash Out', icon: 'arrow-down-left' as const, color: colors.primary, bg: `${colors.primary}1F`, sign: '+' };
     case 'customer_to_customer':
-      return { label: 'P2P Transfer', icon: 'repeat' as const, color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', sign: '±' };
+      return { label: 'P2P Transfer', icon: 'repeat' as const, color: colors.success, bg: `${colors.success}1F`, sign: '±' };
     default:
-      return { label: type.replace(/_/g, ' '), icon: 'activity' as const, color: '#6B7280', bg: 'rgba(107,114,128,0.12)', sign: '' };
+      return { label: type.replace(/_/g, ' '), icon: 'activity' as const, color: colors.textSecondary, bg: `${colors.textSecondary}1F`, sign: '' };
   }
 };
 
@@ -67,7 +68,7 @@ const formatDate = (dateStr: string) => {
 };
 
 export default function TransactionsScreen() {
-  const { theme } = useTheme();
+  const { theme, colors } = useTheme();
   const isDark = theme === 'dark';
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -76,6 +77,9 @@ export default function TransactionsScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<string>("all");
   const [isFocused, setIsFocused] = useState(false);
+
+  // Receipt Modal state
+  const [selectedTxForReceipt, setSelectedTxForReceipt] = useState<ReceiptTransaction | null>(null);
 
   const fetchTransactions = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
@@ -128,11 +132,11 @@ export default function TransactionsScreen() {
     if (item.type === 'header') {
       return (
         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8, marginTop: 4 }}>
-          <Text style={{ fontSize: 12, fontWeight: '700', color: isDark ? '#6B7280' : '#9CA3AF' }}>
+          <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textSecondary }}>
             {item.title}
           </Text>
-          <View style={{ flex: 1, height: 1, backgroundColor: isDark ? '#1F221B' : '#F1F5F9', marginLeft: 10 }} />
-          <Text style={{ fontSize: 10, color: isDark ? '#4B5563' : '#CBD5E1', marginLeft: 8 }}>
+          <View style={{ flex: 1, height: 1, backgroundColor: colors.border, marginLeft: 10 }} />
+          <Text style={{ fontSize: 10, color: colors.border, marginLeft: 8 }}>
             {item.count}
           </Text>
         </View>
@@ -140,7 +144,7 @@ export default function TransactionsScreen() {
     }
 
     const tx = item as Transaction;
-    const meta = getTxMeta(tx.transaction_type);
+    const meta = getTxMeta(tx.transaction_type, colors);
     const date = new Date(tx.created_at);
     const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     const counterparty = tx.transaction_type.startsWith('agent_to')
@@ -148,15 +152,17 @@ export default function TransactionsScreen() {
       : (tx.sender_name || tx.sender_phone);
 
     return (
-      <View
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => setSelectedTxForReceipt(tx)}
         style={{
           marginBottom: 10,
           borderRadius: 20,
           overflow: 'hidden',
-          backgroundColor: isDark ? '#161814' : '#FFFFFF',
+          backgroundColor: colors.surface,
           borderWidth: 1,
-          borderColor: isDark ? '#232620' : '#F0F4F8',
-          shadowColor: '#000',
+          borderColor: colors.border,
+          shadowColor: colors.secondary,
           shadowOffset: { width: 0, height: 1 },
           shadowOpacity: isDark ? 0 : 0.05,
           shadowRadius: 4,
@@ -165,7 +171,6 @@ export default function TransactionsScreen() {
       >
         {/* Left accent bar */}
         <View style={{ flexDirection: 'row' }}>
-          <View style={{ width: 3, backgroundColor: meta.color, borderTopLeftRadius: 20, borderBottomLeftRadius: 20 }} />
           <View style={{ flex: 1, padding: 14 }}>
             {/* Main row */}
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -182,24 +187,24 @@ export default function TransactionsScreen() {
               {/* Middle info */}
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 13, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09' }}>
+                  <Text style={{ fontSize: 13, fontWeight: '800', color: colors.text }}>
                     {meta.label}
                   </Text>
                   <View style={{
                     marginLeft: 8, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6,
                     backgroundColor: tx.status === 'completed'
-                      ? 'rgba(16,185,129,0.12)'
-                      : 'rgba(245,158,11,0.12)',
+                      ? `${colors.success}1F`
+                      : `${colors.primary}1F`,
                   }}>
                     <Text style={{
                       fontSize: 8, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase',
-                      color: tx.status === 'completed' ? '#10b981' : '#f59e0b',
+                      color: tx.status === 'completed' ? colors.success : colors.primary,
                     }}>
                       {tx.status}
                     </Text>
                   </View>
                 </View>
-                <Text style={{ fontSize: 11, color: isDark ? '#6B7280' : '#9CA3AF', marginTop: 2 }}>
+                <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>
                   {counterparty}
                 </Text>
               </View>
@@ -215,52 +220,45 @@ export default function TransactionsScreen() {
             <View style={{
               marginTop: 10, paddingTop: 10,
               borderTopWidth: 1,
-              borderTopColor: isDark ? '#1F221B' : '#F8FAFC',
+              borderTopColor: colors.border,
               flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
             }}>
-              <Text style={{ fontSize: 10, color: isDark ? '#374151' : '#CBD5E1', fontFamily: 'monospace' }}>
+              <Text style={{ fontSize: 10, color: colors.textSecondary, fontFamily: 'monospace' }}>
                 {tx.transaction_number}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 {tx.fee > 0 && (
-                  <Text style={{ fontSize: 10, color: isDark ? '#4B5563' : '#94A3B8', marginRight: 10 }}>
+                  <Text style={{ fontSize: 10, color: colors.textSecondary, marginRight: 10 }}>
                     Fee: {tx.fee.toLocaleString()} Ks
                   </Text>
                 )}
-                <Text style={{ fontSize: 10, color: isDark ? '#4B5563' : '#9CA3AF' }}>
-                  {timeStr}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Text style={{ fontSize: 10, color: colors.textSecondary }}>
+                    {timeStr}
+                  </Text>
+                  <Feather name="file-text" size={11} color={colors.primary} style={{ marginLeft: 4 }} />
+                </View>
               </View>
             </View>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: isDark ? '#0A0B09' : '#F8FAFC' }}>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: colors.background }}>
 
       {/* Header */}
       <View style={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 14 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View>
-            <Text style={{ fontSize: 26, fontWeight: '900', color: isDark ? '#FFFFFF' : '#0A0B09', letterSpacing: -0.8 }}>
+            <Text style={{ fontSize: 26, fontWeight: '900', color: colors.text, letterSpacing: -0.8 }}>
               History
             </Text>
-            <Text style={{ fontSize: 12, color: isDark ? '#6B7280' : '#9CA3AF', marginTop: 2 }}>
+            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
               {transactions.length} record{transactions.length !== 1 ? 's' : ''}
             </Text>
-          </View>
-          <View style={{
-            paddingHorizontal: 12, paddingVertical: 7,
-            borderRadius: 20,
-            backgroundColor: isDark ? '#161814' : '#FFFFFF',
-            borderWidth: 1, borderColor: isDark ? '#2F332B' : '#E2E8F0',
-            flexDirection: 'row', alignItems: 'center',
-          }}>
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: '#10b981', marginRight: 6 }} />
-            <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280' }}>Live</Text>
           </View>
         </View>
 
@@ -268,17 +266,17 @@ export default function TransactionsScreen() {
         <View style={{
           flexDirection: 'row', alignItems: 'center',
           marginTop: 14, borderRadius: 16, borderWidth: 1.5,
-          borderColor: isFocused ? '#D5E726' : (isDark ? '#2F332B' : '#E2E8F0'),
-          backgroundColor: isDark ? '#161814' : '#FFFFFF',
+          borderColor: isFocused ? colors.primary : colors.border,
+          backgroundColor: colors.surface,
           paddingHorizontal: 14,
         }}>
-          <Feather name="search" size={16} color={isDark ? '#6B7280' : '#9CA3AF'} />
+          <Feather name="search" size={16} color={colors.textSecondary} />
           <TextInput
             placeholder="Search transactions..."
-            placeholderTextColor={isDark ? '#4B5563' : '#94A3B8'}
+            placeholderTextColor={colors.textSecondary}
             style={{
               flex: 1, paddingVertical: 13, paddingLeft: 10,
-              fontSize: 14, color: isDark ? '#FFFFFF' : '#0A0B09',
+              fontSize: 14, color: colors.text,
             }}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -289,7 +287,7 @@ export default function TransactionsScreen() {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
-              <Feather name="x-circle" size={16} color={isDark ? '#6B7280' : '#9CA3AF'} />
+              <Feather name="x-circle" size={16} color={colors.textSecondary} />
             </TouchableOpacity>
           )}
         </View>
@@ -304,14 +302,14 @@ export default function TransactionsScreen() {
               style={{
                 paddingHorizontal: 14, paddingVertical: 8,
                 borderRadius: 20,
-                backgroundColor: filter === opt.value ? '#D5E726' : (isDark ? '#161814' : '#FFFFFF'),
+                backgroundColor: filter === opt.value ? colors.primary : (colors.surface),
                 borderWidth: 1,
-                borderColor: filter === opt.value ? '#D5E726' : (isDark ? '#2F332B' : '#E2E8F0'),
+                borderColor: filter === opt.value ? colors.primary : colors.border,
               }}
             >
               <Text style={{
                 fontSize: 11, fontWeight: '700',
-                color: filter === opt.value ? '#0A0B09' : (isDark ? '#9CA3AF' : '#6B7280'),
+                color: filter === opt.value ? colors.background : colors.textSecondary,
               }}>
                 {opt.label}
               </Text>
@@ -323,7 +321,7 @@ export default function TransactionsScreen() {
       {/* Transaction List */}
       {loading && !refreshing ? (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator size="large" color="#D5E726" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
         <FlatList
@@ -333,31 +331,39 @@ export default function TransactionsScreen() {
           contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120, paddingTop: 4 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#D5E726" colors={["#D5E726"]} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
           }
           ListEmptyComponent={
             <View style={{
               paddingVertical: 56, borderRadius: 24, alignItems: 'center',
-              backgroundColor: isDark ? '#161814' : '#FFFFFF',
-              borderWidth: 1, borderColor: isDark ? '#2F332B' : '#F0F4F8',
+              backgroundColor: colors.surface,
+              borderWidth: 1, borderColor: colors.border,
             }}>
               <View style={{
                 width: 72, height: 72, borderRadius: 24,
-                backgroundColor: isDark ? '#0A0B09' : '#F8FAFC',
+                backgroundColor: isDark ? colors.background : `${colors.border}33`,
                 alignItems: 'center', justifyContent: 'center', marginBottom: 16,
               }}>
-                <Feather name="inbox" size={30} color={isDark ? '#2F332B' : '#CBD5E1'} />
+                <Feather name="inbox" size={30} color={colors.border} />
               </View>
-              <Text style={{ fontSize: 16, fontWeight: '800', color: isDark ? '#4B5563' : '#94A3B8' }}>
+              <Text style={{ fontSize: 16, fontWeight: '800', color: colors.textSecondary }}>
                 No transactions
               </Text>
-              <Text style={{ fontSize: 12, color: isDark ? '#374151' : '#CBD5E1', marginTop: 6 }}>
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 6 }}>
                 Try a different filter or search
               </Text>
             </View>
           }
         />
       )}
+
+      {/* ── RECEIPT MODAL ── */}
+      <TransferReceiptModal
+        visible={!!selectedTxForReceipt}
+        onClose={() => setSelectedTxForReceipt(null)}
+        transaction={selectedTxForReceipt}
+        isDark={isDark}
+      />
     </SafeAreaView>
   );
 }

@@ -4,10 +4,26 @@ import "../../global.css";
 import { useEffect, useState, useRef } from "react";
 import * as SecureStore from "expo-secure-store";
 import { View, ActivityIndicator } from "react-native";
-import { ThemeProvider } from '../providers/ThemeProvider';
+import { ThemeProvider, useTheme } from '../providers/ThemeProvider';
 import Toast from 'react-native-toast-message';
 import CustomToast from '../components/CustomToast';
 import { getPendingAuthRoute, clearPendingAuthRoute, AUTH_TOKEN_KEY } from '../services/auth';
+
+function LoadingOverlay() {
+  const { colors } = useTheme();
+  return (
+    <View
+      style={{
+        position: 'absolute', inset: 0,
+        backgroundColor: colors.background,
+        alignItems: 'center', justifyContent: 'center',
+        zIndex: 999,
+      }}
+    >
+      <ActivityIndicator size="large" color={colors.primary} />
+    </View>
+  );
+}
 
 export default function RootLayout() {
   const [loading, setLoading] = useState(true);
@@ -80,18 +96,7 @@ export default function RootLayout() {
     <ThemeProvider>
       <View style={{ flex: 1 }}>
         <Stack screenOptions={{ headerShown: false }} />
-        {loading && (
-          <View 
-            style={{
-              position: 'absolute', inset: 0,
-              backgroundColor: '#0A0B09',
-              alignItems: 'center', justifyContent: 'center',
-              zIndex: 999,
-            }}
-          >
-            <ActivityIndicator size="large" color="#D5E726" />
-          </View>
-        )}
+        {loading && <LoadingOverlay />}
         <Toast
           config={{
             success: (props: any) => <CustomToast {...props} />,

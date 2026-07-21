@@ -32,7 +32,7 @@ export default function VerifyPinScreen() {
 
   const inputRefs = useRef<(TextInput | null)[]>([]);
   const router = useRouter();
-  const { theme } = useTheme();
+  const { theme, colors } = useTheme();
   const isDark = theme === 'dark';
 
   useEffect(() => {
@@ -91,7 +91,7 @@ export default function VerifyPinScreen() {
   return (
     <SafeAreaView
       edges={['top', 'bottom']}
-      style={{ flex: 1, backgroundColor: isDark ? '#0A0B09' : '#FAFAFA' }}
+      style={{ flex: 1, backgroundColor: colors.background }}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -99,7 +99,7 @@ export default function VerifyPinScreen() {
       >
         {/* Header */}
         <LinearGradient
-          colors={['#D5E726', '#A8B81A']}
+          colors={[colors.primary, `${colors.primary}CC`]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ paddingTop: 20, paddingBottom: 40, paddingHorizontal: 24 }}
@@ -108,16 +108,16 @@ export default function VerifyPinScreen() {
           <View style={{ marginBottom: 24 }}>
             <View style={{
               width: 52, height: 52, borderRadius: 16,
-              backgroundColor: 'rgba(0,0,0,0.15)',
+              backgroundColor: `${colors.secondary}26`,
               alignItems: 'center', justifyContent: 'center',
               marginBottom: 12,
             }}>
-              <Feather name="shield" size={24} color="#0A0B09" />
+              <Feather name="shield" size={24} color={colors.secondary} />
             </View>
-            <Text style={{ fontSize: 22, fontWeight: '800', color: '#0A0B09', letterSpacing: -0.5 }}>
+            <Text style={{ fontSize: 22, fontWeight: '800', color: colors.secondary, letterSpacing: -0.5 }}>
               Enter Your PIN
             </Text>
-            <Text style={{ fontSize: 13, color: 'rgba(0,0,0,0.6)', marginTop: 4 }}>
+            <Text style={{ fontSize: 13, color: `${colors.secondary}99`, marginTop: 4 }}>
               Enter your 4-digit security PIN to access your account
             </Text>
           </View>
@@ -129,7 +129,7 @@ export default function VerifyPinScreen() {
                 key={i}
                 style={{
                   width: 16, height: 16, borderRadius: 8,
-                  backgroundColor: pin[i] !== '' ? '#0A0B09' : 'rgba(0,0,0,0.2)',
+                  backgroundColor: pin[i] !== '' ? colors.secondary : `${colors.secondary}33`,
                 }}
               />
             ))}
@@ -149,21 +149,21 @@ export default function VerifyPinScreen() {
                 marginBottom: 20,
                 padding: 12,
                 borderRadius: 12,
-                backgroundColor: failCount >= 3 ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.1)',
+                backgroundColor: failCount >= 3 ? `${colors.error}26` : `${colors.primary}1A`,
                 borderWidth: 1,
-                borderColor: failCount >= 3 ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.2)',
+                borderColor: failCount >= 3 ? `${colors.error}4D` : `${colors.primary}33`,
                 flexDirection: 'row',
                 alignItems: 'center',
               }}>
                 <Feather
                   name="alert-triangle"
                   size={14}
-                  color={failCount >= 3 ? '#EF4444' : '#F59E0B'}
+                  color={failCount >= 3 ? colors.error : colors.primary}
                 />
                 <Text style={{
                   fontSize: 12,
                   marginLeft: 8,
-                  color: failCount >= 3 ? '#EF4444' : '#F59E0B',
+                  color: failCount >= 3 ? colors.error : colors.primary,
                   fontWeight: '500',
                 }}>
                   {failCount >= 3
@@ -191,7 +191,7 @@ export default function VerifyPinScreen() {
                       maxLength={1}
                       keyboardType="number-pad"
                       editable={!loading}
-                      selectionColor="#D5E726"
+                      selectionColor={colors.primary}
                       secureTextEntry={!showPin}
                       style={{
                         height: 64,
@@ -201,16 +201,16 @@ export default function VerifyPinScreen() {
                         borderRadius: 16,
                         borderWidth: 2.5,
                         borderColor: failCount > 0
-                          ? 'rgba(239,68,68,0.4)'
-                          : isFoc ? '#D5E726' : isFilled ? 'rgba(213,231,38,0.4)' : (isDark ? '#2F332B' : '#E2E8F0'),
+                          ? `${colors.error}66`
+                          : isFoc ? colors.primary : isFilled ? `${colors.primary}66` : colors.border,
                         backgroundColor: failCount > 0
-                          ? 'rgba(239,68,68,0.05)'
+                          ? `${colors.error}0D`
                           : isFoc
-                            ? (isDark ? '#1A1E10' : '#FAFFF0')
+                            ? `${colors.primary}1A`
                             : isFilled
-                              ? (isDark ? '#1A1E10' : '#F8FFE0')
-                              : (isDark ? '#161814' : '#FFFFFF'),
-                        color: isDark ? '#FFFFFF' : '#0A0B09',
+                              ? `${colors.primary}14`
+                              : (colors.surface),
+                        color: colors.text,
                       }}
                     />
                   </View>
@@ -224,8 +224,8 @@ export default function VerifyPinScreen() {
               activeOpacity={0.7}
               style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-end', marginBottom: 28 }}
             >
-              <Feather name={showPin ? 'eye-off' : 'eye'} size={15} color="#D5E726" />
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#D5E726', marginLeft: 6 }}>
+              <Feather name={showPin ? 'eye-off' : 'eye'} size={15} color={colors.primary} />
+              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary, marginLeft: 6 }}>
                 {showPin ? 'Hide PIN' : 'Show PIN'}
               </Text>
             </TouchableOpacity>
@@ -238,18 +238,18 @@ export default function VerifyPinScreen() {
               style={{ opacity: loading || !isPinComplete ? 0.6 : 1, marginBottom: 16 }}
             >
               <LinearGradient
-                colors={['#D5E726', '#C4D420']}
+                colors={[colors.primary, `${colors.primary}CC`]}
                 start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                 style={{ paddingVertical: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}
               >
                 {loading ? (
-                  <ActivityIndicator color="#0A0B09" size="small" />
+                  <ActivityIndicator color={colors.secondary} size="small" />
                 ) : (
                   <>
-                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#0A0B09', marginRight: 8 }}>
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: colors.secondary, marginRight: 8 }}>
                       {isPinComplete ? 'Sign In' : 'Enter your PIN'}
                     </Text>
-                    {isPinComplete && <Feather name="log-in" size={18} color="#0A0B09" />}
+                    {isPinComplete && <Feather name="log-in" size={18} color={colors.secondary} />}
                   </>
                 )}
               </LinearGradient>
@@ -261,16 +261,16 @@ export default function VerifyPinScreen() {
               activeOpacity={0.7}
               style={{ alignItems: 'center', marginBottom: 12 }}
             >
-              <Text style={{ fontSize: 13, color: isDark ? '#9CA3AF' : '#6B7280' }}>
+              <Text style={{ fontSize: 13, color: colors.textSecondary }}>
                 Forgot your PIN?{' '}
-                <Text style={{ color: '#D5E726', fontWeight: '700' }}>Reset Now</Text>
+                <Text style={{ color: colors.primary, fontWeight: '700' }}>Reset Now</Text>
               </Text>
             </TouchableOpacity>
 
             {/* Security Note */}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-              <Feather name="lock" size={12} color={isDark ? '#4B5563' : '#CBD5E1'} />
-              <Text style={{ fontSize: 11, marginLeft: 6, color: isDark ? '#4B5563' : '#9CA3AF' }}>
+              <Feather name="lock" size={12} color={colors.textSecondary} />
+              <Text style={{ fontSize: 11, marginLeft: 6, color: colors.textSecondary }}>
                 Your PIN is encrypted and secure
               </Text>
             </View>

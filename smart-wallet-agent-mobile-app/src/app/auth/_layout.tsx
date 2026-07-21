@@ -7,18 +7,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import '../../../global.css';
 
 export default function AuthLayout() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, colors, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
 
   return (
-    <View className="flex-1 bg-background">
-      <SafeAreaView className="absolute right-4 top-2 z-10">
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <SafeAreaView style={{ position: 'absolute', right: 16, top: 8, zIndex: 10 }}>
         <TouchableOpacity
           onPress={toggleTheme}
-          className="px-3 py-1 rounded"
+          style={{ paddingHorizontal: 12, paddingVertical: 4, borderRadius: 4 }}
           accessibilityLabel="Toggle theme"
         >
-          <Feather name={isDark ? 'sun' : 'moon'} size={18} color="#D5E726" />
+          <Feather name={isDark ? 'sun' : 'moon'} size={18} color={colors.primary} />
         </TouchableOpacity>
       </SafeAreaView>
       <Stack 

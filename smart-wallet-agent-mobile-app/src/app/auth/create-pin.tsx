@@ -36,7 +36,7 @@ export default function CreatePinScreen() {
   const pinRefs = useRef<(TextInput | null)[]>([]);
   const confirmRefs = useRef<(TextInput | null)[]>([]);
   const router = useRouter();
-  const { theme } = useTheme();
+  const { theme, colors } = useTheme();
   const isDark = theme === 'dark';
 
   useEffect(() => {
@@ -169,7 +169,7 @@ export default function CreatePinScreen() {
               maxLength={1}
               keyboardType="number-pad"
               editable={!loading}
-              selectionColor="#D5E726"
+              selectionColor={colors.primary}
               secureTextEntry={!showPin}
               style={{
                 height: 64,
@@ -178,13 +178,13 @@ export default function CreatePinScreen() {
                 fontWeight: '900',
                 borderRadius: 16,
                 borderWidth: 2.5,
-                borderColor: isFoc ? '#D5E726' : isFilled ? 'rgba(213,231,38,0.4)' : (isDark ? '#2F332B' : '#E2E8F0'),
+                borderColor: isFoc ? colors.primary : isFilled ? `${colors.primary}66` : colors.border,
                 backgroundColor: isFoc
-                  ? (isDark ? '#1A1E10' : '#FAFFF0')
+                  ? `${colors.primary}1A`
                   : isFilled
-                    ? (isDark ? '#1A1E10' : '#F8FFE0')
-                    : (isDark ? '#161814' : '#FFFFFF'),
-                color: isDark ? '#FFFFFF' : '#0A0B09',
+                    ? `${colors.primary}14`
+                    : (colors.surface),
+                color: colors.text,
               }}
             />
           </View>
@@ -196,7 +196,7 @@ export default function CreatePinScreen() {
   return (
     <SafeAreaView
       edges={['top', 'bottom']}
-      style={{ flex: 1, backgroundColor: isDark ? '#0A0B09' : '#FAFAFA' }}
+      style={{ flex: 1, backgroundColor: colors.background }}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -204,7 +204,7 @@ export default function CreatePinScreen() {
       >
         {/* Header */}
         <LinearGradient
-          colors={['#D5E726', '#A8B81A']}
+          colors={[colors.primary, `${colors.primary}CC`]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ paddingTop: 20, paddingBottom: 32, paddingHorizontal: 24 }}
@@ -213,13 +213,13 @@ export default function CreatePinScreen() {
             onPress={() => router.back()}
             style={{
               width: 40, height: 40, borderRadius: 20,
-              backgroundColor: 'rgba(0,0,0,0.15)',
+              backgroundColor: `${colors.secondary}26`,
               alignItems: 'center', justifyContent: 'center',
               marginBottom: 20,
             }}
             activeOpacity={0.7}
           >
-            <Feather name="arrow-left" size={20} color="#0A0B09" />
+            <Feather name="arrow-left" size={20} color={colors.secondary} />
           </TouchableOpacity>
 
           {/* Step Indicator */}
@@ -228,17 +228,17 @@ export default function CreatePinScreen() {
               <View key={s} style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View style={{
                   width: 28, height: 28, borderRadius: 14,
-                  backgroundColor: i <= 2 ? '#0A0B09' : 'rgba(0,0,0,0.2)',
+                  backgroundColor: i <= 2 ? colors.secondary : `${colors.secondary}33`,
                   alignItems: 'center', justifyContent: 'center',
                 }}>
                   {i < 2
-                    ? <Feather name="check" size={13} color="#D5E726" />
-                    : <Feather name="lock" size={13} color="#D5E726" />
+                    ? <Feather name="check" size={13} color={colors.primary} />
+                    : <Feather name="lock" size={13} color={colors.primary} />
                   }
                 </View>
                 <Text style={{
                   fontSize: 12, fontWeight: i === 2 ? '700' : '500',
-                  color: '#0A0B09',
+                  color: colors.secondary,
                   marginLeft: 6,
                 }}>
                   {s}
@@ -246,7 +246,7 @@ export default function CreatePinScreen() {
                 {i < STEPS.length - 1 && (
                   <View style={{
                     width: 24, height: 1.5,
-                    backgroundColor: 'rgba(0,0,0,0.3)',
+                    backgroundColor: `${colors.secondary}4D`,
                     marginHorizontal: 8,
                   }} />
                 )}
@@ -254,10 +254,10 @@ export default function CreatePinScreen() {
             ))}
           </View>
 
-          <Text style={{ fontSize: 22, fontWeight: '800', color: '#0A0B09', letterSpacing: -0.5 }}>
+          <Text style={{ fontSize: 22, fontWeight: '800', color: colors.secondary, letterSpacing: -0.5 }}>
             {step === 'pin' ? 'Create Your PIN' : 'Confirm Your PIN'}
           </Text>
-          <Text style={{ fontSize: 13, color: 'rgba(0,0,0,0.6)', marginTop: 4 }}>
+          <Text style={{ fontSize: 13, color: `${colors.secondary}99`, marginTop: 4 }}>
             {step === 'pin'
               ? 'Enter a 4-digit PIN to secure your wallet'
               : 'Re-enter your PIN to confirm'}
@@ -281,8 +281,8 @@ export default function CreatePinScreen() {
                     height: 4,
                     borderRadius: 2,
                     backgroundColor: (step === 'pin' && i === 0) || (step === 'confirm' && i <= 1)
-                      ? '#D5E726'
-                      : (isDark ? '#2F332B' : '#E2E8F0'),
+                      ? colors.primary
+                      : colors.border,
                   }}
                 />
               ))}
@@ -301,8 +301,8 @@ export default function CreatePinScreen() {
               activeOpacity={0.7}
               style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-end', marginBottom: 28 }}
             >
-              <Feather name={showPin ? 'eye-off' : 'eye'} size={15} color="#D5E726" />
-              <Text style={{ fontSize: 13, fontWeight: '600', color: '#D5E726', marginLeft: 6 }}>
+              <Feather name={showPin ? 'eye-off' : 'eye'} size={15} color={colors.primary} />
+              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary, marginLeft: 6 }}>
                 {showPin ? 'Hide PIN' : 'Show PIN'}
               </Text>
             </TouchableOpacity>
@@ -316,18 +316,18 @@ export default function CreatePinScreen() {
                 style={{ opacity: loading || !isConfirmComplete ? 0.6 : 1, marginBottom: 16 }}
               >
                 <LinearGradient
-                  colors={['#D5E726', '#C4D420']}
+                  colors={[colors.primary, `${colors.primary}CC`]}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={{ paddingVertical: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}
                 >
                   {loading ? (
-                    <ActivityIndicator color="#0A0B09" size="small" />
+                    <ActivityIndicator color={colors.secondary} size="small" />
                   ) : (
                     <>
-                      <Text style={{ fontSize: 16, fontWeight: '700', color: '#0A0B09', marginRight: 8 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '700', color: colors.secondary, marginRight: 8 }}>
                         {isConfirmComplete ? 'Create PIN' : 'Enter confirm PIN'}
                       </Text>
-                      {isConfirmComplete && <Feather name="check" size={18} color="#0A0B09" />}
+                      {isConfirmComplete && <Feather name="check" size={18} color={colors.secondary} />}
                     </>
                   )}
                 </LinearGradient>
@@ -345,22 +345,22 @@ export default function CreatePinScreen() {
                 style={{ opacity: !isPinComplete ? 0.6 : 1, marginBottom: 16 }}
               >
                 <LinearGradient
-                  colors={['#D5E726', '#C4D420']}
+                  colors={[colors.primary, `${colors.primary}CC`]}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={{ paddingVertical: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}
                 >
-                  <Text style={{ fontSize: 16, fontWeight: '700', color: '#0A0B09', marginRight: 8 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: colors.secondary, marginRight: 8 }}>
                     {isPinComplete ? 'Continue' : 'Enter 4-digit PIN'}
                   </Text>
-                  {isPinComplete && <Feather name="arrow-right" size={18} color="#0A0B09" />}
+                  {isPinComplete && <Feather name="arrow-right" size={18} color={colors.secondary} />}
                 </LinearGradient>
               </TouchableOpacity>
             )}
 
             {/* Security Note */}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-              <Feather name="shield" size={12} color={isDark ? '#4B5563' : '#CBD5E1'} />
-              <Text style={{ fontSize: 11, marginLeft: 6, color: isDark ? '#4B5563' : '#9CA3AF' }}>
+              <Feather name="shield" size={12} color={colors.textSecondary} />
+              <Text style={{ fontSize: 11, marginLeft: 6, color: colors.textSecondary }}>
                 Your PIN is encrypted and stored securely
               </Text>
             </View>

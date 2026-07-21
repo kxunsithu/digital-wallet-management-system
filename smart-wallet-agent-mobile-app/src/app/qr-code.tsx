@@ -1,8 +1,8 @@
 // app/qr-code.tsx
-import { 
-  Text, 
-  View, 
-  TouchableOpacity, 
+import {
+  Text,
+  View,
+  TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,8 +16,7 @@ import apiFetch from "../lib/api";
 
 export default function QrCodeScreen() {
   const router = useRouter();
-  const { theme } = useTheme();
-  const isDark = theme === 'dark';
+  const { colors } = useTheme();
 
   const [qrPayload, setQrPayload] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,51 +47,97 @@ export default function QrCodeScreen() {
     fetchQR();
   }, []);
 
-  const containerClass = isDark ? "flex-1 bg-[#0A0B09]" : "flex-1 bg-slate-50";
-  const headerTextClass = isDark ? "text-white" : "text-gray-900";
-  const subTextClass = isDark ? "text-gray-400" : "text-gray-500";
-
   return (
-    <SafeAreaView edges={["top"]} className={containerClass}>
-      <View className="flex-row items-center px-6 pt-4 pb-6">
-        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
-          <Feather name="arrow-left" size={24} color={isDark ? "#FFFFFF" : "#0A0B09"} />
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Header */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingTop: 16, paddingBottom: 24 }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+          style={{
+            width: 40, height: 40, borderRadius: 20,
+            backgroundColor: colors.surface,
+            alignItems: 'center', justifyContent: 'center',
+            borderWidth: 1, borderColor: colors.border,
+          }}
+        >
+          <Feather name="arrow-left" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text className={`flex-1 text-center text-lg font-bold ${headerTextClass}`}>My QR Code</Text>
-        <TouchableOpacity onPress={fetchQR} activeOpacity={0.7}>
-          <Feather name="refresh-cw" size={20} color={isDark ? "#D5E726" : "#475569"} />
+        <Text style={{ flex: 1, textAlign: 'center', fontSize: 18, fontWeight: '700', color: colors.text }}>
+          My QR Code
+        </Text>
+        <TouchableOpacity
+          onPress={fetchQR}
+          activeOpacity={0.7}
+          style={{
+            width: 40, height: 40, borderRadius: 20,
+            backgroundColor: colors.surface,
+            alignItems: 'center', justifyContent: 'center',
+            borderWidth: 1, borderColor: colors.border,
+          }}
+        >
+          <Feather name="refresh-cw" size={18} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
-      <View className="flex-1 items-center justify-center px-6">
+      {/* Content */}
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
         {loading ? (
-          <View className="items-center justify-center">
-            <ActivityIndicator size="large" color="#D5E726" />
-            <Text className={`mt-4 text-sm ${subTextClass}`}>Loading QR code...</Text>
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={{ marginTop: 16, fontSize: 14, color: colors.textSecondary }}>
+              Loading QR code...
+            </Text>
           </View>
         ) : (
-          <View className={`w-full max-w-sm p-6 rounded-3xl border items-center ${isDark ? 'bg-[#161814] border-[#2F332B]' : 'bg-white border-slate-200'}`}>
-            <View className={`w-56 h-56 rounded-2xl items-center justify-center p-4 border-2 bg-white border-primary`}>
+          <View style={{
+            width: '100%', maxWidth: 360, padding: 24, borderRadius: 28,
+            borderWidth: 1, borderColor: colors.border,
+            backgroundColor: colors.surface,
+            alignItems: 'center',
+            shadowColor: colors.primary, shadowOpacity: 0.08,
+            shadowRadius: 20, shadowOffset: { width: 0, height: 8 },
+            elevation: 6,
+          }}>
+            {/* QR Container */}
+            <View style={{
+              width: 224, height: 224, borderRadius: 20,
+              alignItems: 'center', justifyContent: 'center',
+              padding: 16, backgroundColor: '#FFFFFF',
+              borderWidth: 2, borderColor: colors.primary,
+              marginBottom: 8,
+            }}>
               {qrPayload ? (
-                <QRCode value={qrPayload} size={200} backgroundColor="transparent" />
+                <QRCode value={qrPayload} size={192} backgroundColor="#FFFFFF" color="#0A0B09" />
               ) : (
-                <MaterialCommunityIcons name="qrcode" size={150} color="#000000" />
+                <MaterialCommunityIcons name="qrcode" size={150} color={colors.secondary} />
               )}
             </View>
 
-            <Text className={`text-lg font-bold ${headerTextClass} text-center mt-6`}>
+            {/* Agent Info */}
+            <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text, textAlign: 'center', marginTop: 20 }}>
               {profile?.agent_profile?.shop_name ?? profile?.full_name ?? "Agent Shop"}
             </Text>
-            <Text className={`text-xs ${subTextClass} text-center mt-1`}>
+            <Text style={{ fontSize: 12, color: colors.textSecondary, textAlign: 'center', marginTop: 4 }}>
               Agent Code: {profile?.agent_profile?.agent_code ?? "AG-XXXX"}
             </Text>
-            <Text className="text-xs text-primary font-bold bg-primary/10 px-3 py-1 rounded-full mt-3 tracking-wider">
-              {profile?.wallet?.wallet_number ?? "WAL-XXXX"}
-            </Text>
 
-            <View className={`w-full h-[1px] ${isDark ? 'bg-[#2F332B]' : 'bg-slate-100'} my-4`} />
+            {/* Wallet Number Badge */}
+            <View style={{
+              marginTop: 12, paddingHorizontal: 16, paddingVertical: 6,
+              borderRadius: 20, backgroundColor: `${colors.primary}1A`,
+              borderWidth: 1, borderColor: `${colors.primary}33`,
+            }}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary, letterSpacing: 1 }}>
+                {profile?.wallet?.wallet_number ?? "WAL-XXXX"}
+              </Text>
+            </View>
 
-            <Text className={`text-xs ${subTextClass} text-center px-4`}>
+            {/* Divider */}
+            <View style={{ width: '100%', height: 1, backgroundColor: colors.border, marginVertical: 16 }} />
+
+            {/* Scan hint */}
+            <Text style={{ fontSize: 12, color: colors.textSecondary, textAlign: 'center', paddingHorizontal: 16, lineHeight: 18 }}>
               Scan this QR code to receive payments or float returns
             </Text>
           </View>

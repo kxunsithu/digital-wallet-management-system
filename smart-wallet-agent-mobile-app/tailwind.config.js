@@ -19,6 +19,8 @@ module.exports = {
         text: '#FFFFFF',
         textSecondary: '#C7C7C7',
         border: '#2F332B',
+        error: '#FF4D4F',
+        success: '#52C41A',
       }
     },
   },

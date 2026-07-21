@@ -1,11 +1,11 @@
 // app/(tabs)/_layout.tsx
-import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
+import { Platform, View } from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
-import { View, Platform } from 'react-native';
 
 export default function TabLayout() {
-  const { theme } = useTheme();
+  const { theme, colors } = useTheme();
   const isDark = theme === 'dark';
 
   return (
@@ -19,18 +19,21 @@ export default function TabLayout() {
           right: 20,
           borderRadius: 28,
           height: 68,
-          backgroundColor: isDark ? '#111210' : '#FFFFFF',
+          backgroundColor: colors.surface,
           borderTopWidth: 0,
-          shadowColor: isDark ? '#D5E726' : '#000000',
+          borderWidth: isDark ? 0 : 1,
+          borderColor: colors.border,
+          shadowColor: isDark ? colors.primary : colors.secondary,
           shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: isDark ? 0.12 : 0.12,
+          shadowOpacity: isDark ? 0.12 : 0.08,
           shadowRadius: 24,
           elevation: 16,
           paddingBottom: 0,
           paddingTop: 0,
+          marginHorizontal: 10,
         },
-        tabBarActiveTintColor: '#D5E726',
-        tabBarInactiveTintColor: isDark ? '#4B5563' : '#94A3B8',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: '600',
@@ -42,23 +45,7 @@ export default function TabLayout() {
         },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={{
-              width: 40, height: 32,
-              borderRadius: 16,
-              backgroundColor: focused ? 'rgba(213,231,38,0.15)' : 'transparent',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Feather name={focused ? 'home' : 'home'} size={22} color={color} />
-            </View>
-          ),
-        }}
-      />
+
       <Tabs.Screen
         name="transactions"
         options={{
@@ -67,7 +54,6 @@ export default function TabLayout() {
             <View style={{
               width: 40, height: 32,
               borderRadius: 16,
-              backgroundColor: focused ? 'rgba(213,231,38,0.15)' : 'transparent',
               alignItems: 'center',
               justifyContent: 'center',
             }}>
@@ -76,6 +62,25 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      {/* Home */}
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color, focused }) => (
+            <View style={{
+              width: 40, height: 32,
+              borderRadius: 16,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <Feather name={focused ? 'home' : 'home'} size={22} color={color} />
+            </View>
+          ),
+        }}
+      />
+
       <Tabs.Screen
         name="profile"
         options={{
@@ -84,7 +89,6 @@ export default function TabLayout() {
             <View style={{
               width: 40, height: 32,
               borderRadius: 16,
-              backgroundColor: focused ? 'rgba(213,231,38,0.15)' : 'transparent',
               alignItems: 'center',
               justifyContent: 'center',
             }}>

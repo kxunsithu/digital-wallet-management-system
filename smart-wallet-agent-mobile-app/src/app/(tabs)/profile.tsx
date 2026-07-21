@@ -19,6 +19,7 @@ import apiFetch from "../../lib/api";
 import { logout } from "../../services/auth";
 import { useRouter, useFocusEffect } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
+import { getAutoSaveReceipt, setAutoSaveReceipt } from "../../services/settingsStore";
 
 interface UserProfile {
   id: number;
@@ -41,7 +42,7 @@ interface UserProfile {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, colors, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -51,6 +52,9 @@ export default function ProfileScreen() {
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Receipt Setting state
+  const [autoSaveReceipt, setAutoSaveReceiptState] = useState(false);
 
   // Logout Modal state
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
@@ -74,12 +78,24 @@ export default function ProfileScreen() {
 
   useEffect(() => { fetchProfile(); }, []);
 
-  // Real-time balance refresh when profile tab comes into focus
+  // Load Auto-Save setting on mount and focus
   useFocusEffect(
     useCallback(() => {
       fetchProfile(true);
+      getAutoSaveReceipt().then(setAutoSaveReceiptState);
     }, [fetchProfile])
   );
+
+  const handleToggleAutoSaveReceipt = async () => {
+    const newVal = !autoSaveReceipt;
+    setAutoSaveReceiptState(newVal);
+    await setAutoSaveReceipt(newVal);
+    Toast.show({
+      type: "info",
+      text1: "Receipt Settings Updated",
+      text2: newVal ? "Auto-Save Receipt enabled" : "Auto-Save Receipt disabled",
+    });
+  };
 
   const handleConfirmLogout = async () => {
     setLoggingOut(true);
@@ -122,8 +138,8 @@ export default function ProfileScreen() {
 
   if (loading && !profile) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: isDark ? '#0A0B09' : '#FAFAFA' }}>
-        <ActivityIndicator size="large" color="#D5E726" />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -142,30 +158,30 @@ export default function ProfileScreen() {
         flexDirection: 'row', alignItems: 'center',
         padding: 16, borderRadius: 16,
         backgroundColor: danger
-          ? (isDark ? 'rgba(239,68,68,0.08)' : 'rgba(239,68,68,0.05)')
-          : (isDark ? '#161814' : '#FFFFFF'),
+          ? `${colors.error}14`
+          : (colors.surface),
         borderWidth: 1,
         borderColor: danger
-          ? 'rgba(239,68,68,0.2)'
-          : (isDark ? '#2F332B' : '#E2E8F0'),
+          ? `${colors.error}33`
+          : colors.border,
         marginBottom: 10,
       }}
     >
       <View style={{
         width: 38, height: 38, borderRadius: 12,
-        backgroundColor: danger ? 'rgba(239,68,68,0.1)' : 'rgba(213,231,38,0.1)',
+        backgroundColor: danger ? `${colors.error}1A` : `${colors.primary}1A`,
         alignItems: 'center', justifyContent: 'center',
         marginRight: 14,
       }}>
-        <Feather name={icon} size={17} color={danger ? '#EF4444' : '#D5E726'} />
+        <Feather name={icon} size={17} color={danger ? colors.error : colors.primary} />
       </View>
       <Text style={{
         flex: 1, fontSize: 14, fontWeight: '600',
-        color: danger ? '#EF4444' : (isDark ? '#FFFFFF' : '#0A0B09'),
+        color: danger ? colors.error : (colors.text),
       }}>
         {label}
       </Text>
-      {rightElement ?? <Feather name="chevron-right" size={18} color={danger ? '#EF4444' : (isDark ? '#4B5563' : '#CBD5E1')} />}
+      {rightElement ?? <Feather name="chevron-right" size={18} color={danger ? colors.error : colors.textSecondary} />}
     </TouchableOpacity>
   );
 
@@ -173,22 +189,22 @@ export default function ProfileScreen() {
     label, value, onChange,
   }: { label: string; value: string; onChange: (t: string) => void }) => (
     <View style={{ marginBottom: 14 }}>
-      <Text style={{ fontSize: 11, fontWeight: '600', color: isDark ? '#9CA3AF' : '#6B7280', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+      <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
         {label}
       </Text>
       <TextInput
         placeholder="• • • •"
-        placeholderTextColor={isDark ? '#4B5563' : '#9CA3AF'}
+        placeholderTextColor={colors.textSecondary}
         style={{
           padding: 14, borderRadius: 14,
           borderWidth: 1.5,
-          borderColor: isDark ? '#2F332B' : '#E2E8F0',
-          backgroundColor: isDark ? '#0A0B09' : '#F8FAFC',
+          borderColor: colors.border,
+          backgroundColor: isDark ? colors.background : `${colors.border}22`,
           fontSize: 20,
           textAlign: 'center',
           letterSpacing: 12,
           fontWeight: '800',
-          color: isDark ? '#FFFFFF' : '#0A0B09',
+          color: colors.text,
         }}
         value={value}
         onChangeText={onChange}
@@ -200,14 +216,14 @@ export default function ProfileScreen() {
   );
 
   return (
-    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: isDark ? '#0A0B09' : '#FAFAFA' }}>
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
         contentContainerStyle={{ paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
         <View style={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 8 }}>
-          <Text style={{ fontSize: 24, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09', letterSpacing: -0.5 }}>
+          <Text style={{ fontSize: 24, fontWeight: '800', color: colors.text, letterSpacing: -0.5 }}>
             Profile
           </Text>
         </View>
@@ -215,40 +231,40 @@ export default function ProfileScreen() {
         {/* Profile Card */}
         <View style={{ paddingHorizontal: 24, marginTop: 8 }}>
           <LinearGradient
-            colors={isDark ? ['#161A0F', '#1A1E12'] : ['#FAFFF0', '#F5FAD8']}
+            colors={isDark ? [colors.surface, `${colors.primary}14`] : [`${colors.primary}14`, `${colors.primary}28`]}
             start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
             style={{
               borderRadius: 24, padding: 24,
               borderWidth: 1,
-              borderColor: isDark ? '#2F3A10' : '#DDE826',
+              borderColor: `${colors.primary}33`,
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               {/* Avatar */}
               <LinearGradient
-                colors={['#D5E726', '#A8B81A']}
+                colors={[colors.primary, `${colors.primary}99`]}
                 style={{
                   width: 64, height: 64, borderRadius: 20,
                   alignItems: 'center', justifyContent: 'center',
                   marginRight: 16,
                 }}
               >
-                <Text style={{ fontSize: 28, fontWeight: '900', color: '#0A0B09' }}>
+                <Text style={{ fontSize: 28, fontWeight: '900', color: colors.background }}>
                   {avatarLetter}
                 </Text>
               </LinearGradient>
 
               {/* Info */}
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 18, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09', letterSpacing: -0.3 }}>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text, letterSpacing: -0.3 }}>
                   {profile?.full_name ?? 'User'}
                 </Text>
-                <Text style={{ fontSize: 13, color: isDark ? '#9CA3AF' : '#6B7280', marginTop: 2 }}>
+                <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
                   {profile?.phone_number}
                 </Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
-                  <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: '#10b981', marginRight: 5 }} />
-                  <Text style={{ fontSize: 10, fontWeight: '600', color: '#10b981', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: colors.success, marginRight: 5 }} />
+                  <Text style={{ fontSize: 10, fontWeight: '600', color: colors.success, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     {profile?.status ?? 'Active'}
                   </Text>
                 </View>
@@ -260,22 +276,22 @@ export default function ProfileScreen() {
               flexDirection: 'row',
               marginTop: 20, paddingTop: 20,
               borderTopWidth: 1,
-              borderTopColor: isDark ? '#2F3A10' : '#DDE826',
+              borderTopColor: `${colors.primary}33`,
             }}>
               <View style={{ flex: 1, alignItems: 'center' }}>
-                <Text style={{ fontSize: 10, color: isDark ? '#9CA3AF' : '#6B7280', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: '600' }}>
+                <Text style={{ fontSize: 10, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: '600' }}>
                   Agent Code
                 </Text>
-                <Text style={{ fontSize: 14, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09', marginTop: 4 }}>
+                <Text style={{ fontSize: 14, fontWeight: '800', color: colors.text, marginTop: 4 }}>
                   {profile?.agent_profile?.agent_code ?? 'N/A'}
                 </Text>
               </View>
-              <View style={{ width: 1, backgroundColor: isDark ? '#2F3A10' : '#DDE826' }} />
+              <View style={{ width: 1, backgroundColor: `${colors.primary}33` }} />
               <View style={{ flex: 1, alignItems: 'center' }}>
-                <Text style={{ fontSize: 10, color: isDark ? '#9CA3AF' : '#6B7280', textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: '600' }}>
+                <Text style={{ fontSize: 10, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: '600' }}>
                   Wallet No.
                 </Text>
-                <Text style={{ fontSize: 14, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09', marginTop: 4 }}>
+                <Text style={{ fontSize: 14, fontWeight: '800', color: colors.text, marginTop: 4 }}>
                   {profile?.wallet?.wallet_number ?? 'N/A'}
                 </Text>
               </View>
@@ -285,7 +301,7 @@ export default function ProfileScreen() {
 
         {/* Settings Section */}
         <View style={{ paddingHorizontal: 24, marginTop: 28 }}>
-          <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#6B7280' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 }}>
+          <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 }}>
             Account Settings
           </Text>
 
@@ -295,20 +311,39 @@ export default function ProfileScreen() {
             onPress={() => setChangePinModal(true)}
           />
           <SettingRow
+            icon="file-text"
+            label="Auto-Save & Download Receipt"
+            onPress={handleToggleAutoSaveReceipt}
+            rightElement={
+              <View style={{
+                width: 44, height: 26, borderRadius: 13,
+                backgroundColor: autoSaveReceipt ? colors.primary : colors.border,
+                alignItems: autoSaveReceipt ? 'flex-end' : 'flex-start',
+                justifyContent: 'center',
+                paddingHorizontal: 3,
+              }}>
+                <View style={{
+                  width: 20, height: 20, borderRadius: 10,
+                  backgroundColor: autoSaveReceipt ? colors.background : colors.text,
+                }} />
+              </View>
+            }
+          />
+          <SettingRow
             icon={isDark ? 'sun' : 'moon'}
             label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             onPress={toggleTheme}
             rightElement={
               <View style={{
                 width: 44, height: 26, borderRadius: 13,
-                backgroundColor: isDark ? '#D5E726' : '#E2E8F0',
+                backgroundColor: isDark ? colors.primary : colors.border,
                 alignItems: isDark ? 'flex-end' : 'flex-start',
                 justifyContent: 'center',
                 paddingHorizontal: 3,
               }}>
                 <View style={{
                   width: 20, height: 20, borderRadius: 10,
-                  backgroundColor: isDark ? '#0A0B09' : '#FFFFFF',
+                  backgroundColor: isDark ? colors.background : colors.text,
                 }} />
               </View>
             }
@@ -317,7 +352,7 @@ export default function ProfileScreen() {
 
         {/* Danger Zone */}
         <View style={{ paddingHorizontal: 24, marginTop: 8 }}>
-          <Text style={{ fontSize: 11, fontWeight: '700', color: isDark ? '#6B7280' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 }}>
+          <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 }}>
             Account
           </Text>
           <SettingRow
@@ -336,28 +371,28 @@ export default function ProfileScreen() {
             <View style={{
               borderTopLeftRadius: 28, borderTopRightRadius: 28,
               padding: 28,
-              backgroundColor: isDark ? '#161814' : '#FFFFFF',
+              backgroundColor: colors.surface,
               borderTopWidth: 1,
-              borderTopColor: isDark ? '#2F332B' : '#E2E8F0',
+              borderTopColor: colors.border,
             }}>
               <View style={{ alignItems: 'center', marginBottom: 20 }}>
                 <View style={{
                   width: 40, height: 4, borderRadius: 2,
-                  backgroundColor: isDark ? '#2F332B' : '#E2E8F0',
+                  backgroundColor: colors.border,
                 }} />
               </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <Text style={{ fontSize: 18, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09' }}>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text }}>
                   Change PIN
                 </Text>
                 <TouchableOpacity onPress={() => setChangePinModal(false)} activeOpacity={0.7}>
                   <View style={{
                     width: 36, height: 36, borderRadius: 18,
-                    backgroundColor: isDark ? '#0A0B09' : '#F8FAFC',
+                    backgroundColor: isDark ? colors.background : `${colors.border}33`,
                     alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <Feather name="x" size={18} color={isDark ? '#FFFFFF' : '#0A0B09'} />
+                    <Feather name="x" size={18} color={colors.text} />
                   </View>
                 </TouchableOpacity>
               </View>
@@ -373,13 +408,13 @@ export default function ProfileScreen() {
                 style={{ marginTop: 8, opacity: submitting ? 0.7 : 1 }}
               >
                 <LinearGradient
-                  colors={['#D5E726', '#C4D420']}
+                  colors={[colors.primary, `${colors.primary}CC`]}
                   start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                   style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}
                 >
                   {submitting
-                    ? <ActivityIndicator size="small" color="#0A0B09" />
-                    : <Text style={{ fontSize: 16, fontWeight: '700', color: '#0A0B09' }}>Update PIN</Text>
+                    ? <ActivityIndicator size="small" color={colors.background} />
+                    : <Text style={{ fontSize: 16, fontWeight: '700', color: colors.background }}>Update PIN</Text>
                   }
                 </LinearGradient>
               </TouchableOpacity>
@@ -393,23 +428,23 @@ export default function ProfileScreen() {
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.7)', paddingHorizontal: 24 }}>
           <View style={{
             width: '100%', maxWidth: 340, borderRadius: 24, padding: 24,
-            backgroundColor: isDark ? '#161814' : '#FFFFFF',
-            borderWidth: 1, borderColor: isDark ? '#2F332B' : '#E2E8F0',
+            backgroundColor: colors.surface,
+            borderWidth: 1, borderColor: colors.border,
             alignItems: 'center',
           }}>
             <View style={{
               width: 56, height: 56, borderRadius: 28,
-              backgroundColor: 'rgba(239,68,68,0.12)',
+              backgroundColor: `${colors.error}1F`,
               alignItems: 'center', justifyContent: 'center',
               marginBottom: 16,
             }}>
-              <Feather name="log-out" size={24} color="#EF4444" />
+              <Feather name="log-out" size={24} color={colors.error} />
             </View>
 
-            <Text style={{ fontSize: 18, fontWeight: '800', color: isDark ? '#FFFFFF' : '#0A0B09', textAlign: 'center' }}>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text, textAlign: 'center' }}>
               Sign Out
             </Text>
-            <Text style={{ fontSize: 13, color: isDark ? '#9CA3AF' : '#6B7280', textAlign: 'center', marginTop: 6, marginBottom: 24 }}>
+            <Text style={{ fontSize: 13, color: colors.textSecondary, textAlign: 'center', marginTop: 6, marginBottom: 24 }}>
               Are you sure you want to sign out of your account?
             </Text>
 
@@ -419,11 +454,11 @@ export default function ProfileScreen() {
                 disabled={loggingOut}
                 style={{
                   flex: 1, paddingVertical: 14, borderRadius: 14,
-                  backgroundColor: isDark ? '#232620' : '#F1F5F9',
+                  backgroundColor: colors.border,
                   alignItems: 'center',
                 }}
               >
-                <Text style={{ fontSize: 14, fontWeight: '700', color: isDark ? '#9CA3AF' : '#6B7280' }}>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textSecondary }}>
                   Cancel
                 </Text>
               </TouchableOpacity>
@@ -435,13 +470,13 @@ export default function ProfileScreen() {
               >
                 <View style={{
                   paddingVertical: 14, borderRadius: 14,
-                  backgroundColor: '#EF4444',
+                  backgroundColor: colors.error,
                   alignItems: 'center', justifyContent: 'center',
                 }}>
                   {loggingOut ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <ActivityIndicator size="small" color={colors.text} />
                   ) : (
-                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>
+                    <Text style={{ fontSize: 14, fontWeight: '800', color: colors.text }}>
                       Sign Out
                     </Text>
                   )}

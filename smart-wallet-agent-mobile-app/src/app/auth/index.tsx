@@ -25,7 +25,7 @@ export default function RequestOtpScreen() {
   const [loading, setLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const router = useRouter();
-  const { theme } = useTheme();
+  const { theme, colors } = useTheme();
   const isDark = theme === 'dark';
 
   const handleSubmit = async () => {
@@ -60,7 +60,7 @@ export default function RequestOtpScreen() {
   return (
     <SafeAreaView
       edges={['top', 'bottom']}
-      style={{ flex: 1, backgroundColor: isDark ? '#0A0B09' : '#FAFAFA' }}
+      style={{ flex: 1, backgroundColor: colors.background }}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -73,7 +73,7 @@ export default function RequestOtpScreen() {
         >
           {/* Top Gradient Hero */}
           <LinearGradient
-            colors={['#D5E726', '#A8B81A']}
+            colors={[colors.primary, `${colors.primary}CC`]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{ paddingTop: 48, paddingBottom: 40, paddingHorizontal: 24 }}
@@ -83,17 +83,17 @@ export default function RequestOtpScreen() {
               <View style={{
                 width: 52, height: 52,
                 borderRadius: 16,
-                backgroundColor: 'rgba(0,0,0,0.15)',
+                backgroundColor: `${colors.secondary}26`,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 12,
               }}>
-                <Feather name="zap" size={26} color="#000" />
+                <Feather name="zap" size={26} color={colors.secondary} />
               </View>
-              <Text style={{ fontSize: 26, fontWeight: '800', color: '#0A0B09', letterSpacing: -0.5 }}>
+              <Text style={{ fontSize: 26, fontWeight: '800', color: colors.secondary, letterSpacing: -0.5 }}>
                 Smart Wallet
               </Text>
-              <Text style={{ fontSize: 14, color: 'rgba(0,0,0,0.6)', marginTop: 2 }}>
+              <Text style={{ fontSize: 14, color: `${colors.secondary}99`, marginTop: 2 }}>
                 Agent Portal
               </Text>
             </View>
@@ -104,17 +104,17 @@ export default function RequestOtpScreen() {
                 <View key={step} style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <View style={{
                     width: 28, height: 28, borderRadius: 14,
-                    backgroundColor: i === 0 ? '#0A0B09' : 'rgba(0,0,0,0.2)',
+                    backgroundColor: i === 0 ? colors.secondary : `${colors.secondary}33`,
                     alignItems: 'center', justifyContent: 'center',
                   }}>
                     {i === 0
-                      ? <Feather name="phone" size={13} color="#D5E726" />
-                      : <Text style={{ fontSize: 11, fontWeight: '700', color: 'rgba(0,0,0,0.5)' }}>{i + 1}</Text>
+                      ? <Feather name="phone" size={13} color={colors.primary} />
+                      : <Text style={{ fontSize: 11, fontWeight: '700', color: `${colors.secondary}80` }}>{i + 1}</Text>
                     }
                   </View>
                   <Text style={{
                     fontSize: 12, fontWeight: i === 0 ? '700' : '500',
-                    color: i === 0 ? '#0A0B09' : 'rgba(0,0,0,0.5)',
+                    color: i === 0 ? colors.secondary : `${colors.secondary}80`,
                     marginLeft: 6,
                   }}>
                     {step}
@@ -122,7 +122,7 @@ export default function RequestOtpScreen() {
                   {i < STEPS.length - 1 && (
                     <View style={{
                       width: 24, height: 1.5,
-                      backgroundColor: 'rgba(0,0,0,0.2)',
+                      backgroundColor: `${colors.secondary}33`,
                       marginHorizontal: 8,
                     }} />
                   )}
@@ -139,7 +139,7 @@ export default function RequestOtpScreen() {
           }}>
             <Text style={{
               fontSize: 22, fontWeight: '800',
-              color: isDark ? '#FFFFFF' : '#0A0B09',
+              color: colors.text,
               letterSpacing: -0.5,
               marginBottom: 6,
             }}>
@@ -147,7 +147,7 @@ export default function RequestOtpScreen() {
             </Text>
             <Text style={{
               fontSize: 14,
-              color: isDark ? '#9CA3AF' : '#6B7280',
+              color: colors.textSecondary,
               marginBottom: 28,
               lineHeight: 20,
             }}>
@@ -158,7 +158,7 @@ export default function RequestOtpScreen() {
             <View style={{ marginBottom: 20 }}>
               <Text style={{
                 fontSize: 11, fontWeight: '600',
-                color: isDark ? '#9CA3AF' : '#6B7280',
+                color: colors.textSecondary,
                 textTransform: 'uppercase',
                 letterSpacing: 0.8,
                 marginBottom: 8,
@@ -170,30 +170,30 @@ export default function RequestOtpScreen() {
                 alignItems: 'center',
                 borderRadius: 16,
                 borderWidth: 1.5,
-                borderColor: isFocused ? '#D5E726' : (isDark ? '#2F332B' : '#E2E8F0'),
-                backgroundColor: isDark ? '#161814' : '#FFFFFF',
+                borderColor: isFocused ? colors.primary : colors.border,
+                backgroundColor: colors.surface,
                 paddingHorizontal: 16,
               }}>
                 <View style={{
                   paddingRight: 12,
                   borderRightWidth: 1,
-                  borderRightColor: isDark ? '#2F332B' : '#E2E8F0',
+                  borderRightColor: colors.border,
                   marginRight: 12,
                   paddingVertical: 16,
                 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: isDark ? '#D5E726' : '#475569' }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.primary }}>
                     🇲🇲 +95
                   </Text>
                 </View>
                 <TextInput
                   placeholder="09xxxxxxxx"
-                  placeholderTextColor={isDark ? '#4B5563' : '#94A3B8'}
+                  placeholderTextColor={colors.textSecondary}
                   style={{
                     flex: 1,
                     paddingVertical: 16,
                     fontSize: 16,
                     fontWeight: '500',
-                    color: isDark ? '#FFFFFF' : '#0A0B09',
+                    color: colors.text,
                   }}
                   value={phone}
                   onChangeText={setPhone}
@@ -206,7 +206,7 @@ export default function RequestOtpScreen() {
               </View>
               <Text style={{
                 fontSize: 11,
-                color: isDark ? '#6B7280' : '#9CA3AF',
+                color: colors.textSecondary,
                 marginTop: 6,
                 marginLeft: 4,
               }}>
@@ -222,7 +222,7 @@ export default function RequestOtpScreen() {
               style={{ marginBottom: 16 }}
             >
               <LinearGradient
-                colors={loading ? ['#B0BC1A', '#B0BC1A'] : ['#D5E726', '#C4D420']}
+                colors={loading ? [`${colors.primary}99`, `${colors.primary}99`] : [colors.primary, `${colors.primary}CC`]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{
@@ -234,13 +234,13 @@ export default function RequestOtpScreen() {
                 }}
               >
                 {loading ? (
-                  <ActivityIndicator color="#0A0B09" size="small" />
+                  <ActivityIndicator color={colors.secondary} size="small" />
                 ) : (
                   <>
-                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#0A0B09', marginRight: 8 }}>
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: colors.secondary, marginRight: 8 }}>
                       Send OTP
                     </Text>
-                    <Feather name="arrow-right" size={18} color="#0A0B09" />
+                    <Feather name="arrow-right" size={18} color={colors.secondary} />
                   </>
                 )}
               </LinearGradient>
@@ -248,11 +248,11 @@ export default function RequestOtpScreen() {
 
             {/* Terms */}
             <View style={{ alignItems: 'center', marginTop: 8 }}>
-              <Text style={{ fontSize: 11, color: isDark ? '#4B5563' : '#9CA3AF', textAlign: 'center' }}>
+              <Text style={{ fontSize: 11, color: colors.textSecondary, textAlign: 'center' }}>
                 By continuing, you agree to our{' '}
-                <Text style={{ color: '#D5E726' }}>Terms of Service</Text>
+                <Text style={{ color: colors.primary }}>Terms of Service</Text>
                 {'\n'}and{' '}
-                <Text style={{ color: '#D5E726' }}>Privacy Policy</Text>
+                <Text style={{ color: colors.primary }}>Privacy Policy</Text>
               </Text>
             </View>
           </View>
