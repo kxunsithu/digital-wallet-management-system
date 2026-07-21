@@ -12,7 +12,7 @@ export default function AuthLayout() {
 
   return (
     <View className="flex-1 bg-background">
-      <SafeAreaView className="absolute right-4 top-4 z-10">
+      <SafeAreaView className="absolute right-4 top-2 z-10">
         <TouchableOpacity
           onPress={toggleTheme}
           className="px-3 py-1 rounded"

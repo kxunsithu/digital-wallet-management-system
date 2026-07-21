@@ -76,8 +76,6 @@ export default function ForgotPinScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex-1 items-center justify-center px-6 py-4">
-          <AppLogo />
-
           <View className="w-full mb-8">
             <Text className={`text-2xl font-bold ${isDark ? 'text-text' : 'text-gray-900'} text-center`}>
               Forgot PIN

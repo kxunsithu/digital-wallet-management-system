@@ -333,7 +333,6 @@ export default function ResetPinScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex-1 items-center justify-center px-6 py-4">
-          <AppLogo />
 
           {step === 'otp' ? (
             // OTP Step

@@ -1,12 +1,12 @@
 // app/auth/index.tsx
 import { useState } from 'react';
-import { 
-  Text, 
-  View, 
-  TextInput, 
-  TouchableOpacity, 
-  KeyboardAvoidingView, 
-  Platform, 
+import {
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
@@ -15,7 +15,10 @@ import { Feather } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { useTheme } from '../../providers/ThemeProvider';
 import { requestOtp, setPendingAuthRoute } from '../../services/auth';
-import AppLogo from '../../components/AppLogo';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+const STEPS = ['Phone', 'OTP', 'PIN'];
 
 export default function RequestOtpScreen() {
   const [phone, setPhone] = useState('');
@@ -46,87 +49,215 @@ export default function RequestOtpScreen() {
       Toast.show({ type: 'success', text1: 'OTP Sent', text2: 'A code has been sent to your phone' });
       router.push({ pathname: '/auth/verify-otp', params: { phone: trimmedPhone, expiresAt } });
     } else {
-      Toast.show({ 
-        type: 'error', 
-        text1: 'Failed', 
-        text2: response.body?.message ?? 'Could not request OTP' 
+      Toast.show({
+        type: 'error',
+        text1: 'Failed',
+        text2: response.body?.message ?? 'Could not request OTP',
       });
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      className={isDark ? 'flex-1 bg-background' : 'flex-1 bg-white'}
+    <SafeAreaView
+      edges={['top', 'bottom']}
+      style={{ flex: 1, backgroundColor: isDark ? '#0A0B09' : '#FAFAFA' }}
     >
-      <ScrollView 
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
       >
-        <View className="flex-1 items-center justify-center px-6 py-12">
-          <AppLogo />
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Top Gradient Hero */}
+          <LinearGradient
+            colors={['#D5E726', '#A8B81A']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ paddingTop: 48, paddingBottom: 40, paddingHorizontal: 24 }}
+          >
+            {/* Logo / App Name */}
+            <View style={{ marginBottom: 24 }}>
+              <View style={{
+                width: 52, height: 52,
+                borderRadius: 16,
+                backgroundColor: 'rgba(0,0,0,0.15)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 12,
+              }}>
+                <Feather name="zap" size={26} color="#000" />
+              </View>
+              <Text style={{ fontSize: 26, fontWeight: '800', color: '#0A0B09', letterSpacing: -0.5 }}>
+                Smart Wallet
+              </Text>
+              <Text style={{ fontSize: 14, color: 'rgba(0,0,0,0.6)', marginTop: 2 }}>
+                Agent Portal
+              </Text>
+            </View>
 
-          <View className="w-full mb-8 mt-4">
-            <Text className={`text-2xl font-semibold ${isDark ? 'text-text' : 'text-gray-900'} text-center`}>
-              Welcome Back
-            </Text>
-            <Text className={`text-center mt-2 ${isDark ? 'text-textSecondary' : 'text-gray-500'} text-base`}>
-              Enter your phone number to continue
-            </Text>
-          </View>
+            {/* Step Indicator */}
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {STEPS.map((step, i) => (
+                <View key={step} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={{
+                    width: 28, height: 28, borderRadius: 14,
+                    backgroundColor: i === 0 ? '#0A0B09' : 'rgba(0,0,0,0.2)',
+                    alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {i === 0
+                      ? <Feather name="phone" size={13} color="#D5E726" />
+                      : <Text style={{ fontSize: 11, fontWeight: '700', color: 'rgba(0,0,0,0.5)' }}>{i + 1}</Text>
+                    }
+                  </View>
+                  <Text style={{
+                    fontSize: 12, fontWeight: i === 0 ? '700' : '500',
+                    color: i === 0 ? '#0A0B09' : 'rgba(0,0,0,0.5)',
+                    marginLeft: 6,
+                  }}>
+                    {step}
+                  </Text>
+                  {i < STEPS.length - 1 && (
+                    <View style={{
+                      width: 24, height: 1.5,
+                      backgroundColor: 'rgba(0,0,0,0.2)',
+                      marginHorizontal: 8,
+                    }} />
+                  )}
+                </View>
+              ))}
+            </View>
+          </LinearGradient>
 
-          <View className="w-full mb-6">
-            <View className="flex-row items-center relative">
-              <View className="absolute left-4 z-10">
-                <Feather 
-                  name="phone" 
-                  size={20} 
-                  color={isFocused ? '#D5E726' : (isDark ? '#6B7280' : '#9CA3AF')} 
+          {/* Form Card */}
+          <View style={{
+            flex: 1,
+            paddingHorizontal: 24,
+            paddingTop: 32,
+          }}>
+            <Text style={{
+              fontSize: 22, fontWeight: '800',
+              color: isDark ? '#FFFFFF' : '#0A0B09',
+              letterSpacing: -0.5,
+              marginBottom: 6,
+            }}>
+              Welcome Back 👋
+            </Text>
+            <Text style={{
+              fontSize: 14,
+              color: isDark ? '#9CA3AF' : '#6B7280',
+              marginBottom: 28,
+              lineHeight: 20,
+            }}>
+              Enter your registered phone number to{'\n'}receive a one-time verification code.
+            </Text>
+
+            {/* Phone Input */}
+            <View style={{ marginBottom: 20 }}>
+              <Text style={{
+                fontSize: 11, fontWeight: '600',
+                color: isDark ? '#9CA3AF' : '#6B7280',
+                textTransform: 'uppercase',
+                letterSpacing: 0.8,
+                marginBottom: 8,
+              }}>
+                Phone Number
+              </Text>
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                borderRadius: 16,
+                borderWidth: 1.5,
+                borderColor: isFocused ? '#D5E726' : (isDark ? '#2F332B' : '#E2E8F0'),
+                backgroundColor: isDark ? '#161814' : '#FFFFFF',
+                paddingHorizontal: 16,
+              }}>
+                <View style={{
+                  paddingRight: 12,
+                  borderRightWidth: 1,
+                  borderRightColor: isDark ? '#2F332B' : '#E2E8F0',
+                  marginRight: 12,
+                  paddingVertical: 16,
+                }}>
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: isDark ? '#D5E726' : '#475569' }}>
+                    🇲🇲 +95
+                  </Text>
+                </View>
+                <TextInput
+                  placeholder="09xxxxxxxx"
+                  placeholderTextColor={isDark ? '#4B5563' : '#94A3B8'}
+                  style={{
+                    flex: 1,
+                    paddingVertical: 16,
+                    fontSize: 16,
+                    fontWeight: '500',
+                    color: isDark ? '#FFFFFF' : '#0A0B09',
+                  }}
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  editable={!loading}
+                  autoFocus
                 />
               </View>
-              <TextInput
-                placeholder="09xxxxxxxx"
-                placeholderTextColor={isDark ? '#6B7280' : '#9CA3AF'}
-                className={`w-full bg-surface text-text p-4 rounded-xl border text-base pl-12 ${
-                  isFocused ? 'border-primary' : (isDark ? 'border-border' : 'border-slate-200')
-                } ${isDark ? 'bg-surface text-text' : 'bg-slate-50 text-black'}`}
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                editable={!loading}
-              />
+              <Text style={{
+                fontSize: 11,
+                color: isDark ? '#6B7280' : '#9CA3AF',
+                marginTop: 6,
+                marginLeft: 4,
+              }}>
+                We'll send a 6-digit OTP to this number
+              </Text>
             </View>
-            <Text className={`text-xs mt-2 ${isDark ? 'text-textSecondary' : 'text-gray-400'} ml-1`}>
-              Enter your registered phone number
-            </Text>
-          </View>
 
-          <TouchableOpacity
-            className={`w-full py-4 rounded-xl ${loading ? 'opacity-70' : ''}`}
-            style={{ backgroundColor: '#D5E726' }}
-            onPress={handleSubmit}
-            disabled={loading}
-            activeOpacity={0.8}
-          >
-            {loading ? (
-              <ActivityIndicator color="#10110E" size="small" />
-            ) : (
-              <View className="flex-row items-center justify-center">
-                <Text className="text-secondary font-semibold text-base mr-2">Continue</Text>
-                <Feather name="arrow-right" size={20} color="#10110E" />
-              </View>
-            )}
-          </TouchableOpacity>
+            {/* Submit Button */}
+            <TouchableOpacity
+              onPress={handleSubmit}
+              disabled={loading}
+              activeOpacity={0.85}
+              style={{ marginBottom: 16 }}
+            >
+              <LinearGradient
+                colors={loading ? ['#B0BC1A', '#B0BC1A'] : ['#D5E726', '#C4D420']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{
+                  paddingVertical: 16,
+                  borderRadius: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#0A0B09" size="small" />
+                ) : (
+                  <>
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#0A0B09', marginRight: 8 }}>
+                      Send OTP
+                    </Text>
+                    <Feather name="arrow-right" size={18} color="#0A0B09" />
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
 
-          <View className="mt-8">
-            <Text className={`text-xs text-center ${isDark ? 'text-textSecondary/50' : 'text-gray-400'}`}>
-              By continuing, you agree to our Terms of Service
-            </Text>
+            {/* Terms */}
+            <View style={{ alignItems: 'center', marginTop: 8 }}>
+              <Text style={{ fontSize: 11, color: isDark ? '#4B5563' : '#9CA3AF', textAlign: 'center' }}>
+                By continuing, you agree to our{' '}
+                <Text style={{ color: '#D5E726' }}>Terms of Service</Text>
+                {'\n'}and{' '}
+                <Text style={{ color: '#D5E726' }}>Privacy Policy</Text>
+              </Text>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

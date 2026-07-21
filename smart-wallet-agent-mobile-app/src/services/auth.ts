@@ -15,23 +15,23 @@ export interface PendingAuthRoute {
   params?: {
     user_id?: number;
     phone?: string;
-    expiresAt?: string;
+    expiresAt?: string | null;
   };
-  expiresAt?: string;
+  expiresAt?: string | null; // null = no expiry (persistent until login)
 }
 
 export interface PendingAuthStep {
   step: AuthStep;
   userId?: number;
   phone?: string;
-  expiresAt?: string;
+  expiresAt?: string | null;
 }
 
 // Pending Auth Route Management
 export async function setPendingAuthRoute(route: PendingAuthRoute): Promise<void> {
   try {
     await SecureStore.setItemAsync(PENDING_AUTH_ROUTE_KEY, JSON.stringify(route));
-    
+
     const step: AuthStep = route.path === '/auth/create-pin'
       ? 'create-pin'
       : route.path === '/auth/verify-pin'
@@ -42,7 +42,8 @@ export async function setPendingAuthRoute(route: PendingAuthRoute): Promise<void
       step,
       userId: route.params?.user_id,
       phone: route.params?.phone,
-      expiresAt: route.expiresAt || route.params?.expiresAt,
+      // null means persistent (no expiry)
+      expiresAt: route.expiresAt !== undefined ? route.expiresAt : (route.params?.expiresAt ?? null),
     };
 
     await SecureStore.setItemAsync(PENDING_AUTH_STEP_KEY, JSON.stringify(stepData));
@@ -58,7 +59,8 @@ export async function getPendingAuthRoute(): Promise<PendingAuthRoute | null> {
     if (rawRoute) {
       const parsed = JSON.parse(rawRoute);
       if (parsed?.path) {
-        const expiresAt = parsed.expiresAt || parsed?.params?.expiresAt;
+        const expiresAt = parsed.expiresAt !== undefined ? parsed.expiresAt : (parsed?.params?.expiresAt ?? null);
+        // Only check expiry if expiresAt is a non-null string
         if (expiresAt && new Date(expiresAt) <= new Date()) {
           await clearPendingAuthRoute();
           return null;
@@ -76,6 +78,7 @@ export async function getPendingAuthRoute(): Promise<PendingAuthRoute | null> {
 
     if (!step) return null;
 
+    // Only check expiry if expiresAt is a non-null string
     if (expiresAt && new Date(expiresAt) <= new Date()) {
       await clearPendingAuthRoute();
       return null;
@@ -89,8 +92,8 @@ export async function getPendingAuthRoute(): Promise<PendingAuthRoute | null> {
 
     return {
       path: pathMap[step as AuthStep],
-      params: { user_id: userId, phone, expiresAt },
-      expiresAt,
+      params: { user_id: userId, phone, expiresAt: expiresAt ?? null },
+      expiresAt: expiresAt ?? null,
     };
   } catch (error) {
     return null;

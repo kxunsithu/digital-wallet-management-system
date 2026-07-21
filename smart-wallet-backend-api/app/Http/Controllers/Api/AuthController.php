@@ -163,10 +163,11 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Update OTP status to verified
+        // Update OTP status to verified and extend expiry to 7 days for PIN creation flow
         DB::table('otp_verifications')->where('id', $otp->id)->update([
             'status' => 'verified',
             'verified_at' => now(),
+            'expires_at' => Carbon::now()->addDays(7),
             'updated_at' => now(),
         ]);
 
@@ -183,6 +184,7 @@ class AuthController extends Controller
                 'phone_number' => $user->phone_number,
                 'next_step' => $nextStep,
                 'otp_verified_at' => now()->toISOString(),
+                'expires_at' => Carbon::now()->addDays(7)->toISOString(),
             ],
         ], 200);
     }
@@ -193,7 +195,7 @@ class AuthController extends Controller
 
         $user = User::findOrFail($data['user_id']);
 
-        // 🔒 SECURITY: Verify that OTP was recently verified (within last 10 minutes)
+        // 🔒 SECURITY: Verify that OTP was recently verified (within last 7 days)
         $validOtp = DB::table('otp_verifications')
             ->where('user_id', $user->id)
             ->where('status', 'verified')
