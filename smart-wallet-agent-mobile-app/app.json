@@ -11,9 +11,11 @@
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.kxunsithu.smartwalletagent",
       "permissions": [
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.READ_EXTERNAL_STORAGE"
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.CAMERA"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -44,6 +46,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "aedc38c0-5b53-4c1c-89cf-fbace89975f5"
+      }
     }
   }
 }

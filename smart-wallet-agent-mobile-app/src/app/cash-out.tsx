@@ -702,7 +702,6 @@ export default function CashOutScreen() {
           router.back();
         }}
         transaction={receiptTransaction}
-        isDark={isDark}
       />
     </SafeAreaView>
   );

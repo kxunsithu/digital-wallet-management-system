@@ -362,7 +362,6 @@ export default function TransactionsScreen() {
         visible={!!selectedTxForReceipt}
         onClose={() => setSelectedTxForReceipt(null)}
         transaction={selectedTxForReceipt}
-        isDark={isDark}
       />
     </SafeAreaView>
   );

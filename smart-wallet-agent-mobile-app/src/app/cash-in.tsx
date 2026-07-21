@@ -695,7 +695,6 @@ export default function CashInScreen() {
           router.back();
         }}
         transaction={receiptTransaction}
-        isDark={isDark}
       />
     </SafeAreaView>
   );
