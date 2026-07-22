@@ -32,9 +32,11 @@ class AuthController extends Controller
         $data = $request->validated();
 
         $requestedRoleId = $data['role_id'] ?? null;
-        $requestedRoleName = null;
+        // If role_id not provided by client, treat the request as coming from customer app
         if (! empty($requestedRoleId)) {
             $requestedRoleName = DB::table('roles')->where('id', $requestedRoleId)->value('name');
+        } else {
+            $requestedRoleName = 'customer';
         }
 
         if ($requestedRoleName && strtolower($requestedRoleName) === 'admin') {
