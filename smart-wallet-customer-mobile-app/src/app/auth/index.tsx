@@ -49,11 +49,23 @@ export default function RequestOtpScreen() {
       Toast.show({ type: 'success', text1: 'OTP Sent', text2: 'A code has been sent to your phone' });
       router.push({ pathname: '/auth/verify-otp', params: { phone: trimmedPhone, expiresAt } });
     } else {
-      Toast.show({
-        type: 'error',
-        text1: 'Failed',
-        text2: response.body?.message ?? 'Could not request OTP',
-      });
+      const serverMessage = response.body?.message ?? 'Could not request OTP';
+
+      // If backend indicates the phone is already registered as admin/agent, show a localized message
+      const isRoleConflict = typeof serverMessage === 'string' && /already registered as/i.test(serverMessage);
+      if (isRoleConflict) {
+        Toast.show({
+          type: 'error',
+          text1: 'ဆက်သွယ်ရန်လိုအပ်သည်',
+          text2: 'ဤဖုန်းနံပါတ်ကို အုပ်ချုပ်ရေး/အေဂျင့်အဖြစ် မှတ်ပုံတင်ထားသည်။ မိမိအကောင့်ဖြင့် ဝင်ပါ သို့မဟုတ် support သို့ ဆက်သွယ်ပါ။',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Failed',
+          text2: serverMessage,
+        });
+      }
     }
   };
 
@@ -213,6 +225,8 @@ export default function RequestOtpScreen() {
                 We'll send a 6-digit OTP to this number
               </Text>
             </View>
+
+            {/* Full name and NRC will be collected on the Create PIN step if required */}
 
             {/* Submit Button */}
             <TouchableOpacity

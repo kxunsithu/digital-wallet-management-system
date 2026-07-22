@@ -94,19 +94,6 @@ class AuthController extends Controller
         }
 
         if (! $user) {
-            if (strtolower((string) $requestedRoleName) === 'customer') {
-                if (empty($data['full_name']) || empty($data['nrc_number'])) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Full name and NRC number are required for customer registration.',
-                        'errors' => [
-                            'full_name' => empty($data['full_name']) ? ['Full name is required.'] : [],
-                            'nrc_number' => empty($data['nrc_number']) ? ['NRC number is required.'] : [],
-                        ],
-                    ], 422);
-                }
-            }
-
             $userAttributes = [
                 'phone_number' => $data['phone_number'],
                 'status' => 'active',
