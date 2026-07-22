@@ -26,6 +26,7 @@ interface UserProfile {
   phone_number: string;
   full_name: string | null;
   email: string | null;
+  nrc_number: string | null;
   status: string;
   role?: string;
   agent_profile: {
@@ -52,6 +53,11 @@ export default function ProfileScreen() {
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [editFullName, setEditFullName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editNrcNumber, setEditNrcNumber] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
 
   // Receipt Setting state
   const [autoSaveReceipt, setAutoSaveReceiptState] = useState(false);
@@ -65,7 +71,11 @@ export default function ProfileScreen() {
     try {
       const res = await apiFetch("/profile");
       if (res.status === 200 && res.body?.success) {
-        setProfile(res.body.data);
+        const data = res.body.data;
+        setProfile(data);
+        setEditFullName(data.full_name ?? "");
+        setEditEmail(data.email ?? "");
+        setEditNrcNumber(data.nrc_number ?? "");
       } else if (res.status === 401) {
         router.replace("/auth");
       }
@@ -108,6 +118,41 @@ export default function ProfileScreen() {
       Toast.show({ type: "error", text1: "Error", text2: "Failed to sign out" });
     } finally {
       setLoggingOut(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editFullName.trim()) {
+      Toast.show({ type: "error", text1: "Required", text2: "Full name is required." });
+      return;
+    }
+    if (!editNrcNumber.trim()) {
+      Toast.show({ type: "error", text1: "Required", text2: "NRC number is required." });
+      return;
+    }
+
+    setSavingProfile(true);
+    try {
+      const res = await apiFetch("/profile", {
+        method: "PUT",
+        body: JSON.stringify({
+          full_name: editFullName.trim(),
+          email: editEmail.trim() || null,
+          nrc_number: editNrcNumber.trim(),
+        }),
+      });
+
+      if (res.status === 200 && res.body?.success) {
+        setProfile(res.body.data);
+        setEditingProfile(false);
+        Toast.show({ type: "success", text1: "Saved", text2: "Profile updated successfully." });
+      } else {
+        Toast.show({ type: "error", text1: "Error", text2: res.body?.message ?? "Failed to update profile." });
+      }
+    } catch (e) {
+      Toast.show({ type: "error", text1: "Error", text2: "Network error." });
+    } finally {
+      setSavingProfile(false);
     }
   };
 
