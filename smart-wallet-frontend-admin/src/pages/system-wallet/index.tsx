@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import QRCode from "react-qr-code";
 import {
@@ -15,7 +15,9 @@ import {
   FileText,
   Copy,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
+import { useRealTimeBalance } from "@/hooks/useRealTimeBalance";
 import QrScannerDialog from "@/components/qr/QrScannerDialog";
 import MainLayout from "@/components/layouts/MainLayout";
 import TransferReceiptModal from "@/components/common/TransferReceiptModal";
@@ -100,6 +102,8 @@ const SystemWalletPage = () => {
   const [receiptTx, setReceiptTx] = useState<any>(null);
   const [pinModalOpen, setPinModalOpen] = useState(false);
   const [autoSaveReceipt, setAutoSaveReceipt] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [adminUserId, setAdminUserId] = useState<number | string | undefined>(undefined);
 
   const getAdminUser = () => {
     try {
@@ -111,7 +115,7 @@ const SystemWalletPage = () => {
     }
   };
 
-  const loadWallet = async () => {
+  const loadWallet = useCallback(async () => {
     const adminUser = getAdminUser();
     const adminId = adminUser?.id;
 
@@ -120,6 +124,8 @@ const SystemWalletPage = () => {
       setLoading(false);
       return;
     }
+
+    setAdminUserId(adminId);
 
     try {
       setLoading(true);
@@ -148,11 +154,25 @@ const SystemWalletPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Real-time balance hook — polls every 2 s
+  const {
+    balance: liveBalance,
+    loading: balanceLoading,
+    refreshBalance,
+  } = useRealTimeBalance(adminUserId, !!adminUserId);
+
+  // Track last-updated timestamp whenever a live balance arrives
+  useEffect(() => {
+    if (liveBalance !== null) {
+      setLastUpdated(new Date());
+    }
+  }, [liveBalance]);
 
   useEffect(() => {
     void loadWallet();
-  }, []);
+  }, [loadWallet]);
 
   const normalizeQrValue = (value: string): string => {
     const trimmed = value.trim();
@@ -336,15 +356,39 @@ const SystemWalletPage = () => {
 
                 {/* Balance highlight */}
                 <div className="mb-8">
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                    Available Balance
-                  </p>
+                  <div className="mb-1 flex items-center gap-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                      Available Balance
+                    </p>
+                    {/* Live indicator */}
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-[10px] font-semibold text-green-700">
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+                        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500" />
+                      </span>
+                      LIVE
+                    </span>
+                    {/* Manual refresh */}
+                    <button
+                      type="button"
+                      title="Refresh balance"
+                      onClick={() => void refreshBalance()}
+                      className="ml-auto flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-white text-muted-foreground transition-colors hover:border-[#D5E726] hover:text-[#10110E]"
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 ${balanceLoading ? "animate-spin" : ""}`} />
+                    </button>
+                  </div>
                   <p className="mt-1 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-                    {formatBalance(wallet.balance)}
+                    {formatBalance(liveBalance ?? wallet.balance)}
                     <span className="ml-2 text-lg font-medium text-muted-foreground">
                       MMK
                     </span>
                   </p>
+                  {lastUpdated && (
+                    <p className="mt-1.5 text-[11px] text-muted-foreground">
+                      Updated {lastUpdated.toLocaleTimeString()}
+                    </p>
+                  )}
                 </div>
 
                 {/* Wallet meta row */}
