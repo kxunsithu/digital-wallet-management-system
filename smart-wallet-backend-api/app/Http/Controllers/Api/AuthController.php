@@ -205,6 +205,16 @@ class AuthController extends Controller
         $hasPin = DB::table('pins')->where('user_id', $user->id)->exists();
         $nextStep = ($user->is_pin_created && $hasPin) ? 'verify_pin' : 'create_pin';
 
+        $roleName = null;
+        if (! empty($user->role_id)) {
+            $roleName = DB::table('roles')->where('id', $user->role_id)->value('name');
+        }
+
+        $requiresProfile = false;
+        if ($nextStep === 'create_pin' && strtolower((string) $roleName) === 'customer') {
+            $requiresProfile = empty($user->full_name) || empty($user->nrc_number);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'OTP verified successfully.',
@@ -212,6 +222,7 @@ class AuthController extends Controller
                 'user_id' => $user->id,
                 'phone_number' => $user->phone_number,
                 'next_step' => $nextStep,
+                'requires_profile' => $requiresProfile,
                 'otp_verified_at' => now()->toISOString(),
                 'expires_at' => Carbon::now()->addDays(7)->toISOString(),
             ],

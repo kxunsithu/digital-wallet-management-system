@@ -24,19 +24,19 @@ const STEPS = ['Phone', 'OTP', 'PIN'];
 export default function CreatePinScreen() {
   const params = useLocalSearchParams();
   const userId = Number(params.user_id || params.userId || 0);
+  const requiresProfile = params.requires_profile === '1' || params.requires_profile === 'true';
 
   const [pin, setPin] = useState<string[]>(Array(PIN_LENGTH).fill(''));
   const [confirmPin, setConfirmPin] = useState<string[]>(Array(PIN_LENGTH).fill(''));
   const [fullName, setFullName] = useState('');
   const [nrcNumber, setNrcNumber] = useState('');
-  const [showProfileFields, setShowProfileFields] = useState(false);
+  const [step, setStep] = useState<'profile' | 'pin' | 'confirm'>(requiresProfile ? 'profile' : 'pin');
   const isMounted = useRef(true);
 
   useEffect(() => {
     isMounted.current = true;
     return () => { isMounted.current = false; };
   }, []);
-  const [step, setStep] = useState<'pin' | 'confirm'>('pin');
   const [loading, setLoading] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [confirmFocusedIndex, setConfirmFocusedIndex] = useState<number | null>(null);
@@ -115,6 +115,21 @@ export default function CreatePinScreen() {
   };
 
   const handleSubmit = async () => {
+    if (step === 'profile') {
+      if (!fullName.trim()) {
+        Toast.show({ type: 'error', text1: 'Required', text2: 'Please enter your full name.' });
+        return;
+      }
+      if (!nrcNumber.trim()) {
+        Toast.show({ type: 'error', text1: 'Required', text2: 'Please enter your NRC number.' });
+        return;
+      }
+
+      setStep('pin');
+      setTimeout(() => pinRefs.current[0]?.focus(), 100);
+      return;
+    }
+
     const pinString = pin.join('');
     const confirmString = confirmPin.join('');
 
@@ -153,8 +168,10 @@ export default function CreatePinScreen() {
       const message = response.body?.message ?? '';
 
       if (needsFullName || needsNrc || (typeof message === 'string' && message.toLowerCase().includes('full name'))) {
-        if (isMounted.current) setShowProfileFields(true);
-        if (isMounted.current) Toast.show({ type: 'error', text1: 'Additional Info Required', text2: 'Please provide your full name and NRC number to complete registration.' });
+        if (isMounted.current) {
+          setStep('profile');
+          Toast.show({ type: 'error', text1: 'Additional Info Required', text2: 'Please provide your full name and NRC number to complete registration.' });
+        }
         return;
       }
 
@@ -276,12 +293,18 @@ export default function CreatePinScreen() {
           </View>
 
           <Text style={{ fontSize: 22, fontWeight: '800', color: colors.secondary, letterSpacing: -0.5 }}>
-            {step === 'pin' ? 'Create Your PIN' : 'Confirm Your PIN'}
+            {step === 'profile'
+              ? 'Complete Profile'
+              : step === 'pin'
+                ? 'Create Your PIN'
+                : 'Confirm Your PIN'}
           </Text>
           <Text style={{ fontSize: 13, color: `${colors.secondary}99`, marginTop: 4 }}>
-            {step === 'pin'
-              ? 'Enter a 4-digit PIN to secure your wallet'
-              : 'Re-enter your PIN to confirm'}
+            {step === 'profile'
+              ? 'Please enter your full name and NRC number before creating a PIN.'
+              : step === 'pin'
+                ? 'Enter a 4-digit PIN to secure your wallet'
+                : 'Re-enter your PIN to confirm'}
           </Text>
         </LinearGradient>
 
@@ -309,27 +332,116 @@ export default function CreatePinScreen() {
               ))}
             </View>
 
-            {/* PIN Boxes */}
-            {step === 'pin' ? (
-              renderPinBoxes(pin, pinRefs, handlePinChange, (e, i) => handleKeyPress(e, i, 'pin'), setFocusedIndex, focusedIndex, 'pin')
+            {step === 'profile' ? (
+              <View>
+                <View style={{ marginBottom: 20 }}>
+                  <Text style={{
+                    fontSize: 11, fontWeight: '600',
+                    color: colors.textSecondary,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.8,
+                    marginBottom: 8,
+                  }}>
+                    Full Name
+                  </Text>
+                  <View style={{
+                    borderRadius: 16,
+                    borderWidth: 1.5,
+                    borderColor: colors.border,
+                    backgroundColor: colors.surface,
+                    paddingHorizontal: 16,
+                  }}>
+                    <TextInput
+                      placeholder="Your full name"
+                      placeholderTextColor={colors.textSecondary}
+                      value={fullName}
+                      onChangeText={setFullName}
+                      editable={!loading}
+                      style={{
+                        paddingVertical: 16,
+                        fontSize: 16,
+                        fontWeight: '500',
+                        color: colors.text,
+                      }}
+                    />
+                  </View>
+                </View>
+                <View style={{ marginBottom: 20 }}>
+                  <Text style={{
+                    fontSize: 11, fontWeight: '600',
+                    color: colors.textSecondary,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.8,
+                    marginBottom: 8,
+                  }}>
+                    NRC Number
+                  </Text>
+                  <View style={{
+                    borderRadius: 16,
+                    borderWidth: 1.5,
+                    borderColor: colors.border,
+                    backgroundColor: colors.surface,
+                    paddingHorizontal: 16,
+                  }}>
+                    <TextInput
+                      placeholder="NRC number"
+                      placeholderTextColor={colors.textSecondary}
+                      value={nrcNumber}
+                      onChangeText={setNrcNumber}
+                      editable={!loading}
+                      style={{
+                        paddingVertical: 16,
+                        fontSize: 16,
+                        fontWeight: '500',
+                        color: colors.text,
+                      }}
+                    />
+                  </View>
+                </View>
+              </View>
             ) : (
-              renderPinBoxes(confirmPin, confirmRefs, handleConfirmChange, (e, i) => handleKeyPress(e, i, 'confirm'), setConfirmFocusedIndex, confirmFocusedIndex, 'confirm')
+              <>
+                {/* PIN Boxes */}
+                {step === 'pin' ? (
+                  renderPinBoxes(pin, pinRefs, handlePinChange, (e, i) => handleKeyPress(e, i, 'pin'), setFocusedIndex, focusedIndex, 'pin')
+                ) : (
+                  renderPinBoxes(confirmPin, confirmRefs, handleConfirmChange, (e, i) => handleKeyPress(e, i, 'confirm'), setConfirmFocusedIndex, confirmFocusedIndex, 'confirm')
+                )}
+
+                {/* Show/Hide Toggle */}
+                <TouchableOpacity
+                  onPress={() => setShowPin((prev) => !prev)}
+                  activeOpacity={0.7}
+                  style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-end', marginBottom: 28 }}
+                >
+                  <Feather name={showPin ? 'eye-off' : 'eye'} size={15} color={colors.primary} />
+                  <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary, marginLeft: 6 }}>
+                    {showPin ? 'Hide PIN' : 'Show PIN'}
+                  </Text>
+                </TouchableOpacity>
+              </>
             )}
 
-            {/* Show/Hide Toggle */}
-            <TouchableOpacity
-              onPress={() => setShowPin((prev) => !prev)}
-              activeOpacity={0.7}
-              style={{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-end', marginBottom: 28 }}
-            >
-              <Feather name={showPin ? 'eye-off' : 'eye'} size={15} color={colors.primary} />
-              <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primary, marginLeft: 6 }}>
-                {showPin ? 'Hide PIN' : 'Show PIN'}
-              </Text>
-            </TouchableOpacity>
-
             {/* Action Button */}
-            {step === 'confirm' ? (
+            {step === 'profile' ? (
+              <TouchableOpacity
+                onPress={handleSubmit}
+                disabled={loading || !fullName.trim() || !nrcNumber.trim()}
+                activeOpacity={0.85}
+                style={{ opacity: loading || !fullName.trim() || !nrcNumber.trim() ? 0.6 : 1, marginBottom: 16 }}
+              >
+                <LinearGradient
+                  colors={[colors.primary, `${colors.primary}CC`]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={{ paddingVertical: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Text style={{ fontSize: 16, fontWeight: '700', color: colors.secondary, marginRight: 8 }}>
+                    Continue to PIN
+                  </Text>
+                  <Feather name="arrow-right" size={18} color={colors.secondary} />
+                </LinearGradient>
+              </TouchableOpacity>
+            ) : step === 'confirm' ? (
               <TouchableOpacity
                 onPress={handleSubmit}
                 disabled={loading || !isConfirmComplete}
@@ -346,9 +458,9 @@ export default function CreatePinScreen() {
                   ) : (
                     <>
                       <Text style={{ fontSize: 16, fontWeight: '700', color: colors.secondary, marginRight: 8 }}>
-                        {isConfirmComplete ? 'Create PIN' : 'Enter confirm PIN'}
+                        Create PIN
                       </Text>
-                      {isConfirmComplete && <Feather name="check" size={18} color={colors.secondary} />}
+                      <Feather name="check" size={18} color={colors.secondary} />
                     </>
                   )}
                 </LinearGradient>

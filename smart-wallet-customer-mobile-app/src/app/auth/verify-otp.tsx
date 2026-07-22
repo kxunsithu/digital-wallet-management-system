@@ -159,17 +159,18 @@ export default function VerifyOtpScreen() {
       const data = response.body.data || {};
       const userId = data.user_id;
       const nextStep = data.next_step === 'create_pin' ? '/auth/create-pin' : '/auth/verify-pin';
+      const requiresProfile = Boolean(data.requires_profile);
 
       // Both create-pin and verify-pin pending routes are persistent (expiresAt: null) once OTP is verified
       if (isMounted.current) {
         await setPendingAuthRoute({
           path: nextStep as '/auth/create-pin' | '/auth/verify-pin',
-          params: { user_id: userId, phone },
+          params: { user_id: userId, phone, requires_profile: requiresProfile ? '1' : '0' },
           expiresAt: null, // Persistent — no expiry once OTP is verified
         });
 
         Toast.show({ type: 'success', text1: 'OTP Verified', text2: 'Code verified successfully!' });
-        router.push({ pathname: nextStep, params: { user_id: userId, phone } });
+        router.push({ pathname: nextStep, params: { user_id: userId, phone, requires_profile: requiresProfile ? '1' : '0' } });
       }
     } else {
       if (response.status === 422 && response.body?.message?.toLowerCase().includes('expired')) {
