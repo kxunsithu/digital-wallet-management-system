@@ -22,3 +22,11 @@ export const rejectCustomerNrc = (
 });
 
 export const deleteCustomer = (id: number | string) => api.delete(`customers/${id}`);
+
+export const toggleCustomerStatus = (id: number | string) =>
+  api.post(`customers/${id}/toggle-status`);
+
+export const toggleCustomerKycStatus = (
+  id: number | string,
+  data?: { status: string; rejection_reason?: string }
+) => api.post(`customers/${id}/toggle-kyc-status`, data);

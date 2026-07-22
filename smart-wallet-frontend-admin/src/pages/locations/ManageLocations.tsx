@@ -13,8 +13,7 @@ import {
   updateTownship,
   deleteTownship,
 } from "@/services/location.service";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Trash2, Edit2, Search } from "lucide-react";
+import { Trash2, Edit2, Search, MapPin, Plus } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -48,7 +47,6 @@ export default function ManageLocations() {
   const [newTownshipName, setNewTownshipName] = useState("");
   const [selectedRegionId, setSelectedRegionId] = useState<string>("");
 
-  // Search & client-side pagination states
   const [regionSearch, setRegionSearch] = useState("");
   const [regionPage, setRegionPage] = useState(1);
   const [regionPerPage, setRegionPerPage] = useState(5);
@@ -57,11 +55,9 @@ export default function ManageLocations() {
   const [townshipPage, setTownshipPage] = useState(1);
   const [townshipPerPage, setTownshipPerPage] = useState(5);
 
-  // Controlled delete dialog state
   const [deleteRegionId, setDeleteRegionId] = useState<number | null>(null);
   const [deleteTownshipId, setDeleteTownshipId] = useState<number | null>(null);
 
-  // Controlled edit dialog state
   const [editRegion, setEditRegion] = useState<{ id: number; name: string } | null>(null);
   const [editTownship, setEditTownship] = useState<{ id: number; name: string; state_region_id: string } | null>(null);
 
@@ -69,7 +65,7 @@ export default function ManageLocations() {
     try {
       const res = await getStateRegions();
       setRegions(res.data.data);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load regions");
     }
   };
@@ -78,7 +74,7 @@ export default function ManageLocations() {
     try {
       const res = await getTownships();
       setTownships(res.data.data);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load townships");
     }
   };
@@ -88,13 +84,8 @@ export default function ManageLocations() {
     fetchTownships();
   }, []);
 
-  useEffect(() => {
-    setRegionPage(1);
-  }, [regionSearch]);
-
-  useEffect(() => {
-    setTownshipPage(1);
-  }, [townshipSearch]);
+  useEffect(() => { setRegionPage(1); }, [regionSearch]);
+  useEffect(() => { setTownshipPage(1); }, [townshipSearch]);
 
   const handleAddRegion = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,7 +121,7 @@ export default function ManageLocations() {
       toast.success("Region deleted");
       fetchRegions();
       fetchTownships();
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete region");
     } finally {
       setDeleteRegionId(null);
@@ -178,342 +169,409 @@ export default function ManageLocations() {
       await deleteTownship(deleteTownshipId);
       toast.success("Township deleted");
       fetchTownships();
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete township");
     } finally {
       setDeleteTownshipId(null);
     }
   };
 
-  // Client-side filtering & pagination calculation for Region
-  const filteredRegions = regions.filter(r => r.name.toLowerCase().includes(regionSearch.toLowerCase()));
+  // Client-side filtering & pagination for Regions
+  const filteredRegions = regions.filter((r) =>
+    r.name.toLowerCase().includes(regionSearch.toLowerCase()),
+  );
   const totalRegions = filteredRegions.length;
   const totalRegionPages = Math.ceil(totalRegions / regionPerPage) || 1;
-  const paginatedRegions = filteredRegions.slice((regionPage - 1) * regionPerPage, regionPage * regionPerPage);
+  const paginatedRegions = filteredRegions.slice(
+    (regionPage - 1) * regionPerPage,
+    regionPage * regionPerPage,
+  );
   const regionFrom = totalRegions === 0 ? 0 : (regionPage - 1) * regionPerPage + 1;
   const regionTo = Math.min(regionPage * regionPerPage, totalRegions);
 
-  // Client-side filtering & pagination calculation for Township
-  const filteredTownships = townships.filter(t =>
-    t.name.toLowerCase().includes(townshipSearch.toLowerCase()) ||
-    t.state_region?.name?.toLowerCase().includes(townshipSearch.toLowerCase())
+  // Client-side filtering & pagination for Townships
+  const filteredTownships = townships.filter(
+    (t) =>
+      t.name.toLowerCase().includes(townshipSearch.toLowerCase()) ||
+      t.state_region?.name?.toLowerCase().includes(townshipSearch.toLowerCase()),
   );
   const totalTownships = filteredTownships.length;
   const totalTownshipPages = Math.ceil(totalTownships / townshipPerPage) || 1;
-  const paginatedTownships = filteredTownships.slice((townshipPage - 1) * townshipPerPage, townshipPage * townshipPerPage);
+  const paginatedTownships = filteredTownships.slice(
+    (townshipPage - 1) * townshipPerPage,
+    townshipPage * townshipPerPage,
+  );
   const townshipFrom = totalTownships === 0 ? 0 : (townshipPage - 1) * townshipPerPage + 1;
   const townshipTo = Math.min(townshipPage * townshipPerPage, totalTownships);
 
+  const PaginationControls = ({
+    page,
+    totalPages,
+    totalEntries,
+    from,
+    to,
+    perPage,
+    onPageChange,
+    onPerPageChange,
+  }: {
+    page: number;
+    totalPages: number;
+    totalEntries: number;
+    from: number;
+    to: number;
+    perPage: number;
+    onPageChange: (p: number) => void;
+    onPerPageChange: (n: number) => void;
+  }) => (
+    <div className="flex flex-col items-center justify-between gap-3 border-t border-border bg-slate-50/30 px-4 py-3 text-xs text-muted-foreground sm:flex-row">
+      <div>
+        Showing {from} to {to} of {totalEntries} Entries
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5">
+          <span>Show</span>
+          <Select
+            value={perPage.toString()}
+            onValueChange={(val: string | null) => {
+              if (val) {
+                onPerPageChange(Number(val));
+              }
+            }}
+          >
+            <SelectTrigger className="h-7 w-[55px] text-xs">
+              <SelectValue placeholder={perPage.toString()} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <span>
+          Page {page} of {totalPages}
+        </span>
+        <div className="flex items-center gap-1">
+          {(["<<", "<", ">", ">>"] as const).map((label, i) => {
+            const targets = [1, Math.max(page - 1, 1), Math.min(page + 1, totalPages), totalPages];
+            const disabled = i < 2 ? page === 1 : page === totalPages;
+            return (
+              <Button
+                key={label}
+                variant="outline"
+                size="icon"
+                className="h-7 w-7 rounded-md border-slate-200 text-xs shadow-none"
+                onClick={() => onPageChange(targets[i])}
+                disabled={disabled}
+              >
+                {label}
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <MainLayout title="Manage Locations">
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-        {/* Regions */}
-        <Card className="shadow-sm border-slate-100 bg-white overflow-hidden">
-          <CardHeader className="border-b border-slate-100 bg-slate-50/20 py-4">
-            <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
-              States / Regions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="p-4 border-b border-slate-100 bg-slate-50/5 flex flex-col gap-3">
-              <form onSubmit={handleAddRegion} className="flex gap-2">
-                <Input
-                  placeholder="Add e.g. Yangon Region"
-                  value={newRegionName}
-                  onChange={(e) => setNewRegionName(e.target.value)}
-                  className="h-9 text-sm"
-                />
-                <Button type="submit" size="sm" className="h-9">Add</Button>
-              </form>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="Filter state/regions..."
-                  value={regionSearch}
-                  onChange={(e) => setRegionSearch(e.target.value)}
-                  className="pl-9 h-9 text-sm"
-                />
-              </div>
-            </div>
-
-            <Table>
-              <TableHeader>
-                <TableRow className="border-b border-slate-100 bg-slate-50/30 hover:bg-transparent">
-                  <TableHead className="text-slate-500 text-xs font-semibold uppercase tracking-wider px-4 py-2.5 w-16">No</TableHead>
-                  <TableHead className="text-slate-500 text-xs font-semibold uppercase tracking-wider px-4">Name</TableHead>
-                  <TableHead className="text-slate-500 text-xs font-semibold uppercase tracking-wider px-4 text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedRegions.map((r, index) => (
-                  <TableRow key={r.id} className="border-b border-slate-100 hover:bg-slate-50/40 last:border-0">
-                    <TableCell className="px-4 py-3 text-slate-500 text-sm">
-                      {(regionPage - 1) * regionPerPage + index + 1}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 font-semibold text-slate-800 text-sm">{r.name}</TableCell>
-                    <TableCell className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 rounded-md border-slate-200 hover:bg-slate-50 text-slate-600 shadow-none"
-                          onClick={() => setEditRegion({ id: r.id, name: r.name })}
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 rounded-md border-red-100 hover:bg-red-50 text-red-500 hover:text-red-700 shadow-none"
-                          onClick={() => setDeleteRegionId(r.id)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {totalRegions === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-center py-6 text-slate-500 text-sm">
-                      No regions found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-
-            {totalRegions > 0 && (
-              <div className="border-t border-slate-100 py-3 px-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/30 text-slate-500 text-xs">
-                <div>
-                  Showing {regionFrom} to {regionTo} of {totalRegions} Entries
-                </div>
-                <div className="flex items-center gap-3">
-                  <Select value={regionPerPage.toString()} onValueChange={(val) => {
-                    setRegionPerPage(Number(val));
-                    setRegionPage(1);
-                  }}>
-                    <SelectTrigger className="w-[55px] h-7 text-xs">
-                      <SelectValue placeholder={regionPerPage.toString()} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <span>Page {regionPage} of {totalRegionPages}</span>
-
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7 rounded-md border-slate-200 shadow-none text-xs"
-                      onClick={() => setRegionPage(1)}
-                      disabled={regionPage === 1}
-                    >
-                      {"<<"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7 rounded-md border-slate-200 shadow-none text-xs"
-                      onClick={() => setRegionPage(prev => Math.max(prev - 1, 1))}
-                      disabled={regionPage === 1}
-                    >
-                      {"<"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7 rounded-md border-slate-200 shadow-none text-xs"
-                      onClick={() => setRegionPage(prev => Math.min(prev + 1, totalRegionPages))}
-                      disabled={regionPage === totalRegionPages}
-                    >
-                      {">"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7 rounded-md border-slate-200 shadow-none text-xs"
-                      onClick={() => setRegionPage(totalRegionPages)}
-                      disabled={regionPage === totalRegionPages}
-                    >
-                      {">>"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Townships */}
-        <Card className="shadow-sm border-slate-100 bg-white overflow-hidden">
-          <CardHeader className="border-b border-slate-100 bg-slate-50/20 py-4">
-            <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
-              Townships
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="p-4 border-b border-slate-100 bg-slate-50/5 flex flex-col gap-3">
-              <form onSubmit={handleAddTownship} className="flex flex-col sm:flex-row gap-2">
-                <Select value={selectedRegionId} onValueChange={(val) => setSelectedRegionId(val || "")}>
-                  <SelectTrigger className="w-full sm:w-[170px] h-9 text-sm">
-                    <SelectValue placeholder="Select State/Region">
-                      {(val: string | null) => val ? regions.find(r => r.id.toString() === val)?.name || val : "Select State/Region"}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {regions.map(r => (
-                      <SelectItem key={r.id} value={r.id.toString()}>{r.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  placeholder="Add e.g. Hlaing"
-                  value={newTownshipName}
-                  onChange={(e) => setNewTownshipName(e.target.value)}
-                  className="h-9 text-sm flex-1"
-                />
-                <Button type="submit" size="sm" className="h-9">Add</Button>
-              </form>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="Filter townships..."
-                  value={townshipSearch}
-                  onChange={(e) => setTownshipSearch(e.target.value)}
-                  className="pl-9 h-9 text-sm"
-                />
-              </div>
-            </div>
-
-            <Table>
-              <TableHeader>
-                <TableRow className="border-b border-slate-100 bg-slate-50/30 hover:bg-transparent">
-                  <TableHead className="text-slate-500 text-xs font-semibold uppercase tracking-wider px-4 py-2.5 w-16">No</TableHead>
-                  <TableHead className="text-slate-500 text-xs font-semibold uppercase tracking-wider px-4">Name</TableHead>
-                  <TableHead className="text-slate-500 text-xs font-semibold uppercase tracking-wider px-4">State/Region</TableHead>
-                  <TableHead className="text-slate-500 text-xs font-semibold uppercase tracking-wider px-4 text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedTownships.map((t, index) => (
-                  <TableRow key={t.id} className="border-b border-slate-100 hover:bg-slate-50/40 last:border-0">
-                    <TableCell className="px-4 py-3 text-slate-500 text-sm">
-                      {(townshipPage - 1) * townshipPerPage + index + 1}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 font-semibold text-slate-800 text-sm">{t.name}</TableCell>
-                    <TableCell className="px-4 py-3">
-                      <span className="text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded font-medium border border-slate-200/50">
-                        {t.state_region?.name || "-"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 rounded-md border-slate-200 hover:bg-slate-50 text-slate-600 shadow-none"
-                          onClick={() => setEditTownship({ id: t.id, name: t.name, state_region_id: t.state_region_id?.toString() || "" })}
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 rounded-md border-red-100 hover:bg-red-50 text-red-500 hover:text-red-700 shadow-none"
-                          onClick={() => setDeleteTownshipId(t.id)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {totalTownships === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center py-6 text-slate-500 text-sm">
-                      No townships found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-
-            {totalTownships > 0 && (
-              <div className="border-t border-slate-100 py-3 px-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/30 text-slate-500 text-xs">
-                <div>
-                  Showing {townshipFrom} to {townshipTo} of {totalTownships} Entries
-                </div>
-                <div className="flex items-center gap-3">
-                  <Select value={townshipPerPage.toString()} onValueChange={(val) => {
-                    setTownshipPerPage(Number(val));
-                    setTownshipPage(1);
-                  }}>
-                    <SelectTrigger className="w-[55px] h-7 text-xs">
-                      <SelectValue placeholder={townshipPerPage.toString()} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5</SelectItem>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="20">20</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <span>Page {townshipPage} of {totalTownshipPages}</span>
-
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7 rounded-md border-slate-200 shadow-none text-xs"
-                      onClick={() => setTownshipPage(1)}
-                      disabled={townshipPage === 1}
-                    >
-                      {"<<"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7 rounded-md border-slate-200 shadow-none text-xs"
-                      onClick={() => setTownshipPage(prev => Math.max(prev - 1, 1))}
-                      disabled={townshipPage === 1}
-                    >
-                      {"<"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7 rounded-md border-slate-200 shadow-none text-xs"
-                      onClick={() => setTownshipPage(prev => Math.min(prev + 1, totalTownshipPages))}
-                      disabled={townshipPage === totalTownshipPages}
-                    >
-                      {">"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-7 w-7 rounded-md border-slate-200 shadow-none text-xs"
-                      onClick={() => setTownshipPage(totalTownshipPages)}
-                      disabled={townshipPage === totalTownshipPages}
-                    >
-                      {">>"}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
+      {/* Header Banner */}
+      <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+        <div className="flex items-center gap-4">
+          <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]">
+            <MapPin className="h-6 w-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-foreground">Manage Locations</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Add and manage States/Regions and Townships used across the platform.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full border border-[#D5E726] bg-white px-3 py-1.5 text-xs font-bold text-[#10110E]">
+            {regions.length} Regions
+          </span>
+          <span className="rounded-full border border-border bg-slate-50 px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+            {townships.length} Townships
+          </span>
+        </div>
       </div>
 
-      {/* Delete Region Dialog */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* ─── States / Regions Panel ─── */}
+        <div className="overflow-hidden rounded-2xl border border-border bg-white">
+          {/* Panel header */}
+          <div className="border-b border-border px-5 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-foreground">States / Regions</h3>
+                <p className="text-xs text-muted-foreground">{totalRegions} records</p>
+              </div>
+              <span className="rounded-full bg-[#D5E726] px-2.5 py-1 text-xs font-bold text-[#10110E]">
+                Geo Layer 1
+              </span>
+            </div>
+          </div>
+
+          {/* Add form */}
+          <div className="border-b border-border bg-slate-50/30 px-5 py-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Add New Region
+            </p>
+            <form onSubmit={handleAddRegion} className="flex gap-2">
+              <Input
+                placeholder="e.g. Yangon Region"
+                value={newRegionName}
+                onChange={(e) => setNewRegionName(e.target.value)}
+                className="h-10 flex-1 text-sm"
+              />
+              <Button
+                type="submit"
+                size="sm"
+                className="h-10 rounded-lg bg-[#D5E726] font-semibold text-[#10110E] hover:bg-[#D5E726]/90"
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                Add
+              </Button>
+            </form>
+            <div className="relative mt-3">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Filter regions..."
+                value={regionSearch}
+                onChange={(e) => setRegionSearch(e.target.value)}
+                className="h-10 pl-10 text-sm"
+              />
+            </div>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-border hover:bg-transparent">
+                <TableHead className="bg-slate-50/50 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground w-14">
+                  No
+                </TableHead>
+                <TableHead className="bg-slate-50/50 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Name
+                </TableHead>
+                <TableHead className="bg-slate-50/50 px-4 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Actions
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedRegions.map((r, index) => (
+                <TableRow
+                  key={r.id}
+                  className="border-b border-border transition-colors last:border-0 hover:bg-[#D5E726]/10"
+                >
+                  <TableCell className="px-5 py-3 text-sm text-muted-foreground">
+                    {(regionPage - 1) * regionPerPage + index + 1}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm font-semibold text-foreground">
+                    {r.name}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-lg border-border shadow-none hover:bg-[#D5E726]"
+                        onClick={() => setEditRegion({ id: r.id, name: r.name })}
+                        title="Edit"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-lg border-red-100 text-red-500 shadow-none hover:bg-red-50 hover:text-red-700"
+                        onClick={() => setDeleteRegionId(r.id)}
+                        title="Delete"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {totalRegions === 0 && (
+                <TableRow>
+                  <TableCell colSpan={3} className="py-10 text-center text-sm text-muted-foreground">
+                    No regions found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+
+          {totalRegions > 0 && (
+            <PaginationControls
+              page={regionPage}
+              totalPages={totalRegionPages}
+              totalEntries={totalRegions}
+              from={regionFrom}
+              to={regionTo}
+              perPage={regionPerPage}
+              onPageChange={setRegionPage}
+              onPerPageChange={(n) => { setRegionPerPage(n); setRegionPage(1); }}
+            />
+          )}
+        </div>
+
+        {/* ─── Townships Panel ─── */}
+        <div className="overflow-hidden rounded-2xl border border-border bg-white">
+          {/* Panel header */}
+          <div className="border-b border-border px-5 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-foreground">Townships</h3>
+                <p className="text-xs text-muted-foreground">{totalTownships} records</p>
+              </div>
+              <span className="rounded-full border border-border bg-slate-50 px-2.5 py-1 text-xs font-bold text-muted-foreground">
+                Geo Layer 2
+              </span>
+            </div>
+          </div>
+
+          {/* Add form */}
+          <div className="border-b border-border bg-slate-50/30 px-5 py-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Add New Township
+            </p>
+            <form onSubmit={handleAddTownship} className="flex flex-col gap-2 sm:flex-row">
+              <Select
+                value={selectedRegionId}
+                onValueChange={(val: string | null) => setSelectedRegionId(val || "")}
+              >
+                <SelectTrigger className="h-10 w-full text-sm sm:w-[180px]">
+                  <SelectValue placeholder="Select Region" />
+                </SelectTrigger>
+                <SelectContent>
+                  {regions.map((r) => (
+                    <SelectItem key={r.id} value={r.id.toString()}>
+                      {r.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="e.g. Hlaing"
+                value={newTownshipName}
+                onChange={(e) => setNewTownshipName(e.target.value)}
+                className="h-10 flex-1 text-sm"
+              />
+              <Button
+                type="submit"
+                size="sm"
+                className="h-10 rounded-lg bg-[#D5E726] font-semibold text-[#10110E] hover:bg-[#D5E726]/90"
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                Add
+              </Button>
+            </form>
+            <div className="relative mt-3">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Filter townships..."
+                value={townshipSearch}
+                onChange={(e) => setTownshipSearch(e.target.value)}
+                className="h-10 pl-10 text-sm"
+              />
+            </div>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-border hover:bg-transparent">
+                <TableHead className="bg-slate-50/50 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground w-14">
+                  No
+                </TableHead>
+                <TableHead className="bg-slate-50/50 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Name
+                </TableHead>
+                <TableHead className="bg-slate-50/50 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  State/Region
+                </TableHead>
+                <TableHead className="bg-slate-50/50 px-4 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Actions
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedTownships.map((t, index) => (
+                <TableRow
+                  key={t.id}
+                  className="border-b border-border transition-colors last:border-0 hover:bg-[#D5E726]/10"
+                >
+                  <TableCell className="px-5 py-3 text-sm text-muted-foreground">
+                    {(townshipPage - 1) * townshipPerPage + index + 1}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-sm font-semibold text-foreground">
+                    {t.name}
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
+                    <span className="rounded-md border border-border bg-slate-50 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                      {t.state_region?.name || "—"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-lg border-border shadow-none hover:bg-[#D5E726]"
+                        onClick={() =>
+                          setEditTownship({
+                            id: t.id,
+                            name: t.name,
+                            state_region_id: t.state_region_id?.toString() || "",
+                          })
+                        }
+                        title="Edit"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8 rounded-lg border-red-100 text-red-500 shadow-none hover:bg-red-50 hover:text-red-700"
+                        onClick={() => setDeleteTownshipId(t.id)}
+                        title="Delete"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {totalTownships === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="py-10 text-center text-sm text-muted-foreground">
+                    No townships found
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+
+          {totalTownships > 0 && (
+            <PaginationControls
+              page={townshipPage}
+              totalPages={totalTownshipPages}
+              totalEntries={totalTownships}
+              from={townshipFrom}
+              to={townshipTo}
+              perPage={townshipPerPage}
+              onPageChange={setTownshipPage}
+              onPerPageChange={(n) => { setTownshipPerPage(n); setTownshipPage(1); }}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* ─── Delete Region Dialog ─── */}
       <Dialog
         open={deleteRegionId !== null}
         onOpenChange={(open, details) => {
@@ -535,7 +593,7 @@ export default function ManageLocations() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Township Dialog */}
+      {/* ─── Delete Township Dialog ─── */}
       <Dialog
         open={deleteTownshipId !== null}
         onOpenChange={(open, details) => {
@@ -557,7 +615,7 @@ export default function ManageLocations() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Region Dialog */}
+      {/* ─── Edit Region Dialog ─── */}
       <Dialog
         open={editRegion !== null}
         onOpenChange={(open, details) => {
@@ -569,26 +627,24 @@ export default function ManageLocations() {
           <form onSubmit={handleEditRegionSubmit}>
             <DialogHeader>
               <DialogTitle>Edit State/Region</DialogTitle>
-              <DialogDescription>
-                Update the name of this state/region.
-              </DialogDescription>
+              <DialogDescription>Update the name of this state/region.</DialogDescription>
             </DialogHeader>
             <div className="py-4">
               <Input
                 placeholder="State/Region name"
                 value={editRegion?.name || ""}
-                onChange={(e) => setEditRegion(prev => prev ? { ...prev, name: e.target.value } : null)}
+                onChange={(e) => setEditRegion((prev) => (prev ? { ...prev, name: e.target.value } : null))}
               />
             </div>
             <DialogFooter>
               <DialogClose render={<Button type="button" variant="outline" onClick={() => setEditRegion(null)}>Cancel</Button>} />
-              <Button type="submit">Save Changes</Button>
+              <Button type="submit" className="bg-[#D5E726] font-semibold text-[#10110E] hover:bg-[#D5E726]/90">Save Changes</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Township Dialog */}
+      {/* ─── Edit Township Dialog ─── */}
       <Dialog
         open={editTownship !== null}
         onOpenChange={(open, details) => {
@@ -600,46 +656,51 @@ export default function ManageLocations() {
           <form onSubmit={handleEditTownshipSubmit}>
             <DialogHeader>
               <DialogTitle>Edit Township</DialogTitle>
-              <DialogDescription>
-                Update the name or state/region for this township.
-              </DialogDescription>
+              <DialogDescription>Update the name or state/region for this township.</DialogDescription>
             </DialogHeader>
-            <div className="py-4 space-y-4">
+            <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">State/Region</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  State/Region
+                </label>
                 <Select
                   value={editTownship?.state_region_id || ""}
-                  onValueChange={(val) => setEditTownship(prev => prev ? { ...prev, state_region_id: val || "" } : null)}
+                  onValueChange={(val: string | null) =>
+                    setEditTownship((prev) => (prev ? { ...prev, state_region_id: val || "" } : null))
+                  }
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select State/Region">
-                      {(val: string | null) => val ? regions.find(r => r.id.toString() === val)?.name || val : "Select State/Region"}
-                    </SelectValue>
+                    <SelectValue placeholder="Select State/Region" />
                   </SelectTrigger>
                   <SelectContent>
-                    {regions.map(r => (
-                      <SelectItem key={r.id} value={r.id.toString()}>{r.name}</SelectItem>
+                    {regions.map((r) => (
+                      <SelectItem key={r.id} value={r.id.toString()}>
+                        {r.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Township Name</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Township Name
+                </label>
                 <Input
                   placeholder="Township name"
                   value={editTownship?.name || ""}
-                  onChange={(e) => setEditTownship(prev => prev ? { ...prev, name: e.target.value } : null)}
+                  onChange={(e) =>
+                    setEditTownship((prev) => (prev ? { ...prev, name: e.target.value } : null))
+                  }
                 />
               </div>
             </div>
             <DialogFooter>
               <DialogClose render={<Button type="button" variant="outline" onClick={() => setEditTownship(null)}>Cancel</Button>} />
-              <Button type="submit">Save Changes</Button>
+              <Button type="submit" className="bg-[#D5E726] font-semibold text-[#10110E] hover:bg-[#D5E726]/90">Save Changes</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
-
     </MainLayout>
   );
 }

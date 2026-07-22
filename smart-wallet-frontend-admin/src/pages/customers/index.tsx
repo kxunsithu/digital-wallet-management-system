@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Eye, Trash2, User } from "lucide-react";
+import { Search, Eye, Trash2, User, SlidersHorizontal, Power } from "lucide-react";
 import MainLayout from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,20 +38,8 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { getCustomers, deleteCustomer } from "@/services/customer.service";
+import { getCustomers, deleteCustomer, toggleCustomerStatus } from "@/services/customer.service";
 import { getStateRegions, getTownships } from "@/services/location.service";
-
-const kycStatusClass = (status?: string) => {
-  switch (status) {
-    case "verified":
-    case "approved":
-      return "bg-green-50 text-green-700 border border-green-200";
-    case "rejected":
-      return "bg-red-50 text-red-700 border border-red-200";
-    default:
-      return "bg-yellow-50 text-yellow-700 border border-yellow-200";
-  }
-};
 
 export default function CustomersPage() {
   const navigate = useNavigate();
@@ -83,6 +71,16 @@ export default function CustomersPage() {
   const [toEntry, setToEntry] = useState(0);
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const handleToggleStatus = async (id: number | string) => {
+    try {
+      const response = await toggleCustomerStatus(id);
+      toast.success(response.data?.message || "Status updated successfully.");
+      await fetchCustomers();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to update status.");
+    }
+  };
 
   useEffect(() => {
     getStateRegions().then((res) => setRegionsList(res.data.data)).catch(() => {});
@@ -157,6 +155,10 @@ export default function CustomersPage() {
     }
   };
 
+  const verifiedCustomers = customers.filter(
+    (customer) => customer.kyc_status === "verified" || customer.kyc_status === "approved"
+  ).length;
+
   return (
     <MainLayout title="Customers">
       <div className="mb-6 space-y-4">
@@ -171,89 +173,151 @@ export default function CustomersPage() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+        <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+          <div className="flex items-center gap-4">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]">
+              <User className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-foreground">Customers</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Manage customer accounts, KYC status, and registered locations.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Card className="mb-6 shadow-sm border-slate-100">
-        <div className="p-4 flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Search by name, phone, or referral code..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 max-w-sm"
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Select value={kycStatus} onValueChange={(val) => setKycStatus(val as string)}>
-              <SelectTrigger className="w-[130px]">
-                <SelectValue placeholder="KYC Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">all KYC</SelectItem>
-                <SelectItem value="pending">pending</SelectItem>
-                <SelectItem value="verified">verified</SelectItem>
-                <SelectItem value="approved">approved</SelectItem>
-                <SelectItem value="rejected">rejected</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={regionId}
-              onValueChange={(val) => {
-                setRegionId(val === "all" || val === null ? "" : val);
-                setTownshipId("");
-              }}
-            >
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="State/Region">
-                  {(val: string | null) => {
-                    if (!val) return "State/Region";
-                    if (val === "all") return "All States/Regions";
-                    return regionsList.find((r) => r.id.toString() === val)?.name || val;
-                  }}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All States/Regions</SelectItem>
-                {regionsList.map((r) => (
-                  <SelectItem key={r.id} value={r.id.toString()}>
-                    {r.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={townshipId}
-              onValueChange={(val) => setTownshipId(val === "all" || val === null ? "" : val)}
-              disabled={!regionId}
-            >
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Township">
-                  {(val: string | null) => {
-                    if (!val) return "Township";
-                    if (val === "all") return "All Townships";
-                    return townshipsList.find((t) => t.id.toString() === val)?.name || val;
-                  }}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Townships</SelectItem>
-                {townshipsList.map((t) => (
-                  <SelectItem key={t.id} value={t.id.toString()}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="ghost" onClick={handleClearFilters}>
-              Clear
+      {/* Filters & Search */}
+      <Card className="mb-6 rounded-2xl border border-border shadow-none">
+        <div className="border-b border-border px-5 py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                <SlidersHorizontal className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Search &amp; Filters</h3>
+                <p className="text-xs text-muted-foreground">
+                  Narrow the customer directory by location or KYC status.
+                </p>
+              </div>
+            </div>
+            <Button variant="outline" onClick={handleClearFilters} className="h-9 rounded-lg">
+              Clear filters
             </Button>
+          </div>
+        </div>
+        <div className="grid gap-4 p-5 xl:grid-cols-[minmax(280px,.85fr)_minmax(0,1.55fr)]">
+          <div className="rounded-xl border border-border bg-white p-4">
+            <label
+              htmlFor="customer-search"
+              className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              Find a customer
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="customer-search"
+                placeholder="Search name, phone, or referral code"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-12 border-[#D5E726] pl-10 focus-visible:ring-[#D5E726]/30"
+              />
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-white p-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Refine results
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">KYC status</label>
+                <Select value={kycStatus} onValueChange={(val) => setKycStatus(val as string)}>
+                  <SelectTrigger className="h-12 w-full">
+                    <SelectValue placeholder="KYC Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="verified">Verified</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">State / Region</label>
+                <Select
+                  value={regionId}
+                  onValueChange={(val) => {
+                    setRegionId(val === "all" || val === null ? "" : val);
+                    setTownshipId("");
+                  }}
+                >
+                  <SelectTrigger className="h-12 w-full">
+                    <SelectValue placeholder="State/Region">
+                      {(val: string | null) => {
+                        if (!val) return "All states";
+                        if (val === "all") return "All states";
+                        return regionsList.find((r) => r.id.toString() === val)?.name || val;
+                      }}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All States/Regions</SelectItem>
+                    {regionsList.map((r) => (
+                      <SelectItem key={r.id} value={r.id.toString()}>
+                        {r.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">Township</label>
+                <Select
+                  value={townshipId}
+                  onValueChange={(val) => setTownshipId(val === "all" || val === null ? "" : val)}
+                  disabled={!regionId}
+                >
+                  <SelectTrigger className="h-12 w-full">
+                    <SelectValue placeholder="Township">
+                      {(val: string | null) => {
+                        if (!val) return "All townships";
+                        if (val === "all") return "All townships";
+                        return townshipsList.find((t) => t.id.toString() === val)?.name || val;
+                      }}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Townships</SelectItem>
+                    {townshipsList.map((t) => (
+                      <SelectItem key={t.id} value={t.id.toString()}>
+                        {t.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
         </div>
       </Card>
 
-      <div className="rounded bg-white shadow-sm overflow-hidden border border-slate-100">
+      <div className="overflow-hidden rounded-2xl border border-border bg-white">
+        <div className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="font-semibold text-foreground">Customer Directory</h3>
+            <p className="text-xs text-muted-foreground">
+              {totalEntries} total customers · {verifiedCustomers} verified on this page
+            </p>
+          </div>
+          <span className="w-fit rounded-full bg-[#D5E726] px-3 py-1 text-xs font-bold text-[#10110E]">
+            KYC managed
+          </span>
+        </div>
         <Table>
           <TableHeader>
             <TableRow className="border-b border-slate-100 hover:bg-transparent">
@@ -270,6 +334,9 @@ export default function CustomersPage() {
                 KYC Status
               </TableHead>
               <TableHead className="bg-slate-50/50 text-slate-500 text-xs font-semibold uppercase tracking-wider px-4">
+                Account Status
+              </TableHead>
+              <TableHead className="bg-slate-50/50 text-slate-500 text-xs font-semibold uppercase tracking-wider px-4">
                 State/Region &amp; Township
               </TableHead>
               <TableHead className="bg-slate-50/50 text-slate-500 text-xs font-semibold uppercase tracking-wider px-6 text-right">
@@ -280,13 +347,13 @@ export default function CustomersPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10">
+                <TableCell colSpan={7} className="text-center py-10">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : customers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10">
+                <TableCell colSpan={7} className="text-center py-10">
                   No customers found.
                 </TableCell>
               </TableRow>
@@ -294,16 +361,16 @@ export default function CustomersPage() {
               customers.map((customer, index) => (
                 <TableRow
                   key={customer.id}
-                  className="hover:bg-slate-50/40 transition-colors border-b border-slate-100 last:border-0"
+                  className="border-b border-border transition-colors last:border-0 hover:bg-[#D5E726]/10"
                 >
                   <TableCell className="px-6 py-4 text-slate-500 text-sm">
                     {(page - 1) * perPage + index + 1}
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-semibold text-sm">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#D5E726] text-sm font-semibold text-[#10110E]">
                         {customer.user?.full_name?.charAt(0) || (
-                          <User className="w-4 h-4 text-slate-400" />
+                          <User className="h-4 w-4" />
                         )}
                       </div>
                       <div className="flex flex-col">
@@ -321,9 +388,28 @@ export default function CustomersPage() {
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <span
-                      className={`px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${kycStatusClass(customer.kyc_status)}`}
+                      className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                        customer.kyc_status === "verified" || customer.kyc_status === "approved"
+                          ? "border border-[#52C41A] bg-white text-[#52C41A]"
+                          : customer.kyc_status === "pending"
+                            ? "border border-[#D5E726] bg-[#D5E726] text-[#10110E]"
+                            : "border border-[#FF4D4F] bg-white text-[#FF4D4F]"
+                      }`}
                     >
                       {customer.kyc_status || "pending"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${
+                        customer.user?.status === "active"
+                          ? "border border-[#52C41A] bg-white text-[#52C41A]"
+                          : customer.user?.status === "pending"
+                            ? "border border-[#D5E726] bg-[#D5E726] text-[#10110E]"
+                            : "border border-[#FF4D4F] bg-white text-[#FF4D4F]"
+                      }`}
+                    >
+                      {customer.user?.status || "inactive"}
                     </span>
                   </TableCell>
                   <TableCell className="px-4 py-3">
@@ -341,16 +427,27 @@ export default function CustomersPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 rounded-md border-slate-200 hover:bg-slate-50 text-slate-600 shadow-none"
+                        className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#D5E726]"
                         onClick={() => navigate(`/customers/${customer.id}`)}
+                        title="View Details"
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </Button>
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 rounded-md border-red-100 hover:bg-red-50 text-red-500 hover:text-red-700 shadow-none"
+                        className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#D5E726]"
+                        onClick={() => handleToggleStatus(customer.id)}
+                        title="Toggle Account Status"
+                      >
+                        <Power className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-9 w-9 rounded-lg border-[#FF4D4F] text-[#FF4D4F] shadow-none hover:bg-white"
                         onClick={() => setDeleteId(customer.id)}
+                        title="Delete Customer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
@@ -362,8 +459,9 @@ export default function CustomersPage() {
           </TableBody>
         </Table>
 
+        {/* Pagination Footer */}
         {!loading && customers.length > 0 && (
-          <div className="border-t border-slate-100 py-3.5 px-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/30 text-slate-500 text-xs">
+          <div className="flex flex-col items-center justify-between gap-4 border-t border-border bg-white px-6 py-4 text-xs text-muted-foreground sm:flex-row">
             <div>
               Showing {fromEntry} to {toEntry} of {totalEntries} Entries
             </div>

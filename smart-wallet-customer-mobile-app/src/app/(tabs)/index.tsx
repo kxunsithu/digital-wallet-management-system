@@ -45,6 +45,11 @@ interface UserProfile {
     balance: number;
     status: string;
   } | null;
+  kyc_status?: string | null;
+  nrc_verification?: {
+    status: string;
+    rejection_reason: string | null;
+  } | null;
 }
 
 interface Transaction {
@@ -311,6 +316,36 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* ── KYC Status Warning Banner ── */}
+        {profile?.kyc_status === 'rejected' && (
+          <View style={{
+            marginHorizontal: 24, marginTop: 12, padding: 16,
+            borderRadius: 20, backgroundColor: `${colors.error}14`,
+            borderWidth: 1, borderColor: `${colors.error}33`,
+            flexDirection: 'row', alignItems: 'flex-start',
+          }}>
+            <View style={{
+              width: 36, height: 36, borderRadius: 12,
+              backgroundColor: `${colors.error}1A`,
+              alignItems: 'center', justifyContent: 'center',
+              marginRight: 12, marginTop: 2,
+            }}>
+              <Feather name="alert-triangle" size={18} color={colors.error} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 14, fontWeight: '800', color: colors.error }}>
+                KYC Verification Rejected
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.text, marginTop: 4, lineHeight: 16 }}>
+                Reason: {profile?.nrc_verification?.rejection_reason || 'No reason provided.'}
+              </Text>
+              <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 6, fontWeight: '600' }}>
+                Please check with administration to re-verify.
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* ── Wallet Balance Card (real-time balance update) ── */}
         <View style={{ paddingHorizontal: 24, paddingTop: 16 }}>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Eye, Wallet as WalletIcon } from "lucide-react";
+import { CircleDollarSign, Eye, ShieldCheck, Users, Wallet as WalletIcon } from "lucide-react";
 import MainLayout from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,6 +78,14 @@ export default function WalletsPage() {
   const [role, setRole] = useState("all");
 
   const walletList = useMemo(() => wallets ?? [], [wallets]);
+  const visibleBalance = useMemo(
+    () => walletList.reduce((total, wallet) => total + Number(wallet.balance ?? 0), 0),
+    [walletList],
+  );
+  const activeWallets = useMemo(
+    () => walletList.filter((wallet) => wallet.status === "active").length,
+    [walletList],
+  );
 
   useEffect(() => {
     setPage(1);
@@ -176,16 +184,51 @@ export default function WalletsPage() {
         </Breadcrumb>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.5fr_0.9fr]">
-        <Card className="border-slate-100 shadow-sm">
-          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-50 py-4">
-            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-              <WalletIcon className="h-5 w-5 text-blue-600" />
-              Wallets List
+      <div className="mb-6 flex flex-col justify-between gap-4 rounded-2xl border border-border bg-white p-5 md:flex-row md:items-center md:p-6">
+        <div>
+          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-[#D5E726] text-[#10110E]">
+            <WalletIcon className="h-5 w-5" />
+          </div>
+          <h2 className="text-xl font-bold tracking-tight text-foreground">Wallet Management</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Review wallet balances, owners, and account status.</p>
+        </div>
+        <div className="rounded-xl border border-border px-4 py-3 text-right">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total wallets</p>
+          <p className="mt-1 text-2xl font-bold text-foreground">{totalEntries}</p>
+        </div>
+      </div>
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+        <Card className="rounded-2xl border border-border shadow-none">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#D5E726] text-[#10110E]"><WalletIcon className="h-5 w-5" /></div>
+            <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Visible wallets</p><p className="mt-1 text-xl font-bold text-foreground">{walletList.length}</p></div>
+          </CardContent>
+        </Card>
+        <Card className="rounded-2xl border border-border shadow-none">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#52C41A] text-white"><ShieldCheck className="h-5 w-5" /></div>
+            <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Active wallets</p><p className="mt-1 text-xl font-bold text-foreground">{activeWallets}</p></div>
+          </CardContent>
+        </Card>
+        <Card className="rounded-2xl border border-border shadow-none">
+          <CardContent className="flex items-center gap-4 p-5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#10110E] text-white"><CircleDollarSign className="h-5 w-5" /></div>
+            <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Visible balance</p><p className="mt-1 text-xl font-bold text-foreground">{formatBalance(visibleBalance)} <span className="text-xs font-semibold text-muted-foreground">MMK</span></p></div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,.75fr)]">
+        <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
+          <CardHeader className="flex flex-col gap-4 border-b border-border py-5 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+              <WalletIcon className="h-5 w-5 text-[#10110E]" />
+              All Wallets
             </CardTitle>
-            <div className="flex gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row">
               <Select value={role} onValueChange={(val) => setRole(val ?? "all")}>
-                <SelectTrigger className="w-[150px] h-9 text-xs rounded border-slate-200">
+                <SelectTrigger className="h-10 w-full rounded border-border text-xs sm:w-[150px]">
                   <SelectValue placeholder="Owner Type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -196,7 +239,7 @@ export default function WalletsPage() {
                 </SelectContent>
               </Select>
               <Select value={status} onValueChange={(val) => setStatus(val ?? "all")}>
-                <SelectTrigger className="w-[130px] h-9 text-xs rounded border-slate-200">
+                <SelectTrigger className="h-10 w-full rounded border-border text-xs sm:w-[130px]">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -229,23 +272,17 @@ export default function WalletsPage() {
                     </TableHeader>
                     <TableBody>
                       {walletList.map((wallet) => (
-                        <TableRow key={wallet.id} className={id && Number(id) === wallet.id ? "bg-slate-50" : ""}>
+                        <TableRow key={wallet.id} className={id && Number(id) === wallet.id ? "bg-[#D5E726]/20" : "hover:bg-[#D5E726]/10"}>
                           <TableCell>
-                            <div className="font-medium text-slate-900">{wallet.wallet_number ?? "—"}</div>
-                            <div className="text-xs text-slate-500">#{wallet.id}</div>
+                            <div className="font-mono font-semibold text-foreground">{wallet.wallet_number ?? "—"}</div>
+                            <div className="text-xs text-muted-foreground">#{wallet.id}</div>
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium text-slate-900">{wallet.user?.full_name || "—"}</div>
-                            <div className="text-xs text-slate-500 mb-1">{wallet.user?.phone_number || "—"}</div>
+                            <div className="font-medium text-foreground">{wallet.user?.full_name || "—"}</div>
+                            <div className="mb-1 text-xs text-muted-foreground">{wallet.user?.phone_number || "—"}</div>
                             {wallet.user?.role?.name && (
                               <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-semibold border ${
-                                wallet.user.role.name === 'admin'
-                                  ? 'bg-purple-50 text-purple-700 border-purple-100'
-                                  : wallet.user.role.name === 'agent_manager'
-                                  ? 'bg-indigo-50 text-indigo-700 border-indigo-100'
-                                  : wallet.user.role.name === 'agent'
-                                  ? 'bg-blue-50 text-blue-700 border-blue-100'
-                                  : 'bg-teal-50 text-teal-700 border-teal-100'
+                                'border-[#D5E726] bg-[#D5E726] text-[#10110E]'
                               }`}>
                                 {wallet.user.role.name === 'agent_manager'
                                   ? 'Agent Manager'
@@ -254,12 +291,12 @@ export default function WalletsPage() {
                             )}
                           </TableCell>
                           <TableCell>
-                            <div className="font-medium text-slate-900">
+                            <div className="font-semibold text-foreground">
                               {formatBalance(wallet.balance)} MMK
                             </div>
                           </TableCell>
                           <TableCell>
-                            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${wallet.status === "active" ? "bg-green-50 text-green-700" : "bg-slate-100 text-slate-700"}`}>
+                            <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${wallet.status === "active" ? "border-[#52C41A] bg-white text-[#52C41A]" : "border-border bg-white text-muted-foreground"}`}>
                               {wallet.status ?? "active"}
                             </span>
                           </TableCell>
@@ -294,7 +331,7 @@ export default function WalletsPage() {
                 </div>
 
                 {!loading && walletList.length > 0 && (
-                  <div className="mt-4 flex flex-col gap-4 border-t border-slate-100 pt-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="mt-4 flex flex-col gap-4 border-t border-border pt-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       Showing {fromEntry} to {toEntry} of {totalEntries} Entries
                     </div>
@@ -371,9 +408,9 @@ export default function WalletsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-100 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-slate-900">Wallet Details</CardTitle>
+        <Card className="h-fit rounded-2xl border border-border shadow-none xl:sticky xl:top-24">
+          <CardHeader className="border-b border-border py-5">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground"><Users className="h-5 w-5 text-[#10110E]" />Wallet Details</CardTitle>
           </CardHeader>
           <CardContent>
             {!id ? (
@@ -382,34 +419,28 @@ export default function WalletsPage() {
               <p className="text-sm text-slate-500">Loading details...</p>
             ) : selectedWallet ? (
               <div className="space-y-4">
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Wallet Number</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900">{selectedWallet.wallet_number ?? "—"}</p>
+                <div className="rounded-xl border border-border bg-white p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Wallet Number</p>
+                  <p className="mt-1 font-mono text-lg font-semibold text-foreground">{selectedWallet.wallet_number ?? "—"}</p>
                 </div>
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Balance</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900">
+                <div className="rounded-xl border border-border bg-[#D5E726] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#10110E]">Balance</p>
+                  <p className="mt-1 text-lg font-bold text-[#10110E]">
                     {formatBalance(selectedWallet.balance)} MMK
                   </p>
                 </div>
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Status</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900">{selectedWallet.status ?? "active"}</p>
+                <div className="rounded-xl border border-border bg-white p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</p>
+                  <p className="mt-1 text-lg font-semibold text-foreground">{selectedWallet.status ?? "active"}</p>
                 </div>
-                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                   <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Owner</p>
-                   <p className="mt-1 text-lg font-semibold text-slate-900">{selectedWallet.user?.full_name || "—"}</p>
-                   <p className="text-sm text-slate-500">{selectedWallet.user?.phone_number || "—"}</p>
+                 <div className="rounded-xl border border-border bg-white p-4">
+                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Owner</p>
+                   <p className="mt-1 text-lg font-semibold text-foreground">{selectedWallet.user?.full_name || "—"}</p>
+                   <p className="text-sm text-muted-foreground">{selectedWallet.user?.phone_number || "—"}</p>
                    {selectedWallet.user?.role?.name && (
                      <div className="mt-2">
                        <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-semibold border ${
-                         selectedWallet.user.role.name === 'admin'
-                           ? 'bg-purple-50 text-purple-700 border-purple-100'
-                           : selectedWallet.user.role.name === 'agent_manager'
-                           ? 'bg-indigo-50 text-indigo-700 border-indigo-100'
-                           : selectedWallet.user.role.name === 'agent'
-                           ? 'bg-blue-50 text-blue-700 border-blue-100'
-                           : 'bg-teal-50 text-teal-700 border-teal-100'
+                         'border-[#D5E726] bg-[#D5E726] text-[#10110E]'
                        }`}>
                          {selectedWallet.user.role.name === 'agent_manager'
                            ? 'Agent Manager'

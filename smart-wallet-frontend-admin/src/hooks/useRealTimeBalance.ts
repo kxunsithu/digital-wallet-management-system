@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 import api from "@/lib/axiox";
 
 export const useRealTimeBalance = (userId?: number | string, enabled: boolean = true) => {
@@ -7,6 +8,7 @@ export const useRealTimeBalance = (userId?: number | string, enabled: boolean = 
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isMountedRef = useRef(true);
+  const prevBalanceRef = useRef<number | null>(null);
 
   const fetchBalance = useCallback(async () => {
     if (!userId || !enabled || !isMountedRef.current) {
@@ -27,6 +29,14 @@ export const useRealTimeBalance = (userId?: number | string, enabled: boolean = 
       if (isMountedRef.current && wallets && wallets.length > 0) {
         const newBalance = parseFloat(wallets[0].balance);
         console.log("useRealTimeBalance: Setting balance to:", newBalance);
+        
+        if (prevBalanceRef.current !== null && newBalance > prevBalanceRef.current) {
+          const diff = newBalance - prevBalanceRef.current;
+          const formattedAmount = new Intl.NumberFormat("en-MM").format(diff);
+          toast.success(`Money Received - +${formattedAmount} MMK`);
+        }
+        
+        prevBalanceRef.current = newBalance;
         setBalance(newBalance);
         setError(null);
       }

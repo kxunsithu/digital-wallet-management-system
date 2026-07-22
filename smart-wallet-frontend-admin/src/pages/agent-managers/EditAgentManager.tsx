@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { User, Image as ImageIcon } from "lucide-react";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { NRCInput, validateNrc } from "@/components/NRCInput";
 import MainLayout from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -122,6 +123,11 @@ export default function EditAgentManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const nrcError = validateNrc(userForm.nrc_number);
+    if (nrcError) {
+      toast.error(nrcError);
+      return;
+    }
     try {
       setLoading(true);
 
@@ -173,23 +179,31 @@ export default function EditAgentManager() {
         </Breadcrumb>
       </div>
 
-      <div className="w-full max-w-5xl mx-auto">
+      <div className="mx-auto w-full max-w-6xl">
         {fetching ? (
           <div className="py-20 text-center text-slate-500">Loading...</div>
         ) : (
+          <>
+          <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+            <div className="flex items-center gap-4">
+              <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]"><User className="h-6 w-6" /></div>
+              <div><h2 className="text-xl font-bold tracking-tight text-foreground">Edit Agent Manager</h2><p className="mt-1 text-sm text-muted-foreground">Review identity, KYC information, and operating location.</p></div>
+            </div>
+            <span className="w-fit rounded-full border border-border px-3 py-1.5 text-xs font-bold capitalize text-foreground">{profileForm.status}</span>
+          </div>
           <form onSubmit={handleSubmit} className="space-y-6">
 
             {/* General Information */}
-            <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
-              <CardHeader className="border-b border-slate-50 py-5 bg-slate-50/10">
-                <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
-                  <User className="w-4.5 h-4.5 text-blue-600" />
+            <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
+              <CardHeader className="border-b border-border py-5">
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                  <User className="h-5 w-5 text-[#10110E]" />
                   General Information
                 </CardTitle>
                 <CardDescription className="text-xs">Update the agent manager personal details and profile settings.</CardDescription>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="manager_code" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Manager Code</Label>
                     <Input
@@ -197,7 +211,7 @@ export default function EditAgentManager() {
                       name="manager_code"
                       value={profileForm.manager_code}
                       disabled
-                      className="h-9 text-sm rounded bg-slate-50 text-slate-500 cursor-not-allowed border-slate-200/60"
+                      className="h-11 cursor-not-allowed rounded border-border bg-white text-sm text-muted-foreground"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -207,7 +221,7 @@ export default function EditAgentManager() {
                       name="phone_number"
                       value={userForm.phone_number}
                       disabled
-                      className="h-9 text-sm rounded bg-slate-50 text-slate-500 cursor-not-allowed border-slate-200/60"
+                      className="h-11 cursor-not-allowed rounded border-border bg-white text-sm text-muted-foreground"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -218,19 +232,11 @@ export default function EditAgentManager() {
                       value={userForm.full_name}
                       onChange={handleUserChange}
                       placeholder="e.g. Ko Aung"
-                      className="h-9 text-sm rounded"
+                      className="h-11 rounded text-sm"
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="nrc_number" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">NRC Number</Label>
-                    <Input
-                      id="nrc_number"
-                      name="nrc_number"
-                      value={userForm.nrc_number}
-                      onChange={handleUserChange}
-                      placeholder="e.g. 12/ABCDE(N)123456"
-                      className="h-9 text-sm rounded"
-                    />
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <NRCInput value={userForm.nrc_number} onChange={(nrc_number) => setUserForm((prev) => ({ ...prev, nrc_number }))} />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="status" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</Label>
@@ -238,7 +244,7 @@ export default function EditAgentManager() {
                       value={profileForm.status}
                       onValueChange={(val) => handleSelectChange(val as string, "status")}
                     >
-                      <SelectTrigger className="h-9 text-sm rounded">
+                    <SelectTrigger className="h-11 rounded text-sm">
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -256,7 +262,7 @@ export default function EditAgentManager() {
                         setProfileForm((prev) => ({ ...prev, state_region_id: val || "", township_id: "" }));
                       }}
                     >
-                      <SelectTrigger className="h-9 text-sm rounded">
+                    <SelectTrigger className="h-11 rounded text-sm">
                         <SelectValue placeholder="Select state/region">
                           {(val: string | null) => val ? regions.find(r => r.id.toString() === val)?.name || val : "Select state/region"}
                         </SelectValue>
@@ -275,7 +281,7 @@ export default function EditAgentManager() {
                       onValueChange={(val) => handleSelectChange(val as string, "township_id")}
                       disabled={!profileForm.state_region_id}
                     >
-                      <SelectTrigger className="h-9 text-sm rounded">
+                    <SelectTrigger className="h-11 rounded text-sm">
                         <SelectValue placeholder="Select township">
                           {(val: string | null) => val ? townships.find(t => t.id.toString() === val)?.name || val : "Select township"}
                         </SelectValue>
@@ -293,16 +299,16 @@ export default function EditAgentManager() {
             </Card>
 
             {/* NRC Images */}
-            <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
-              <CardHeader className="border-b border-slate-50 py-5 bg-slate-50/10">
-                <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
-                  <ImageIcon className="w-4.5 h-4.5 text-indigo-600" />
+            <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
+              <CardHeader className="border-b border-border py-5">
+                <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                  <ImageIcon className="h-5 w-5 text-[#10110E]" />
                   NRC Images
                 </CardTitle>
                 <CardDescription className="text-xs">Upload to update the front and back of the NRC card.</CardDescription>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <ImageUpload
                     label="NRC Front Image"
                     initialPreview={nrcFrontUrl}
@@ -318,15 +324,16 @@ export default function EditAgentManager() {
             </Card>
 
 
-            <div className="flex justify-end space-x-3">
-              <Button variant="outline" type="button" onClick={() => navigate("/agent-managers")} className="rounded">
+            <div className="flex flex-col-reverse gap-3 rounded-2xl border border-border bg-white p-4 sm:flex-row sm:justify-end">
+              <Button variant="outline" type="button" onClick={() => navigate("/agent-managers")} className="h-11 rounded-lg">
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading} className="h-11 rounded-lg bg-[#D5E726] px-6 font-semibold text-[#10110E] hover:bg-[#D5E726]">
                 {loading ? "Updating..." : "Update Agent Manager"}
               </Button>
             </div>
           </form>
+          </>
         )}
       </div>
     </MainLayout>

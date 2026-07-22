@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { User, Image as ImageIcon, Store } from "lucide-react";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { NRCInput, validateNrc } from "@/components/NRCInput";
 import RoleAwareLayout from "@/components/layouts/RoleAwareLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,6 +110,11 @@ export default function EditAgent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
+    const nrcError = validateNrc(userForm.nrc_number);
+    if (nrcError) {
+      toast.error(nrcError);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -145,7 +151,7 @@ export default function EditAgent() {
   if (fetching) {
     return (
       <RoleAwareLayout title="Edit Agent">
-        <div className="py-20 text-center text-slate-500">Loading...</div>
+        <div className="py-20 text-center text-muted-foreground">Loading...</div>
       </RoleAwareLayout>
     );
   }
@@ -168,26 +174,44 @@ export default function EditAgent() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+        <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+          <div className="flex items-center gap-4">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]">
+              <User className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-foreground">Edit Agent</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Update identity, KYC information, and shop location.
+              </p>
+            </div>
+          </div>
+          <span className="w-fit rounded-full border border-border px-3 py-1.5 text-xs font-bold capitalize text-foreground">
+            {profileForm.status}
+          </span>
+        </div>
       </div>
 
-      <div className="w-full max-w-5xl mx-auto">
+      <div className="mx-auto w-full max-w-6xl">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
-            <CardHeader className="border-b border-slate-50 py-5 bg-slate-50/10">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
-                <User className="w-4.5 h-4.5 text-blue-600" />
+          <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
+            <CardHeader className="border-b border-border py-5">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                  <User className="h-4 w-4" />
+                </div>
                 General Information
               </CardTitle>
-              <CardDescription className="text-xs">Update agent personal details.</CardDescription>
+              <CardDescription className="text-xs">Update agent personal details and account settings.</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Phone Number</Label>
-                  <Input value={userForm.phone_number} disabled className="h-9 text-sm rounded bg-slate-50" />
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Phone Number</Label>
+                  <Input value={userForm.phone_number} disabled className="h-11 rounded-lg border-border bg-slate-50 text-sm" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="full_name" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <Label htmlFor="full_name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Full Name
                   </Label>
                   <Input
@@ -195,23 +219,14 @@ export default function EditAgent() {
                     name="full_name"
                     value={userForm.full_name}
                     onChange={handleUserChange}
-                    className="h-9 text-sm rounded"
+                    className="h-11 rounded-lg border-border text-sm"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="nrc_number" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    NRC Number
-                  </Label>
-                  <Input
-                    id="nrc_number"
-                    name="nrc_number"
-                    value={userForm.nrc_number}
-                    onChange={handleUserChange}
-                    className="h-9 text-sm rounded"
-                  />
+                <div className="md:col-span-3">
+                  <NRCInput value={userForm.nrc_number} onChange={(nrc_number) => setUserForm((prev) => ({ ...prev, nrc_number }))} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="agent_code" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <Label htmlFor="agent_code" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Agent Code
                   </Label>
                   <Input
@@ -219,16 +234,16 @@ export default function EditAgent() {
                     name="agent_code"
                     value={profileForm.agent_code}
                     onChange={handleProfileChange}
-                    className="h-9 text-sm rounded"
+                    className="h-11 rounded-lg border-border text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</Label>
                   <Select
                     value={profileForm.status}
                     onValueChange={(val) => setProfileForm((prev) => ({ ...prev, status: val as string }))}
                   >
-                    <SelectTrigger className="h-9 text-sm rounded">
+                    <SelectTrigger className="h-11 rounded-lg text-sm">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -242,17 +257,19 @@ export default function EditAgent() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
-            <CardHeader className="border-b border-slate-50 py-5 bg-slate-50/10">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
-                <Store className="w-4.5 h-4.5 text-emerald-600" />
+          <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
+            <CardHeader className="border-b border-border py-5">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                  <Store className="h-4 w-4" />
+                </div>
                 Shop &amp; Location
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="shop_name" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <Label htmlFor="shop_name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Shop Name
                   </Label>
                   <Input
@@ -260,11 +277,11 @@ export default function EditAgent() {
                     name="shop_name"
                     value={profileForm.shop_name}
                     onChange={handleProfileChange}
-                    className="h-9 text-sm rounded"
+                    className="h-11 rounded-lg border-border text-sm"
                   />
                 </div>
                 <div className="space-y-1.5 md:col-span-2">
-                  <Label htmlFor="shop_address" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <Label htmlFor="shop_address" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Shop Address
                   </Label>
                   <Input
@@ -272,18 +289,18 @@ export default function EditAgent() {
                     name="shop_address"
                     value={profileForm.shop_address}
                     onChange={handleProfileChange}
-                    className="h-9 text-sm rounded"
+                    className="h-11 rounded-lg border-border text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">State/Region</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">State/Region</Label>
                   <Select
                     value={profileForm.state_region_id}
                     onValueChange={(val) => {
                       setProfileForm((prev) => ({ ...prev, state_region_id: val || "", township_id: "" }));
                     }}
                   >
-                    <SelectTrigger className="h-9 text-sm rounded">
+                    <SelectTrigger className="h-11 rounded-lg text-sm">
                       <SelectValue placeholder="Select state/region">
                         {(val: string | null) =>
                           val ? regions.find((r) => r.id.toString() === val)?.name || val : "Select state/region"
@@ -300,13 +317,13 @@ export default function EditAgent() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Township</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Township</Label>
                   <Select
                     value={profileForm.township_id}
                     onValueChange={(val) => setProfileForm((prev) => ({ ...prev, township_id: val || "" }))}
                     disabled={!profileForm.state_region_id}
                   >
-                    <SelectTrigger className="h-9 text-sm rounded">
+                    <SelectTrigger className="h-11 rounded-lg text-sm">
                       <SelectValue placeholder="Select township">
                         {(val: string | null) =>
                           val ? townships.find((t) => t.id.toString() === val)?.name || val : "Select township"
@@ -326,27 +343,29 @@ export default function EditAgent() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
-            <CardHeader className="border-b border-slate-50 py-5 bg-slate-50/10">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
-                <ImageIcon className="w-4.5 h-4.5 text-indigo-600" />
+          <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
+            <CardHeader className="border-b border-border py-5">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                  <ImageIcon className="h-4 w-4" />
+                </div>
                 NRC Images
               </CardTitle>
               <CardDescription className="text-xs">Leave empty to keep existing images.</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <ImageUpload label="NRC Front Image" onChange={(file) => setNrcFront(file)} />
                 <ImageUpload label="NRC Back Image" onChange={(file) => setNrcBack(file)} />
               </div>
             </CardContent>
           </Card>
 
-          <div className="flex justify-end space-x-3">
-            <Button variant="outline" type="button" onClick={() => navigate(`/agents/${id}`)} className="rounded">
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" type="button" onClick={() => navigate(`/agents/${id}`)} className="h-11 rounded-lg">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="h-11 rounded-lg bg-[#D5E726] px-5 font-semibold text-[#10110E] hover:bg-[#D5E726]">
               {loading ? "Saving..." : "Save Changes"}
             </Button>
           </div>

@@ -6,7 +6,7 @@ export const getAgentManagers = (params?: {
   status?: string;
   search?: string;
   state_region_id?: string;
-  township_id?: string;
+  township_id?: string
 }) => api.get("agent-managers", { params });
 
 export const getAgentManager = (id: number | string) => api.get(`agent-managers/${id}`);

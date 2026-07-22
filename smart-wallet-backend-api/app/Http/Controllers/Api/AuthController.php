@@ -9,6 +9,7 @@ use App\Http\Requests\Auth\RequestOtpRequest;
 use App\Http\Requests\Auth\VerifyOtpRequest;
 use App\Http\Requests\Auth\VerifyPinRequest;
 use App\Http\Resources\UserResource;
+use App\Models\CustomerProfile;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Services\QrCodeService;
@@ -71,7 +72,7 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            if ($user->status !== 'active') {
+            if (! in_array($user->status, ['active', 'pending'], true)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Your ' . str_replace('_', ' ', $requestedRoleName) . ' account is currently ' . $user->status . '. Please contact your administrator.',
@@ -117,6 +118,15 @@ class AuthController extends Controller
                 $user->role_id = $data['role_id'];
                 $user->save();
             }
+        }
+
+        // Auto-create CustomerProfile if role is customer
+        $resolvedRoleName = ! empty($user->role_id) ? DB::table('roles')->where('id', $user->role_id)->value('name') : 'customer';
+        if (strtolower((string) $resolvedRoleName) === 'customer') {
+            CustomerProfile::firstOrCreate(
+                ['user_id' => $user->id],
+                ['kyc_status' => 'pending']
+            );
         }
 
         $otpCode = (string) random_int(100000, 999999);
@@ -270,6 +280,7 @@ class AuthController extends Controller
 
         $userData = [
             'is_pin_created' => true,
+            'status' => 'active',
         ];
 
         if (strtolower((string) $roleName) === 'customer') {
@@ -278,6 +289,13 @@ class AuthController extends Controller
         }
 
         $user->update($userData);
+
+        if (strtolower((string) $roleName) === 'customer') {
+            CustomerProfile::firstOrCreate(
+                ['user_id' => $user->id],
+                ['kyc_status' => 'pending']
+            );
+        }
 
         // Auto-create wallet for the user when PIN is created
         if (! Wallet::where('user_id', $user->id)->exists()) {
@@ -355,6 +373,10 @@ class AuthController extends Controller
             }
         }
 
+        if ($user->status === 'pending') {
+            $user->update(['status' => 'active']);
+        }
+
         $token = $user->createToken('auth-token')->plainTextToken;
 
         DB::table('user_devices')->insert([
@@ -371,6 +393,13 @@ class AuthController extends Controller
         $roleName = null;
         if (! empty($user->role_id)) {
             $roleName = DB::table('roles')->where('id', $user->role_id)->value('name');
+        }
+
+        if (strtolower((string) $roleName) === 'customer') {
+            CustomerProfile::firstOrCreate(
+                ['user_id' => $user->id],
+                ['kyc_status' => 'pending']
+            );
         }
 
         $user->load('images');

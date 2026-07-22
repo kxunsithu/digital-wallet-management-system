@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { User, Phone, Mail, CreditCard, MapPin, Image as ImageIcon, Activity, Edit2, Wallet as WalletIcon } from "lucide-react";
+import { User, Phone, CreditCard, MapPin, Image as ImageIcon, Activity, Edit2, Wallet as WalletIcon } from "lucide-react";
 import MainLayout from "@/components/layouts/MainLayout";
 import {
   Breadcrumb,
@@ -75,22 +75,21 @@ export default function AgentManagerDetail() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <div className="flex items-center justify-between">
-
-          <div className="flex gap-2 w-full justify-end">
-            <Button size="sm" onClick={() => navigate(`/agent-managers/${manager.id}/edit`)}>
-              <Edit2 className="w-4 h-4 mr-1" /> Edit
-            </Button>
+        <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+          <div className="flex items-center gap-4">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]"><User className="h-6 w-6" /></div>
+            <div><h2 className="text-xl font-bold tracking-tight text-foreground">{user?.full_name || "Agent Manager"}</h2><p className="mt-1 font-mono text-sm text-muted-foreground">{manager.manager_code || "—"}</p></div>
           </div>
+          <div className="flex items-center gap-3"><span className={`rounded-full border px-3 py-1.5 text-xs font-bold capitalize ${manager.status === "active" ? "border-[#52C41A] text-[#52C41A]" : manager.status === "pending" ? "border-[#D5E726] bg-[#D5E726] text-[#10110E]" : "border-[#FF4D4F] text-[#FF4D4F]"}`}>{manager.status || "inactive"}</span><Button onClick={() => navigate(`/agent-managers/${manager.id}/edit`)} className="h-10 rounded-lg bg-[#D5E726] text-[#10110E] hover:bg-[#D5E726]"><Edit2 className="mr-2 h-4 w-4" />Edit</Button></div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,.8fr)_minmax(0,1.2fr)]">
         {/* User Information */}
-        <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
-          <CardContent className="space-y-5 p-6">
-            <div className="flex flex-col items-center pb-5 border-b border-slate-100/70 mb-5">
-              <div className="h-20 w-20 rounded-full overflow-hidden border border-slate-100 bg-slate-50 flex items-center justify-center text-slate-400 shadow-inner">
+        <Card className="h-fit overflow-hidden rounded-2xl border border-border shadow-none xl:sticky xl:top-24">
+          <CardContent className="p-6">
+            <div className="mb-5 flex items-center gap-4 border-b border-border pb-5">
+              <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-border bg-white text-muted-foreground">
                 {profileImage ? (
                   <img
                     src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/storage/${profileImage.image_path}`}
@@ -104,36 +103,38 @@ export default function AgentManagerDetail() {
                   <User className="h-8 w-8 text-slate-300" />
                 )}
               </div>
+              <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Manager profile</p><p className="mt-1 text-lg font-bold text-foreground">{user?.full_name || "—"}</p><p className="text-sm text-muted-foreground">{user?.phone_number || "—"}</p></div>
             </div>
-            <div className="flex items-start gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-white p-3">
               <User className="w-4 h-4 text-slate-400 mt-0.5" />
               <div>
                 <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Full Name</p>
                 <p className="text-sm font-semibold text-slate-700">{user?.full_name || "-"}</p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-white p-3">
               <Phone className="w-4 h-4 text-slate-400 mt-0.5" />
               <div>
                 <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Phone Number</p>
                 <p className="text-sm font-semibold text-slate-700">{user?.phone_number || "-"}</p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-white p-3">
               <CreditCard className="w-4 h-4 text-slate-400 mt-0.5" />
               <div>
                 <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">NRC Number</p>
                 <p className="text-sm font-semibold text-slate-700">{user?.nrc_number || "-"}</p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-white p-3">
               <Activity className="w-4 h-4 text-slate-400 mt-0.5" />
               <div>
                 <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Manager Code</p>
                 <p className="text-sm font-semibold text-slate-700">{manager.manager_code || "-"}</p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-white p-3">
               <Activity className="w-4 h-4 text-slate-400 mt-0.5" />
               <div>
                 <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Status</p>
@@ -148,7 +149,7 @@ export default function AgentManagerDetail() {
               </div>
             </div>
             {manager.parent && (
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3 rounded-xl border border-border bg-white p-3">
                 <User className="w-4 h-4 text-slate-400 mt-0.5" />
                 <div>
                   <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Parent Manager</p>
@@ -156,7 +157,7 @@ export default function AgentManagerDetail() {
                 </div>
               </div>
             )}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3 rounded-xl border border-border bg-white p-3 sm:col-span-2">
               <MapPin className="w-4 h-4 text-slate-400 mt-0.5" />
               <div>
                 <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">State/Region &amp; Township</p>
@@ -165,23 +166,24 @@ export default function AgentManagerDetail() {
                 </p>
               </div>
             </div>
+            </div>
 
           </CardContent>
         </Card>
 
         {/* NRC Images */}
-        <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
-          <CardHeader className="border-b border-slate-50 py-5 bg-slate-50/10">
-            <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
-              <ImageIcon className="w-4.5 h-4.5 text-slate-600" />
+        <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
+          <CardHeader className="border-b border-border py-5">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+              <ImageIcon className="h-5 w-5 text-[#10110E]" />
               NRC Images
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-2 flex justify-center flex-col items-center">
+          <CardContent className="grid gap-5 p-6 sm:grid-cols-2">
+            <div className="flex flex-col items-center justify-center space-y-2">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Front Image</p>
               {nrcFront ? (
-                <div className="relative mt-2 rounded-lg border border-slate-100 bg-slate-50/40 p-2 overflow-hidden flex items-center justify-center max-w-lg shadow-sm hover:shadow transition-shadow">
+                <div className="relative mt-2 flex max-w-lg items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2">
                   <img
                     src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/storage/${nrcFront.image_path}`}
                     alt="NRC Front"
@@ -195,10 +197,10 @@ export default function AgentManagerDetail() {
                 <p className="text-sm text-slate-400 italic">No front image uploaded.</p>
               )}
             </div>
-            <div className="space-y-2 mt-5 flex justify-center flex-col items-center">
+            <div className="flex flex-col items-center justify-center space-y-2">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Back Image</p>
               {nrcBack ? (
-                <div className="relative mt-2 rounded-lg border border-slate-100 bg-slate-50/40 p-2 overflow-hidden flex items-center justify-center max-w-lg shadow-sm hover:shadow transition-shadow">
+                <div className="relative mt-2 flex max-w-lg items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2">
                   <img
                     src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/storage/${nrcBack.image_path}`}
                     alt="NRC Back"
@@ -219,28 +221,28 @@ export default function AgentManagerDetail() {
       {/* Wallet Information */}
       {user?.wallet && (
         <div className="mt-8">
-          <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
-            <CardHeader className="border-b border-slate-50 py-5 bg-slate-50/10">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
-                <WalletIcon className="w-4.5 h-4.5 text-blue-500" />
+          <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
+            <CardHeader className="border-b border-border py-5">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <WalletIcon className="h-5 w-5 text-[#10110E]" />
                 Wallet Information
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Wallet Number</p>
-                  <p className="mt-1 text-sm font-bold text-slate-800 font-mono tracking-wide">{user.wallet.wallet_number ?? "—"}</p>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+                <div className="rounded-xl border border-border bg-white p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Wallet Number</p>
+                  <p className="mt-1 font-mono text-sm font-bold tracking-wide text-foreground">{user.wallet.wallet_number ?? "—"}</p>
                 </div>
-                <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Balance</p>
-                  <p className="mt-1 text-sm font-bold text-slate-800">
+                <div className="rounded-xl border border-[#D5E726] bg-[#D5E726] p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-[#10110E]">Balance</p>
+                  <p className="mt-1 text-sm font-bold text-[#10110E]">
                     {new Intl.NumberFormat("en-MM").format(Number(user.wallet.balance ?? 0))}
                     <span className="ml-1 text-xs font-medium text-slate-500">MMK</span>
                   </p>
                 </div>
-                <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
-                  <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Wallet Status</p>
+                <div className="rounded-xl border border-border bg-white p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Wallet Status</p>
                   <div className="mt-1">
                     <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                       user.wallet.status === "active"

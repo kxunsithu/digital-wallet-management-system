@@ -110,12 +110,32 @@ export default function TransferReceiptModal({
       ctx.font = "bold 26px sans-serif";
       ctx.fillText(`${formattedAmount} MMK`, 200, 185);
 
-      // Status Badge
+      const drawRoundedRect = (
+        c: CanvasRenderingContext2D,
+        rx: number,
+        ry: number,
+        rw: number,
+        rh: number,
+        radius: number
+      ) => {
+        c.beginPath();
+        c.moveTo(rx + radius, ry);
+        c.lineTo(rx + rw - radius, ry);
+        c.quadraticCurveTo(rx + rw, ry, rx + rw, ry + radius);
+        c.lineTo(rx + rw, ry + rh - radius);
+        c.quadraticCurveTo(rx + rw, ry + rh, rx + rw - radius, ry + rh);
+        c.lineTo(rx + radius, ry + rh);
+        c.quadraticCurveTo(rx, ry + rh, rx, ry + rh - radius);
+        c.lineTo(rx, ry + radius);
+        c.quadraticCurveTo(rx, ry, rx + radius, ry);
+        c.closePath();
+      };
+
+      // Status Badge Background
       ctx.fillStyle = "#ecfdf5";
-      ctx.beginPath();
-      // RoundRect fallback (approximate rounded rect)
-      ctx.roundRect ? ctx.roundRect(160, 202, 80, 22, 11) : ctx.rect(160, 202, 80, 22);
+      drawRoundedRect(ctx, 160, 202, 80, 22, 11);
       ctx.fill();
+
       ctx.fillStyle = "#047857";
       ctx.font = "bold 11px sans-serif";
       ctx.fillText("Completed", 200, 217);
@@ -132,7 +152,8 @@ export default function TransferReceiptModal({
 
       // Draw details list
       let y = 280;
-      const drawRow = (label: string, value: string, isMono = false) => {
+      const drawRow = (label: string, value: any, isMono = false) => {
+        const valStr = String(value ?? "—");
         ctx.fillStyle = "#64748b";
         ctx.font = "13px sans-serif";
         ctx.textAlign = "left";
@@ -141,7 +162,7 @@ export default function TransferReceiptModal({
         ctx.fillStyle = "#334155";
         ctx.font = isMono ? "bold 12px monospace" : "bold 13px sans-serif";
         ctx.textAlign = "right";
-        ctx.fillText(value, 370, y);
+        ctx.fillText(valStr, 370, y);
         y += 32;
       };
 
@@ -165,8 +186,8 @@ export default function TransferReceiptModal({
       ctx.textAlign = "left";
       ctx.fillText("SENDER DETAILS", 30, y);
       y += 24;
-      drawRow("Name", transaction.sender_name || "—");
-      drawRow("Phone", transaction.sender_phone || "—");
+      drawRow("Name", transaction.sender_name);
+      drawRow("Phone", transaction.sender_phone);
 
       // Dotted divider
       ctx.setLineDash([5, 5]);
@@ -184,8 +205,8 @@ export default function TransferReceiptModal({
       ctx.textAlign = "left";
       ctx.fillText("RECEIVER DETAILS", 30, y);
       y += 24;
-      drawRow("Name", transaction.receiver_name || "—");
-      drawRow("Phone", transaction.receiver_phone || "—");
+      drawRow("Name", transaction.receiver_name);
+      drawRow("Phone", transaction.receiver_phone);
 
       // Dotted divider
       ctx.setLineDash([5, 5]);
@@ -199,16 +220,20 @@ export default function TransferReceiptModal({
 
       // Fee & Description
       drawRow("Transfer Fee", `${formattedFee} MMK`);
-      drawRow("Description", transaction.description || "—");
+      drawRow("Description", transaction.description);
 
       // Trigger download
       const dataUrl = canvas.toDataURL("image/png");
       const link = document.createElement("a");
-      link.download = `Receipt-${transaction.transaction_number}.png`;
+      link.download = `Receipt-${transaction.transaction_number || "Transaction"}.png`;
       link.href = dataUrl;
+      link.style.display = "none";
+      document.body.appendChild(link);
       link.click();
+      link.remove();
       toast.success("Receipt downloaded successfully");
-    } catch (e) {
+    } catch (err) {
+      console.error("Receipt generation/download failed:", err);
       toast.error("Failed to generate downloadable receipt image");
     }
   };
@@ -396,11 +421,13 @@ export default function TransferReceiptModal({
 
   // Auto-save download trigger when modal opens with new transaction
   useEffect(() => {
-    if (autoDownload && open && transaction && transaction.id !== lastSavedId) {
-      setLastSavedId(transaction.id);
+    const receiptId = transaction?.id ?? transaction?.transaction_number ?? transaction?.created_at;
+
+    if (autoDownload && open && receiptId && receiptId !== lastSavedId) {
+      setLastSavedId(receiptId);
       const timer = setTimeout(() => {
         handleDownload();
-      }, 500);
+      }, 0);
       return () => clearTimeout(timer);
     }
   }, [autoDownload, open, transaction, lastSavedId]);

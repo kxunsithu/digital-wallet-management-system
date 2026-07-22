@@ -253,6 +253,156 @@ code {
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Smart Wallet admin visual system. Keep the admin and agent-manager portal on
+   the same high-contrast wallet palette regardless of the OS colour scheme. */
+:root,
+.dark {
+  color-scheme: light;
+  --text: #10110E;
+  --text-h: #10110E;
+  --bg: #FFFFFF;
+  --border: #C7C7C7;
+  --code-bg: #FFFFFF;
+  --accent: #D5E726;
+  --accent-bg: #FFFFFF;
+  --accent-border: #D5E726;
+  --social-bg: #FFFFFF;
+  --shadow: #C7C7C7 0 10px 15px -3px, #C7C7C7 0 4px 6px -2px;
+  --background: #FFFFFF;
+  --foreground: #10110E;
+  --card: #FFFFFF;
+  --card-foreground: #10110E;
+  --popover: #FFFFFF;
+  --popover-foreground: #10110E;
+  --primary: #D5E726;
+  --primary-foreground: #10110E;
+  --secondary: #10110E;
+  --secondary-foreground: #FFFFFF;
+  --muted: #FFFFFF;
+  --muted-foreground: #10110E;
+  --accent: #D5E726;
+  --accent-foreground: #10110E;
+  --destructive: #FF4D4F;
+  --input: #C7C7C7;
+  --ring: #D5E726;
+  --chart-1: #D5E726;
+  --chart-2: #52C41A;
+  --chart-3: #C7C7C7;
+  --chart-4: #2F332B;
+  --chart-5: #10110E;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #10110E;
+  --sidebar-primary: #D5E726;
+  --sidebar-primary-foreground: #10110E;
+  --sidebar-accent: #FFFFFF;
+  --sidebar-accent-foreground: #10110E;
+  --sidebar-border: #C7C7C7;
+  --sidebar-ring: #D5E726;
+}
+
+.admin-portal {
+  min-height: 100svh;
+  background: #FFFFFF;
+  color: #10110E;
+}
+
+/* Legacy page utility classes are mapped to the portal palette so existing
+   screens inherit the redesign without changing their data and layouts. */
+.admin-portal .bg-white,
+.admin-portal .bg-white\/90,
+.admin-portal .bg-white\/95,
+.admin-portal .bg-slate-50,
+.admin-portal .bg-slate-50\/40,
+.admin-portal .bg-slate-50\/50,
+.admin-portal .bg-slate-50\/80,
+.admin-portal .bg-slate-50\/10 {
+  background-color: #FFFFFF !important;
+}
+
+.admin-portal .bg-slate-100,
+.admin-portal .hover\:bg-slate-100:hover,
+.admin-portal .hover\:bg-slate-50:hover {
+  background-color: #FFFFFF !important;
+}
+
+.admin-portal .bg-slate-900,
+.admin-portal .bg-slate-950 {
+  background-color: #10110E !important;
+}
+
+.admin-portal .text-slate-950,
+.admin-portal .text-slate-900,
+.admin-portal .text-slate-800,
+.admin-portal .text-slate-700,
+.admin-portal .text-slate-200 {
+  color: #10110E !important;
+}
+
+.admin-portal .text-slate-600,
+.admin-portal .text-slate-500,
+.admin-portal .text-slate-400,
+.admin-portal .text-slate-300 {
+  color: #10110E !important;
+}
+
+.admin-portal .border-slate-100,
+.admin-portal .border-slate-200,
+.admin-portal .border-slate-200\/70,
+.admin-portal .border-slate-200\/80,
+.admin-portal .ring-slate-100,
+.admin-portal .ring-slate-200\/70 {
+  border-color: #C7C7C7 !important;
+  --tw-ring-color: #C7C7C7 !important;
+}
+
+.admin-portal .text-blue-500,
+.admin-portal .text-blue-600,
+.admin-portal .text-indigo-600,
+.admin-portal .text-emerald-600,
+.admin-portal .text-yellow-600,
+.admin-portal .text-yellow-700 {
+  color: #D5E726 !important;
+}
+
+.admin-portal .bg-blue-50,
+.admin-portal .bg-indigo-50,
+.admin-portal .bg-emerald-50,
+.admin-portal .bg-yellow-50 {
+  background-color: #FFFFFF !important;
+}
+
+.admin-portal .border-blue-200,
+.admin-portal .border-indigo-200,
+.admin-portal .border-emerald-200,
+.admin-portal .border-yellow-200 {
+  border-color: #D5E726 !important;
+}
+
+.admin-portal [data-slot="card"] {
+  border: 1px solid #C7C7C7;
+  box-shadow: none;
+}
+
+.admin-portal input,
+.admin-portal textarea,
+.admin-portal [data-slot="select-trigger"] {
+  background-color: #FFFFFF;
+  color: #10110E;
+}
+
+.admin-portal input::placeholder,
+.admin-portal textarea::placeholder {
+  color: #C7C7C7;
+}
+
+.admin-portal table thead {
+  background: #FFFFFF;
+}
+
+.admin-portal table tr {
+  border-color: #C7C7C7;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;}

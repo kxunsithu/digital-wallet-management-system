@@ -26,6 +26,8 @@ class UserResource extends JsonResource
 
         $agentProfile = $this->relationLoaded('agentProfile') ? $this->agentProfile : $this->loadMissing('agentProfile')->agentProfile;
         $wallet = $this->relationLoaded('wallet') ? $this->wallet : $this->loadMissing('wallet')->wallet;
+        $customerProfile = $this->relationLoaded('customerProfile') ? $this->customerProfile : $this->loadMissing('customerProfile')->customerProfile;
+        $nrcVerification = $this->relationLoaded('nrcVerification') ? $this->nrcVerification : $this->loadMissing('nrcVerification')->nrcVerification;
 
         return [
             'id' => $this->id,
@@ -38,6 +40,12 @@ class UserResource extends JsonResource
             'role_id' => $this->role_id,
             'images' => $formattedImages,
             'nrc_images' => $formattedImages->filter(fn ($image) => in_array($image['image_type'], ['nrc_front_image', 'nrc_back_image'], true))->values(),
+            'kyc_status' => $customerProfile ? $customerProfile->kyc_status : null,
+            'nrc_verification' => $nrcVerification ? [
+                'id' => $nrcVerification->id,
+                'status' => $nrcVerification->status,
+                'rejection_reason' => $nrcVerification->rejection_reason,
+            ] : null,
             'agent_profile' => $agentProfile ? [
                 'id' => $agentProfile->id,
                 'agent_code' => $agentProfile->agent_code,

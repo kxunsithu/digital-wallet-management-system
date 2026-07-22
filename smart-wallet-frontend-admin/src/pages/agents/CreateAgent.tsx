@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { NRCInput, validateNrc } from "@/components/NRCInput";
 import {
   Select,
   SelectContent,
@@ -41,7 +42,6 @@ export default function CreateAgent() {
     shop_address: "",
     state_region_id: "",
     township_id: "",
-    status: "pending",
   });
 
   const [regions, setRegions] = useState<any[]>([]);
@@ -79,6 +79,11 @@ export default function CreateAgent() {
       toast.error("Both NRC front and back images are required.");
       return;
     }
+    const nrcError = validateNrc(userForm.nrc_number);
+    if (nrcError) {
+      toast.error(nrcError);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -91,6 +96,7 @@ export default function CreateAgent() {
       Object.entries(profileForm).forEach(([key, value]) => {
         if (value) data.append(key, value);
       });
+      data.append("status", "pending");
 
       data.append("nrc_front_image", nrcFront);
       data.append("nrc_back_image", nrcBack);
@@ -130,22 +136,37 @@ export default function CreateAgent() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+        <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+          <div className="flex items-center gap-4">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]">
+              <User className="h-6 w-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-foreground">Create Agent</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Add a new agent account, NRC details, and shop location.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="w-full max-w-5xl mx-auto">
+      <div className="mx-auto w-full max-w-6xl">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
-            <CardHeader className="border-b border-slate-50 py-5 bg-slate-50/10">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
-                <User className="w-4.5 h-4.5 text-blue-600" />
+          <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
+            <CardHeader className="border-b border-border py-5">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                  <User className="h-4 w-4" />
+                </div>
                 General Information
               </CardTitle>
-              <CardDescription className="text-xs">Agent personal details.</CardDescription>
+              <CardDescription className="text-xs">Agent personal details and login information.</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="phone_number" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <Label htmlFor="phone_number" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Phone Number <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -155,11 +176,11 @@ export default function CreateAgent() {
                     onChange={handleUserChange}
                     required
                     placeholder="e.g. 09xxxxxxxxx"
-                    className="h-9 text-sm rounded"
+                    className="h-11 rounded-lg border-border text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="full_name" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <Label htmlFor="full_name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Full Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -169,55 +190,30 @@ export default function CreateAgent() {
                     onChange={handleUserChange}
                     required
                     placeholder="e.g. Ko Aung"
-                    className="h-9 text-sm rounded"
+                    className="h-11 rounded-lg border-border text-sm"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="nrc_number" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    NRC Number <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="nrc_number"
-                    name="nrc_number"
-                    value={userForm.nrc_number}
-                    onChange={handleUserChange}
-                    required
-                    placeholder="e.g. 12/ABCDE(N)123456"
-                    className="h-9 text-sm rounded"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</Label>
-                  <Select
-                    value={profileForm.status}
-                    onValueChange={(val) => setProfileForm((prev) => ({ ...prev, status: val as string }))}
-                  >
-                    <SelectTrigger className="h-9 text-sm rounded">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="md:col-span-3">
+                  <NRCInput value={userForm.nrc_number} onChange={(nrc_number) => setUserForm((prev) => ({ ...prev, nrc_number }))} />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
-            <CardHeader className="border-b border-slate-50 py-5 bg-slate-50/10">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
-                <Store className="w-4.5 h-4.5 text-emerald-600" />
+          <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
+            <CardHeader className="border-b border-border py-5">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                  <Store className="h-4 w-4" />
+                </div>
                 Shop &amp; Location
               </CardTitle>
               <CardDescription className="text-xs">Shop details and operating location.</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="shop_name" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <Label htmlFor="shop_name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Shop Name
                   </Label>
                   <Input
@@ -226,11 +222,11 @@ export default function CreateAgent() {
                     value={profileForm.shop_name}
                     onChange={handleProfileChange}
                     placeholder="Shop name"
-                    className="h-9 text-sm rounded"
+                    className="h-11 rounded-lg border-border text-sm"
                   />
                 </div>
                 <div className="space-y-1.5 md:col-span-2">
-                  <Label htmlFor="shop_address" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <Label htmlFor="shop_address" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Shop Address
                   </Label>
                   <Input
@@ -239,11 +235,11 @@ export default function CreateAgent() {
                     value={profileForm.shop_address}
                     onChange={handleProfileChange}
                     placeholder="Shop address"
-                    className="h-9 text-sm rounded"
+                    className="h-11 rounded-lg border-border text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     State/Region <span className="text-red-500">*</span>
                   </Label>
                   <Select
@@ -252,7 +248,7 @@ export default function CreateAgent() {
                       setProfileForm((prev) => ({ ...prev, state_region_id: val || "", township_id: "" }));
                     }}
                   >
-                    <SelectTrigger className="h-9 text-sm rounded">
+                    <SelectTrigger className="h-11 rounded-lg text-sm">
                       <SelectValue placeholder="Select state/region">
                         {(val: string | null) =>
                           val ? regions.find((r) => r.id.toString() === val)?.name || val : "Select state/region"
@@ -269,7 +265,7 @@ export default function CreateAgent() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Township <span className="text-red-500">*</span>
                   </Label>
                   <Select
@@ -277,7 +273,7 @@ export default function CreateAgent() {
                     onValueChange={(val) => setProfileForm((prev) => ({ ...prev, township_id: val || "" }))}
                     disabled={!profileForm.state_region_id}
                   >
-                    <SelectTrigger className="h-9 text-sm rounded">
+                    <SelectTrigger className="h-11 rounded-lg text-sm">
                       <SelectValue placeholder="Select township">
                         {(val: string | null) =>
                           val ? townships.find((t) => t.id.toString() === val)?.name || val : "Select township"
@@ -297,27 +293,29 @@ export default function CreateAgent() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
-            <CardHeader className="border-b border-slate-50 py-5 bg-slate-50/10">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
-                <ImageIcon className="w-4.5 h-4.5 text-indigo-600" />
+          <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
+            <CardHeader className="border-b border-border py-5">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                  <ImageIcon className="h-4 w-4" />
+                </div>
                 NRC Images
               </CardTitle>
               <CardDescription className="text-xs">Upload the front and back of the NRC card.</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <ImageUpload label="NRC Front Image" required onChange={(file) => setNrcFront(file)} />
                 <ImageUpload label="NRC Back Image" required onChange={(file) => setNrcBack(file)} />
               </div>
             </CardContent>
           </Card>
 
-          <div className="flex justify-end space-x-3">
-            <Button variant="outline" type="button" onClick={() => navigate("/agents")} className="rounded">
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" type="button" onClick={() => navigate("/agents")} className="h-11 rounded-lg">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="h-11 rounded-lg bg-[#D5E726] px-5 font-semibold text-[#10110E] hover:bg-[#D5E726]">
               {loading ? "Creating..." : "Create Agent"}
             </Button>
           </div>

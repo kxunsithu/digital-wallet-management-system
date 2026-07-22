@@ -22,7 +22,7 @@ class StoreAgentManagerRequest extends FormRequest
             // Profile fields
             'state_region_id'   => ['required', 'integer', 'exists:state_regions,id'],
             'township_id'       => ['required', 'integer', 'exists:townships,id'],
-            'status'            => ['required', 'string', 'in:pending,active,inactive'],
+            'status'            => ['nullable', 'string', 'in:pending,active,inactive'],
             'parent_manager_id' => ['nullable', 'integer', 'exists:agent_manager_profiles,id'],
 
             // NRC images

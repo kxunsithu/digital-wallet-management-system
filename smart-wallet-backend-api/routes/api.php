@@ -65,6 +65,8 @@ Route::prefix('customers')->group(function () {
     Route::get('/', [CustomerController::class, 'index']);
     Route::get('/{id}', [CustomerController::class, 'show']);
     Route::delete('/{id}', [CustomerController::class, 'destroy'])->middleware('auth:sanctum');
+    Route::post('/{id}/toggle-status', [CustomerController::class, 'toggleStatus'])->middleware(['auth:sanctum', 'ensure.admin']);
+    Route::post('/{id}/toggle-kyc-status', [CustomerController::class, 'toggleKycStatus'])->middleware(['auth:sanctum', 'ensure.admin']);
 });
 
 Route::prefix('profile')->middleware('auth:sanctum')->group(function () {

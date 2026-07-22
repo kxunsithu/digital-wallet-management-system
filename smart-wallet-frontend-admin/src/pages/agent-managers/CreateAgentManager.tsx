@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { NRCInput, validateNrc } from "@/components/NRCInput";
 import {
   Select,
   SelectContent,
@@ -41,7 +42,6 @@ export default function CreateAgentManager() {
   const [profileForm, setProfileForm] = useState({
     state_region_id: "",
     township_id: "",
-    status: "pending",
   });
 
   const [regions, setRegions] = useState<any[]>([]);
@@ -84,6 +84,11 @@ export default function CreateAgentManager() {
       toast.error("Both NRC front and back images are required.");
       return;
     }
+    const nrcError = validateNrc(userForm.nrc_number);
+    if (nrcError) {
+      toast.error(nrcError);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -98,6 +103,7 @@ export default function CreateAgentManager() {
       Object.entries(profileForm).forEach(([key, value]) => {
         if (value) data.append(key, value);
       });
+      data.append("status", "pending");
 
       data.append("nrc_front_image", nrcFront);
       data.append("nrc_back_image", nrcBack);
@@ -139,22 +145,29 @@ export default function CreateAgentManager() {
         </Breadcrumb>
       </div>
 
-      <div className="w-full max-w-5xl mx-auto">
+      <div className="mx-auto w-full max-w-6xl">
+        <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+          <div className="flex items-center gap-4">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]"><User className="h-6 w-6" /></div>
+            <div><h2 className="text-xl font-bold tracking-tight text-foreground">New Agent Manager</h2><p className="mt-1 text-sm text-muted-foreground">Set up manager identity, location, and KYC documents.</p></div>
+          </div>
+          <span className="w-fit rounded-full bg-[#D5E726] px-3 py-1.5 text-xs font-bold text-[#10110E]">Pending approval</span>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-6">
 
           {/* General Information */}
-          <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
-            <CardHeader className="border-b border-slate-50 py-5 bg-slate-50/10">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
-                <User className="w-4.5 h-4.5 text-blue-600" />
+          <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
+            <CardHeader className="border-b border-border py-5">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <User className="h-5 w-5 text-[#10110E]" />
                 General Information
               </CardTitle>
               <CardDescription className="text-xs">Agent manager personal details and profile settings.</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="phone_number" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Phone Number <span className="text-red-500">*</span></Label>
+                  <Label htmlFor="phone_number" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Phone Number <span className="text-[#FF4D4F]">*</span></Label>
                   <Input
                     id="phone_number"
                     name="phone_number"
@@ -162,57 +175,33 @@ export default function CreateAgentManager() {
                     onChange={handleUserChange}
                     required
                     placeholder="e.g. 09xxxxxxxxx"
-                    className="h-9 text-sm rounded"
+                    className="h-11 rounded text-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="full_name" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Full Name</Label>
+                  <Label htmlFor="full_name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Full Name</Label>
                   <Input
                     id="full_name"
                     name="full_name"
                     value={userForm.full_name}
                     onChange={handleUserChange}
                     placeholder="e.g. Ko Aung"
-                    className="h-9 text-sm rounded"
+                    className="h-11 rounded text-sm"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="nrc_number" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">NRC Number</Label>
-                  <Input
-                    id="nrc_number"
-                    name="nrc_number"
-                    value={userForm.nrc_number}
-                    onChange={handleUserChange}
-                    placeholder="e.g. 12/ABCDE(N)123456"
-                    className="h-9 text-sm rounded"
-                  />
+                <div className="md:col-span-2">
+                  <NRCInput value={userForm.nrc_number} onChange={(nrc_number) => setUserForm((prev) => ({ ...prev, nrc_number }))} />
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="status" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</Label>
-                  <Select
-                    value={profileForm.status}
-                    onValueChange={(val) => handleSelectChange(val as string, "status")}
-                  >
-                    <SelectTrigger className="h-9 text-sm rounded">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="state_region_id" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">State/Region</Label>
+                  <Label htmlFor="state_region_id" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">State/Region</Label>
                   <Select
                     value={profileForm.state_region_id}
                     onValueChange={(val) => {
                       setProfileForm((prev) => ({ ...prev, state_region_id: val || "", township_id: "" }));
                     }}
                   >
-                    <SelectTrigger className="h-9 text-sm rounded">
+                    <SelectTrigger className="h-11 rounded text-sm">
                       <SelectValue placeholder="Select state/region">
                         {(val: string | null) => val ? regions.find(r => r.id.toString() === val)?.name || val : "Select state/region"}
                       </SelectValue>
@@ -225,13 +214,13 @@ export default function CreateAgentManager() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="township_id" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Township</Label>
+                  <Label htmlFor="township_id" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Township</Label>
                   <Select
                     value={profileForm.township_id}
                     onValueChange={(val) => handleSelectChange(val as string, "township_id")}
                     disabled={!profileForm.state_region_id}
                   >
-                    <SelectTrigger className="h-9 text-sm rounded">
+                    <SelectTrigger className="h-11 rounded text-sm">
                       <SelectValue placeholder="Select township">
                         {(val: string | null) => val ? townships.find(t => t.id.toString() === val)?.name || val : "Select township"}
                       </SelectValue>
@@ -249,16 +238,16 @@ export default function CreateAgentManager() {
           </Card>
 
           {/* NRC Images */}
-          <Card className="shadow-sm border-slate-100 bg-white rounded overflow-hidden">
-            <CardHeader className="border-b border-slate-50 py-5 bg-slate-50/10">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-800">
-                <ImageIcon className="w-4.5 h-4.5 text-indigo-600" />
+          <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
+            <CardHeader className="border-b border-border py-5">
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <ImageIcon className="h-5 w-5 text-[#10110E]" />
                 NRC Images
               </CardTitle>
               <CardDescription className="text-xs">Upload the front and back of the NRC card.</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <ImageUpload
                   label="NRC Front Image"
                   required
@@ -274,11 +263,11 @@ export default function CreateAgentManager() {
           </Card>
 
 
-          <div className="flex justify-end space-x-3">
-            <Button variant="outline" type="button" onClick={() => navigate("/agent-managers")} className="rounded">
+          <div className="flex flex-col-reverse gap-3 rounded-2xl border border-border bg-white p-4 sm:flex-row sm:justify-end">
+            <Button variant="outline" type="button" onClick={() => navigate("/agent-managers")} className="h-11 rounded-lg">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} >
+            <Button type="submit" disabled={loading} className="h-11 rounded-lg bg-[#D5E726] px-6 font-semibold text-[#10110E] hover:bg-[#D5E726]" >
               {loading ? "Creating..." : "Create Agent Manager"}
             </Button>
           </div>

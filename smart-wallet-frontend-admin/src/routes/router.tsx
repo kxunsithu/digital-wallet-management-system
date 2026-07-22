@@ -127,6 +127,14 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+  {
+    path: "/agent-manager-wallet",
+    element: (
+      <ProtectedRoute allowedRoles={MANAGER_ONLY}>
+        <ManagerTransferPage />
+      </ProtectedRoute>
+    ),
+  },
 
   // ─── Customers: admin only ─────────────────────────────────────────────────
   {

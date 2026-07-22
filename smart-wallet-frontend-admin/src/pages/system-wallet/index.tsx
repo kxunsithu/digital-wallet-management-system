@@ -154,8 +154,22 @@ const SystemWalletPage = () => {
     void loadWallet();
   }, []);
 
+  const normalizeQrValue = (value: string): string => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed && typeof parsed === "object" && "qr_code_value" in parsed) {
+        return String((parsed as any).qr_code_value).trim();
+      }
+    } catch {
+      // not JSON — treat as raw code
+    }
+    return trimmed;
+  };
+
   const resolveQrLookup = async (value: string) => {
-    const lookupValue = value.trim();
+    const lookupValue = normalizeQrValue(value);
     if (!lookupValue) {
       toast.error("Enter or paste a QR code value.");
       return;
@@ -270,26 +284,28 @@ const SystemWalletPage = () => {
   const statusColor = (status?: string) => {
     switch (status) {
       case "active":
-        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+        return "border-[#D5E726] bg-[#D5E726] text-[#10110E]";
       case "frozen":
-        return "bg-amber-50 text-amber-700 border-amber-200";
+        return "border-[#2F332B] bg-[#161814] text-white";
       case "suspended":
-        return "bg-red-50 text-red-700 border-red-200";
+        return "border-[#FF4D4F] bg-white text-[#FF4D4F]";
       default:
-        return "bg-slate-50 text-slate-600 border-slate-200";
+        return "border-[#C7C7C7] bg-white text-[#10110E]";
     }
   };
 
   return (
     <MainLayout title="System Wallet">
-      <div className="space-y-8">
-        {/* ───────── Hero Wallet Card ───────── */}
-        <div className="overflow-hidden rounded-xl bg-slate-900 shadow-lg">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="border-b border-border bg-[#D5E726] px-6 py-3 text-xs font-bold tracking-[0.2em] text-[#10110E] uppercase md:px-8">
+            System treasury
+          </div>
           <div className="p-6 md:p-8">
             {loading ? (
               <div className="flex items-center gap-3 py-8">
-                <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
-                <p className="text-sm text-slate-400">Loading wallet details…</p>
+                <Loader2 className="h-5 w-5 animate-spin text-[#10110E]" />
+                <p className="text-sm text-muted-foreground">Loading wallet details…</p>
               </div>
             ) : error ? (
               <div className="py-8 text-center">
@@ -301,12 +317,12 @@ const SystemWalletPage = () => {
             ) : wallet ? (
               <>
                 <div className="mb-6 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl">
-                    <Wallet className="h-5 w-5 text-indigo-400" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D5E726] text-[#10110E]">
+                    <Wallet className="h-5 w-5" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-white">Admin Wallet</h2>
-                    <p className="text-xs text-slate-400">System treasury account</p>
+                    <h2 className="text-lg font-semibold text-foreground">Admin Wallet</h2>
+                    <p className="text-xs text-muted-foreground">System treasury account</p>
                   </div>
                   <div className="ml-auto">
                     <span
@@ -320,54 +336,54 @@ const SystemWalletPage = () => {
 
                 {/* Balance highlight */}
                 <div className="mb-8">
-                  <p className="text-xs font-medium uppercase tracking-widest text-slate-500">
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
                     Available Balance
                   </p>
-                  <p className="mt-1 text-4xl font-bold tracking-tight text-white md:text-5xl">
+                  <p className="mt-1 text-4xl font-bold tracking-tight text-foreground md:text-5xl">
                     {formatBalance(wallet.balance)}
-                    <span className="ml-2 text-lg font-medium text-slate-400">
+                    <span className="ml-2 text-lg font-medium text-muted-foreground">
                       MMK
                     </span>
                   </p>
                 </div>
 
                 {/* Wallet meta row */}
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  <div className="group flex items-start gap-3 rounded-xl bg-slate-800/70 p-4 ring-1 ring-slate-700/70 transition-all hover:bg-slate-800 hover:ring-slate-600/70">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/15 text-blue-400">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-colors hover:border-[#D5E726]">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#D5E726] text-[#10110E]">
                       <Hash className="h-4 w-4" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                         Wallet Number
                       </p>
-                      <p className="mt-0.5 truncate font-mono text-sm font-semibold text-slate-200">
+                      <p className="mt-0.5 truncate font-mono text-sm font-semibold text-foreground">
                         {wallet.wallet_number ?? "—"}
                       </p>
                     </div>
                   </div>
-                  <div className="group flex items-start gap-3 rounded-xl bg-slate-800/70 p-4 ring-1 ring-slate-700/70 transition-all hover:bg-slate-800 hover:ring-slate-600/70">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-500/15 text-purple-400">
+                  <div className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-colors hover:border-[#D5E726]">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#D5E726] text-[#10110E]">
                       <CircleDollarSign className="h-4 w-4" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                         Currency
                       </p>
-                      <p className="mt-0.5 text-sm font-semibold text-slate-200">
+                      <p className="mt-0.5 text-sm font-semibold text-foreground">
                         MMK
                       </p>
                     </div>
                   </div>
-                  <div className="group flex items-start gap-3 rounded-xl bg-slate-800/70 p-4 ring-1 ring-slate-700/70 transition-all hover:bg-slate-800 hover:ring-slate-600/70">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
+                  <div className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-colors hover:border-[#D5E726]">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#D5E726] text-[#10110E]">
                       <ShieldCheck className="h-4 w-4" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                         Linked Admin ID
                       </p>
-                      <p className="mt-0.5 text-sm font-semibold text-slate-200">
+                      <p className="mt-0.5 text-sm font-semibold text-foreground">
                         {wallet.user_id ?? "—"}
                       </p>
                     </div>
@@ -385,12 +401,13 @@ const SystemWalletPage = () => {
           </div>
         </div>
 
+        <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,.85fr)_minmax(0,1.35fr)]">
         {/* ───────── Receive QR Card ───────── */}
-        <Card className="overflow-hidden border-0 shadow-md ring-1 ring-slate-200/60">
-          <CardHeader className="border-b border-slate-100 bg-blue-50/50 px-6 py-5">
-            <CardTitle className="flex items-center gap-2.5 text-lg font-semibold text-slate-800">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
-                <QrCode className="h-4 w-4 text-blue-600" />
+        <Card className="overflow-hidden rounded-2xl border border-border shadow-none xl:sticky xl:top-24">
+          <CardHeader className="border-b border-border px-6 py-5">
+            <CardTitle className="flex items-center gap-2.5 text-lg font-semibold text-foreground">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                <QrCode className="h-4 w-4" />
               </div>
               Receive Money via QR
             </CardTitle>
@@ -401,24 +418,24 @@ const SystemWalletPage = () => {
                 <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
                 <p className="text-sm text-slate-500">Loading QR code…</p>
               </div>
-            ) : myQrCode?.qr_payload ? (
-              <div className="flex flex-col items-center gap-6 md:flex-row md:items-start">
+            ) : myQrCode?.qr_code_value ? (
+              <div className="flex flex-col items-center gap-6">
                 <div className="group relative flex-shrink-0">
-                  <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/70 transition-shadow group-hover:shadow-md">
-                    <QRCode value={myQrCode.qr_payload} size={180} />
+                  <div className="rounded-2xl border border-border bg-white p-5 shadow-sm transition-shadow group-hover:border-[#D5E726]">
+                    <QRCode value={String(myQrCode.qr_code_value)} size={180} />
                   </div>
                   <div className="mt-3 flex justify-center">
-                    <Badge variant="secondary" className="text-xs font-normal text-slate-500">
+                    <Badge variant="secondary" className="text-xs font-normal text-white">
                       Admin QR Code
                     </Badge>
                   </div>
                 </div>
                 <div className="flex-1 space-y-4">
-                  <div className="rounded-xl bg-slate-50/80 p-4 ring-1 ring-slate-100">
+                  <div className="rounded-xl border border-border bg-white p-4">
                     <p className="text-sm leading-relaxed text-slate-600">
                       Agent managers can scan this QR code to send money to the system wallet
                       using the{" "}
-                      <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 ring-1 ring-indigo-200/50">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-[#D5E726] px-2 py-0.5 text-xs font-medium text-[#10110E]">
                         <ArrowUpRight className="h-3 w-3" />
                         manager → admin
                       </span>{" "}
@@ -427,7 +444,7 @@ const SystemWalletPage = () => {
                   </div>
 
                   <div className="space-y-2.5">
-                    <div className="flex items-center justify-between rounded-lg bg-slate-50/80 px-4 py-3 ring-1 ring-slate-100">
+                    <div className="flex items-center justify-between rounded-lg border border-border bg-white px-4 py-3">
                       <div>
                         <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                           QR Value
@@ -454,7 +471,7 @@ const SystemWalletPage = () => {
                       </Button>
                     </div>
                     {myQrCode.wallet?.wallet_number && (
-                      <div className="rounded-lg bg-slate-50/80 px-4 py-3 ring-1 ring-slate-100">
+                    <div className="rounded-lg border border-border bg-white px-4 py-3">
                         <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                           Linked Wallet
                         </p>
@@ -480,11 +497,11 @@ const SystemWalletPage = () => {
         </Card>
 
         {/* ───────── Transfer Card ───────── */}
-        <Card className="overflow-hidden border-0 shadow-md ring-1 ring-slate-200/60">
-          <CardHeader className="space-y-1 border-b border-slate-100 bg-emerald-50/40 px-6 py-5">
-            <CardTitle className="flex items-center gap-2.5 text-lg font-semibold text-slate-800">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10">
-                <ArrowUpRight className="h-4 w-4 text-emerald-600" />
+        <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
+          <CardHeader className="space-y-1 border-b border-border px-6 py-5">
+            <CardTitle className="flex items-center gap-2.5 text-lg font-semibold text-foreground">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                <ArrowUpRight className="h-4 w-4" />
               </div>
               Transfer to Agent Manager
             </CardTitle>
@@ -495,12 +512,12 @@ const SystemWalletPage = () => {
           <CardContent className="p-6">
             <form className="space-y-6" onSubmit={handleTransferClick}>
               {/* Mode switcher */}
-              <div className="flex items-center gap-1 rounded-xl bg-slate-100/80 p-1">
+              <div className="flex items-center gap-1 rounded-xl border border-border bg-white p-1">
                 <button
                   type="button"
                   className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${transferMode === "manual"
-                      ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70"
-                      : "text-slate-500 hover:text-slate-700"
+                      ? "bg-[#D5E726] text-[#10110E] shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                     }`}
                   onClick={() => {
                     setTransferMode("manual");
@@ -513,8 +530,8 @@ const SystemWalletPage = () => {
                 <button
                   type="button"
                   className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${transferMode === "qr"
-                      ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/70"
-                      : "text-slate-500 hover:text-slate-700"
+                      ? "bg-[#D5E726] text-[#10110E] shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                     }`}
                   onClick={() => {
                     setTransferMode("qr");
@@ -528,7 +545,7 @@ const SystemWalletPage = () => {
 
               {/* Transfer mode panels */}
               {transferMode === "manual" ? (
-                <div className="space-y-4 rounded-xl border border-slate-200/70 bg-slate-50/50 p-5">
+                <div className="space-y-4 rounded-xl border border-border bg-white p-5">
                   <div className="space-y-2">
                     <Label htmlFor="receiverPhone" className="flex items-center gap-2 text-sm font-medium text-slate-700">
                       <Phone className="h-3.5 w-3.5 text-slate-400" />
@@ -549,7 +566,7 @@ const SystemWalletPage = () => {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4 rounded-xl border border-slate-200/70 bg-slate-50/50 p-5">
+                <div className="space-y-4 rounded-xl border border-border bg-white p-5">
                   <div className="space-y-3">
                     <Label htmlFor="qrLookup" className="flex items-center gap-2 text-sm font-medium text-slate-700">
                       <QrCode className="h-3.5 w-3.5 text-slate-400" />
@@ -558,7 +575,7 @@ const SystemWalletPage = () => {
                     <div className="flex flex-col gap-2 sm:flex-row">
                       <Input
                         id="qrLookup"
-                        placeholder="Paste scanned QR value or SW-XXXXXXXXXXXX"
+                        placeholder="SW-XXXXXXXXXX or paste full QR JSON"
                         value={qrLookupValue}
                         onChange={(event) => setQrLookupValue(event.target.value)}
                         className="h-11"
@@ -595,23 +612,23 @@ const SystemWalletPage = () => {
                   </div>
 
                   {selectedQr ? (
-                    <div className="flex items-start gap-4 rounded-xl border border-emerald-200/70 bg-emerald-50/70 p-4">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                    <div className="flex items-start gap-4 rounded-xl border border-[#52C41A] bg-white p-4">
+                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#52C41A] text-white">
                         <UserCheck className="h-5 w-5" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-emerald-900">
+                        <p className="font-semibold text-foreground">
                           {selectedQr.user?.full_name || "Agent Manager"}
                         </p>
-                        <p className="text-sm text-emerald-700">
+                        <p className="text-sm text-[#10110E]">
                           {selectedQr.user?.phone_number || "—"}
                         </p>
-                        <p className="mt-1 break-all font-mono text-xs text-emerald-600/80">
+                        <p className="mt-1 break-all font-mono text-xs text-[#10110E]">
                           {selectedQr.qr_code_value}
                         </p>
                         <button
                           type="button"
-                          className="mt-2 text-xs font-medium text-emerald-700 underline decoration-emerald-300 underline-offset-2 transition-colors hover:text-emerald-900"
+                          className="mt-2 text-xs font-medium text-[#10110E] underline decoration-[#52C41A] underline-offset-2"
                           onClick={clearQrSelection}
                         >
                           Clear selection
@@ -678,7 +695,7 @@ const SystemWalletPage = () => {
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="h-12 w-full gap-2 rounded-xl bg-slate-900 text-sm font-semibold tracking-wide text-white shadow-lg shadow-slate-900/20 transition-all hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-900/25 disabled:opacity-60 md:w-auto md:px-8"
+                  className="h-12 w-full gap-2 rounded-xl bg-[#D5E726] text-sm font-semibold tracking-wide text-[#10110E] shadow-none transition-all hover:bg-[#D5E726] disabled:opacity-60 md:w-auto md:px-8"
                 >
                   {submitting ? (
                     <>
@@ -696,6 +713,7 @@ const SystemWalletPage = () => {
             </form>
           </CardContent>
         </Card>
+        </div>
 
         <QrScannerDialog
           open={scannerOpen}

@@ -69,7 +69,7 @@ class AgentManagerController extends Controller
                 'full_name'    => $data['full_name'] ?? null,
                 'nrc_number'   => $data['nrc_number'] ?? null,
                 'role_id'      => $agentManagerRoleId,
-                'status'       => $data['status'] ?? 'active',
+                'status'       => $data['status'] ?? 'pending',
             ]);
 
             // Generate a unique manager code

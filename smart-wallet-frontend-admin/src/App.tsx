@@ -4,10 +4,10 @@ import ToasterProvider from "./components/ui/ToasterProvider";
 
 function App() {
   return (
-    <>
+    <div className="admin-portal">
       <RouterProvider router={router} />
       <ToasterProvider />
-    </>
+    </div>
   );
 }
 

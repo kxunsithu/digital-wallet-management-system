@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Search, Eye, Edit2, Trash2, Power, User } from "lucide-react";
+import { Plus, Search, Eye, Edit2, Trash2, Power, SlidersHorizontal, User } from "lucide-react";
 import MainLayout from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -163,6 +163,8 @@ export default function AgentManagersPage() {
     }
   };
 
+  const activeManagers = managers.filter((manager) => manager.status === "active").length;
+
   return (
     <MainLayout title="Agent Managers">
       <div className="mb-6 space-y-4">
@@ -177,80 +179,64 @@ export default function AgentManagersPage() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <div className="flex justify-end">
-          <Button onClick={() => navigate("/agent-managers/create")}>
-            <Plus className="w-4 h-4 mr-2" /> Create Agent Manager
+        <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+          <div className="flex items-center gap-4">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]"><User className="h-6 w-6" /></div>
+            <div><h2 className="text-xl font-bold tracking-tight text-foreground">Agent Managers</h2><p className="mt-1 text-sm text-muted-foreground">Manage manager accounts, KYC records, and operating locations.</p></div>
+          </div>
+          <Button onClick={() => navigate("/agent-managers/create")} className="h-11 rounded-lg bg-[#D5E726] px-5 font-semibold text-[#10110E] hover:bg-[#D5E726]">
+            <Plus className="mr-2 h-4 w-4" /> Create Agent Manager
           </Button>
         </div>
       </div>
 
       {/* Filters & Search */}
-      <Card className="mb-6 shadow-sm border-slate-100">
-        <div className="p-4 flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Search by name, phone, or NRC..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 max-w-sm"
-            />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Select value={status} onValueChange={(val) => setStatus(val as string)}>
-              <SelectTrigger className="w-[130px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">all statuses</SelectItem>
-                <SelectItem value="active">active</SelectItem>
-                <SelectItem value="inactive">inactive</SelectItem>
-                <SelectItem value="pending">pending</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={regionId} onValueChange={(val) => {
-              setRegionId(val === "all" || val === null ? "" : val);
-              setTownshipId("");
-            }}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="State/Region">
-                  {(val: string | null) => {
-                    if (!val) return "State/Region";
-                    if (val === "all") return "All States/Regions";
-                    return regionsList.find(r => r.id.toString() === val)?.name || val;
-                  }}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All States/Regions</SelectItem>
-                {regionsList.map(r => (
-                  <SelectItem key={r.id} value={r.id.toString()}>{r.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={townshipId} onValueChange={(val) => setTownshipId(val === "all" || val === null ? "" : val)} disabled={!regionId}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Township">
-                  {(val: string | null) => {
-                    if (!val) return "Township";
-                    if (val === "all") return "All Townships";
-                    return townshipsList.find(t => t.id.toString() === val)?.name || val;
-                  }}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Townships</SelectItem>
-                {townshipsList.map(t => (
-                  <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="ghost" onClick={handleClearFilters}>Clear</Button>
+      <Card className="mb-6 rounded-2xl border border-border shadow-none">
+        <div className="border-b border-border px-5 py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-lg bg-[#D5E726] text-[#10110E]"><SlidersHorizontal className="h-4 w-4" /></div><div><h3 className="text-sm font-semibold text-foreground">Search & Filters</h3><p className="text-xs text-muted-foreground">Narrow the manager directory by location or account status.</p></div></div>
+            <Button variant="outline" onClick={handleClearFilters} className="h-9 rounded-lg">Clear filters</Button>
           </div>
         </div>
+        <div className="grid gap-4 p-5 xl:grid-cols-[minmax(280px,.85fr)_minmax(0,1.55fr)]">
+          <div className="rounded-xl border border-border bg-white p-4">
+            <label htmlFor="manager-search" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Find a manager</label>
+            <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input id="manager-search" placeholder="Search name, phone, or NRC number" value={search} onChange={(e) => setSearch(e.target.value)} className="h-12 border-[#D5E726] pl-10 focus-visible:ring-[#D5E726]/30" /></div>
+          </div>
+          <div className="rounded-xl border border-border bg-white p-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Refine results</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">Account status</label>
+                <Select value={status} onValueChange={(val) => setStatus(val as string)}>
+                  <SelectTrigger className="h-12 w-full"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem><SelectItem value="pending">Pending</SelectItem></SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">State / Region</label>
+                <Select value={regionId} onValueChange={(val) => { setRegionId(val === "all" || val === null ? "" : val); setTownshipId(""); }}>
+                  <SelectTrigger className="h-12 w-full"><SelectValue placeholder="State/Region">{(val: string | null) => { if (!val) return "All states"; if (val === "all") return "All states"; return regionsList.find(r => r.id.toString() === val)?.name || val; }}</SelectValue></SelectTrigger>
+                  <SelectContent><SelectItem value="all">All States/Regions</SelectItem>{regionsList.map(r => <SelectItem key={r.id} value={r.id.toString()}>{r.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground">Township</label>
+                <Select value={townshipId} onValueChange={(val) => setTownshipId(val === "all" || val === null ? "" : val)} disabled={!regionId}>
+                  <SelectTrigger className="h-12 w-full"><SelectValue placeholder="Township">{(val: string | null) => { if (!val) return "All townships"; if (val === "all") return "All townships"; return townshipsList.find(t => t.id.toString() === val)?.name || val; }}</SelectValue></SelectTrigger>
+                  <SelectContent><SelectItem value="all">All Townships</SelectItem>{townshipsList.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          </div>
       </Card>
 
-      <div className="rounded bg-white shadow-sm overflow-hidden border border-slate-100">
+      <div className="overflow-hidden rounded-2xl border border-border bg-white">
+        <div className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div><h3 className="font-semibold text-foreground">Manager Directory</h3><p className="text-xs text-muted-foreground">{totalEntries} total managers · {activeManagers} active on this page</p></div>
+          <span className="w-fit rounded-full bg-[#D5E726] px-3 py-1 text-xs font-bold text-[#10110E]">KYC managed</span>
+        </div>
         <Table>
           <TableHeader>
             <TableRow className="border-b border-slate-100 hover:bg-transparent">
@@ -278,14 +264,14 @@ export default function AgentManagersPage() {
               </TableRow>
             ) : (
               managers.map((manager, index) => (
-                <TableRow key={manager.id} className="hover:bg-slate-50/40 transition-colors border-b border-slate-100 last:border-0">
+                <TableRow key={manager.id} className="border-b border-border transition-colors last:border-0 hover:bg-[#D5E726]/10">
                   <TableCell className="px-6 py-4 text-slate-500 text-sm">
                     {(page - 1) * perPage + index + 1}
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-semibold text-sm">
-                        {manager.user?.full_name?.charAt(0) || <User className="w-4 h-4 text-slate-400" />}
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#D5E726] text-sm font-semibold text-[#10110E]">
+                        {manager.user?.full_name?.charAt(0) || <User className="h-4 w-4" />}
                       </div>
                       <div className="flex flex-col">
                         <span className="font-semibold text-slate-900 text-sm">{manager.user?.full_name || "-"}</span>
@@ -306,10 +292,10 @@ export default function AgentManagersPage() {
                   <TableCell className="px-4 py-3">
                     <span
                       className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${manager.status === "active"
-                        ? "bg-green-50 text-green-700 border border-green-200"
+                        ? "border border-[#52C41A] bg-white text-[#52C41A]"
                         : manager.status === "pending"
-                          ? "bg-yellow-50 text-yellow-700 border border-yellow-200"
-                          : "bg-red-50 text-red-700 border border-red-200"
+                          ? "border border-[#D5E726] bg-[#D5E726] text-[#10110E]"
+                          : "border border-[#FF4D4F] bg-white text-[#FF4D4F]"
                         }`}
                     >
                       {manager.status || "inactive"}
@@ -320,7 +306,7 @@ export default function AgentManagersPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 rounded-md border-slate-200 hover:bg-slate-50 text-slate-600 shadow-none"
+                        className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#D5E726]"
                         onClick={() => navigate(`/agent-managers/${manager.id}`)}
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -328,7 +314,7 @@ export default function AgentManagersPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 rounded-md border-slate-200 hover:bg-slate-50 text-slate-600 shadow-none"
+                        className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#D5E726]"
                         onClick={() => handleToggleStatus(manager.id)}
                         title="Toggle Status"
                       >
@@ -337,7 +323,7 @@ export default function AgentManagersPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 rounded-md border-slate-200 hover:bg-slate-50 text-slate-600 shadow-none"
+                        className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#D5E726]"
                         onClick={() => navigate(`/agent-managers/${manager.id}/edit`)}
                       >
                         <Edit2 className="w-3.5 h-3.5" />
@@ -345,7 +331,7 @@ export default function AgentManagersPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 rounded-md border-red-100 hover:bg-red-50 text-red-500 hover:text-red-700 shadow-none"
+                        className="h-9 w-9 rounded-lg border-[#FF4D4F] text-[#FF4D4F] shadow-none hover:bg-white"
                         onClick={() => setDeleteId(manager.id)}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -360,7 +346,7 @@ export default function AgentManagersPage() {
 
         {/* Pagination Footer */}
         {!loading && managers.length > 0 && (
-          <div className="border-t border-slate-100 py-3.5 px-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/30 text-slate-500 text-xs">
+          <div className="flex flex-col items-center justify-between gap-4 border-t border-border bg-white px-6 py-4 text-xs text-muted-foreground sm:flex-row">
             <div>
               Showing {fromEntry} to {toEntry} of {totalEntries} Entries
             </div>
