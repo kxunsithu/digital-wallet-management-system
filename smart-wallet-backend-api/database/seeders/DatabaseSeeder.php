@@ -31,7 +31,6 @@ class DatabaseSeeder extends Seeder
             ['phone_number' => '09123456789'],
             [
                 'full_name' => 'Test User',
-                'email' => 'test@example.com',
                 'status' => 'active',
                 'role_id' => DB::table('roles')->where('name', 'customer')->value('id'),
             ]

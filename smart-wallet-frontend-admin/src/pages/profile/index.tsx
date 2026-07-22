@@ -35,7 +35,6 @@ type ProfileData = {
   id?: number;
   phone_number?: string;
   full_name?: string;
-  email?: string;
   nrc_number?: string;
   status?: string;
   role_id?: number;
@@ -61,7 +60,6 @@ const syncSessionCookie = (profile: ProfileData) => {
         id: profile.id ?? existing.id,
         full_name: profile.full_name,
         name: profile.full_name,
-        email: profile.email,
         phone: profile.phone_number ?? existing.phone,
         phone_number: profile.phone_number,
         nrc_number: profile.nrc_number,
@@ -84,7 +82,6 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [form, setForm] = useState({
     full_name: "",
-    email: "",
     nrc_number: "",
   });
   const [pinForm, setPinForm] = useState({
@@ -103,7 +100,6 @@ export default function ProfilePage() {
       setProfile(data);
       setForm({
         full_name: data.full_name ?? "",
-        email: data.email ?? "",
         nrc_number: data.nrc_number ?? "",
       });
 
@@ -127,7 +123,6 @@ export default function ProfilePage() {
       setSaving(true);
       const response = await updateProfile({
         full_name: form.full_name || undefined,
-        email: form.email || undefined,
         nrc_number: form.nrc_number || undefined,
       });
       const data = (response.data?.data ?? response.data) as ProfileData;
@@ -257,16 +252,6 @@ export default function ProfilePage() {
                         value={form.full_name}
                         onChange={(e) => setForm((prev) => ({ ...prev, full_name: e.target.value }))}
                         placeholder="Your full name"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={form.email}
-                        onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                        placeholder="you@example.com"
                       />
                     </div>
                     <div className="space-y-1.5">

@@ -26,7 +26,6 @@ class AgentManagerSeeder extends Seeder
             [
                 'full_name' => 'Min Thant',
                 'phone_number' => '09944074981',
-                'email' => 'minthant@gmail.com',
                 'nrc_number' => '12/KAMAYU(N)182736',
                 'manager_code' => 'mgr_minthant',
                 'region_name' => 'Yangon Region',
@@ -37,7 +36,6 @@ class AgentManagerSeeder extends Seeder
             [
                 'full_name' => 'Zayar Lynn',
                 'phone_number' => '09944074982',
-                'email' => 'zayarlynn@gmail.com',
                 'nrc_number' => '12/Bahan(N)192837',
                 'manager_code' => 'mgr_zayarl',
                 'region_name' => 'Yangon Region',
@@ -48,7 +46,6 @@ class AgentManagerSeeder extends Seeder
             [
                 'full_name' => 'Thiri Swe',
                 'phone_number' => '09944074983',
-                'email' => 'thiriswe@gmail.com',
                 'nrc_number' => '9/MAHA(N)102938',
                 'manager_code' => 'mgr_thiris',
                 'region_name' => 'Mandalay Region',
@@ -59,7 +56,6 @@ class AgentManagerSeeder extends Seeder
             [
                 'full_name' => 'Kyaw Zin Win',
                 'phone_number' => '09944074984',
-                'email' => 'kyawzinwin@gmail.com',
                 'nrc_number' => '14/PATHE(N)120394',
                 'manager_code' => 'mgr_kyawzw',
                 'region_name' => 'Ayeyarwady Region',
@@ -70,7 +66,6 @@ class AgentManagerSeeder extends Seeder
             [
                 'full_name' => 'Nan Khin Lay',
                 'phone_number' => '09944074985',
-                'email' => 'nankhinlay@gmail.com',
                 'nrc_number' => '13/TAUNG(N)148293',
                 'manager_code' => 'mgr_nankl',
                 'region_name' => 'Shan State',
@@ -81,7 +76,6 @@ class AgentManagerSeeder extends Seeder
             [
                 'full_name' => 'Hla Hla Win',
                 'phone_number' => '09944074986',
-                'email' => 'hlahlawin@gmail.com',
                 'nrc_number' => '8/MABANA(N)123456',
                 'manager_code' => 'mgr_hlahla',
                 'region_name' => 'Bago Region',
@@ -101,7 +95,6 @@ class AgentManagerSeeder extends Seeder
                 [
                     'role_id' => $role->id,
                     'full_name' => $data['full_name'],
-                    'email' => $data['email'],
                     'nrc_number' => $data['nrc_number'],
                     'status' => $data['status'],
                     'is_phone_verified' => true,

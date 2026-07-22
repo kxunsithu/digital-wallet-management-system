@@ -4,7 +4,6 @@ export const getProfile = () => api.get("profile");
 
 export const updateProfile = (data: {
   full_name?: string;
-  email?: string;
   nrc_number?: string;
 }) => api.put("profile", data);
 

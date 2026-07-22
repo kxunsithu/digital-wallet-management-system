@@ -25,7 +25,6 @@ class CustomerSeeder extends Seeder
             [
                 'full_name' => 'May Thu',
                 'phone_number' => '09944076001',
-                'email' => 'maythu@gmail.com',
                 'nrc_number' => '12/KAMAYU(N)384756',
                 'referral_code' => 'ref_maythu',
                 'region_name' => 'Yangon Region',
@@ -36,7 +35,6 @@ class CustomerSeeder extends Seeder
             [
                 'full_name' => 'Zin Mar Oo',
                 'phone_number' => '09944076002',
-                'email' => 'zinmaroo@gmail.com',
                 'nrc_number' => '12/BAHAN(N)475829',
                 'referral_code' => 'ref_zinmar',
                 'region_name' => 'Yangon Region',
@@ -47,7 +45,6 @@ class CustomerSeeder extends Seeder
             [
                 'full_name' => 'Kaung Htet',
                 'phone_number' => '09944076003',
-                'email' => 'kaunghtet@gmail.com',
                 'nrc_number' => '9/MAHA(N)586739',
                 'referral_code' => 'ref_kaungh',
                 'region_name' => 'Mandalay Region',
@@ -57,7 +54,6 @@ class CustomerSeeder extends Seeder
             [
                 'full_name' => 'Ei Mon',
                 'phone_number' => '09944076004',
-                'email' => 'eimon@gmail.com',
                 'nrc_number' => '13/TAUNG(N)697840',
                 'referral_code' => 'ref_eimon',
                 'region_name' => 'Shan State',
@@ -68,7 +64,6 @@ class CustomerSeeder extends Seeder
             [
                 'full_name' => 'Soe Paing',
                 'phone_number' => '09944076005',
-                'email' => 'soepaing@gmail.com',
                 'nrc_number' => '8/MABANA(N)708951',
                 'referral_code' => 'ref_soepa',
                 'region_name' => 'Bago Region',
@@ -78,7 +73,6 @@ class CustomerSeeder extends Seeder
             [
                 'full_name' => 'Hnin Wai',
                 'phone_number' => '09944076006',
-                'email' => 'hninwai@gmail.com',
                 'nrc_number' => '12/HLAING(N)819062',
                 'referral_code' => 'ref_hninw',
                 'region_name' => 'Yangon Region',
@@ -103,7 +97,6 @@ class CustomerSeeder extends Seeder
                 [
                     'role_id' => $role->id,
                     'full_name' => $data['full_name'],
-                    'email' => $data['email'],
                     'nrc_number' => $data['nrc_number'],
                     'status' => in_array($data['kyc_status'], ['verified', 'approved'], true) ? 'active' : 'inactive',
                     'is_phone_verified' => true,

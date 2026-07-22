@@ -26,7 +26,6 @@ class WalletSeeder extends Seeder
             [
                 'role_id' => $adminRoleId,
                 'full_name' => 'System Administrator',
-                'email' => 'admin@wallet.local',
                 'status' => 'active',
                 'is_phone_verified' => true,
                 'is_pin_created' => true,

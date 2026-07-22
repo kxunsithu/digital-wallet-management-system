@@ -35,7 +35,6 @@ export default function EditAgentManager() {
   // User fields
   const [userForm, setUserForm] = useState({
     full_name: "",
-    email: "",
     nrc_number: "",
     phone_number: "",
   });
@@ -79,7 +78,6 @@ export default function EditAgentManager() {
 
         setUserForm({
           full_name: user.full_name || "",
-          email: user.email || "",
           nrc_number: user.nrc_number || "",
           phone_number: user.phone_number || "",
         });
@@ -220,18 +218,6 @@ export default function EditAgentManager() {
                       value={userForm.full_name}
                       onChange={handleUserChange}
                       placeholder="e.g. Ko Aung"
-                      className="h-9 text-sm rounded"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="email" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Email</Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={userForm.email}
-                      onChange={handleUserChange}
-                      placeholder="e.g. manager@example.com"
                       className="h-9 text-sm rounded"
                     />
                   </div>

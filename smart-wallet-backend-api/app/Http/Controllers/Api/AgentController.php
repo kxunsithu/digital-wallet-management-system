@@ -80,7 +80,6 @@ class AgentController extends Controller
             $user = User::create([
                 'phone_number' => $data['phone_number'],
                 'full_name' => $data['full_name'] ?? null,
-                'email' => $data['email'] ?? null,
                 'nrc_number' => $data['nrc_number'] ?? null,
                 'role_id' => $agentRoleId,
                 'status' => $data['status'] ?? 'active',
@@ -196,7 +195,6 @@ class AgentController extends Controller
         try {
             $userFields = array_filter([
                 'full_name' => $data['full_name'] ?? null,
-                'email' => $data['email'] ?? null,
                 'nrc_number' => $data['nrc_number'] ?? null,
                 'status' => $data['status'] ?? null,
             ], fn ($v) => $v !== null);

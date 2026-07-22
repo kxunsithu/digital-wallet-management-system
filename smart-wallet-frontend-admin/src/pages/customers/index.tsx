@@ -178,7 +178,7 @@ export default function CustomersPage() {
           <div className="flex-1 relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
             <Input
-              placeholder="Search by name, phone, email, or referral code..."
+              placeholder="Search by name, phone, or referral code..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 max-w-sm"

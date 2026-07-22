@@ -27,7 +27,6 @@ class UserFactory extends Factory
         return [
             'full_name' => fake()->name(),
             'phone_number' => fake()->unique()->numerify('09#########'),
-            'email' => fake()->unique()->safeEmail(),
             'status' => 'active',
             'is_phone_verified' => false,
             'is_pin_created' => false,
@@ -39,8 +38,6 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
-        ]);
+        return $this->state(fn (array $attributes) => []);
     }
 }

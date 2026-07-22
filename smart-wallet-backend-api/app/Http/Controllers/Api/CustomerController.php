@@ -36,8 +36,7 @@ class CustomerController extends Controller
                     ->orWhereHas('user', function ($uq) use ($search) {
                         $uq->where('full_name', 'like', "%{$search}%")
                             ->orWhere('phone_number', 'like', "%{$search}%")
-                            ->orWhere('nrc_number', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
+                            ->orWhere('nrc_number', 'like', "%{$search}%");
                     });
             });
         }

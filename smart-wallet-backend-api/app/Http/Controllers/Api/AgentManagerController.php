@@ -67,7 +67,6 @@ class AgentManagerController extends Controller
             $user = User::create([
                 'phone_number' => $data['phone_number'],
                 'full_name'    => $data['full_name'] ?? null,
-                'email'        => $data['email'] ?? null,
                 'nrc_number'   => $data['nrc_number'] ?? null,
                 'role_id'      => $agentManagerRoleId,
                 'status'       => $data['status'] ?? 'active',
@@ -158,7 +157,6 @@ class AgentManagerController extends Controller
             // Update user data if provided
             $userFields = array_filter([
                 'full_name'  => $data['full_name'] ?? null,
-                'email'      => $data['email'] ?? null,
                 'nrc_number' => $data['nrc_number'] ?? null,
                 'status'     => $data['status'] ?? null,
             ], fn($v) => $v !== null);

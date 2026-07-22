@@ -36,7 +36,6 @@ class UserProfileController extends Controller
 
         $data = $request->validate([
             'full_name' => ['sometimes', 'string', 'max:255'],
-            'email' => ['sometimes', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'profile_image' => ['sometimes', 'string', 'max:255'],
             'profile_image_original_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'profile_image_size' => ['sometimes', 'nullable', 'integer'],

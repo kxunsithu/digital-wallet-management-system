@@ -185,15 +185,6 @@ export default function CustomerDetail() {
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Mail className="w-4 h-4 text-slate-400 mt-0.5" />
-              <div>
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  Email
-                </p>
-                <p className="text-sm font-semibold text-slate-700">{user?.email || "-"}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
               <CreditCard className="w-4 h-4 text-slate-400 mt-0.5" />
               <div>
                 <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">

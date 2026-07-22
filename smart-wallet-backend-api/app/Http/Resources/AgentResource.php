@@ -47,7 +47,6 @@ class AgentResource extends JsonResource
                     'id' => $this->user->id,
                     'phone_number' => $this->user->phone_number,
                     'full_name' => $this->user->full_name,
-                    'email' => $this->user->email,
                     'nrc_number' => $this->user->nrc_number,
                     'images' => $formattedImages,
                     'nrc_images' => $formattedImages->filter(fn ($image) => in_array($image['image_type'], ['nrc_front_image', 'nrc_back_image'], true))->values(),

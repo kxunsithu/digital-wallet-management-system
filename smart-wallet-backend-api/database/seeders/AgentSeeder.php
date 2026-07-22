@@ -26,7 +26,6 @@ class AgentSeeder extends Seeder
             [
                 'full_name' => 'Aung Ko Ko',
                 'phone_number' => '09944075001',
-                'email' => 'aungkoko@gmail.com',
                 'nrc_number' => '12/KAMAYU(N)283746',
                 'agent_code' => 'agt_aungkk',
                 'shop_name' => 'Aung Mobile Shop',
@@ -41,7 +40,6 @@ class AgentSeeder extends Seeder
             [
                 'full_name' => 'Su Mon',
                 'phone_number' => '09944075002',
-                'email' => 'sumon@gmail.com',
                 'nrc_number' => '12/BAHAN(N)374829',
                 'agent_code' => 'agt_sumon',
                 'shop_name' => 'Su Mon Telecom',
@@ -56,7 +54,6 @@ class AgentSeeder extends Seeder
             [
                 'full_name' => 'Myo Min',
                 'phone_number' => '09944075003',
-                'email' => 'myomin@gmail.com',
                 'nrc_number' => '9/MAHA(N)293847',
                 'agent_code' => 'agt_myomin',
                 'shop_name' => 'Myo Min Cash Point',
@@ -71,7 +68,6 @@ class AgentSeeder extends Seeder
             [
                 'full_name' => 'Phyo Wai',
                 'phone_number' => '09944075004',
-                'email' => 'phyowai@gmail.com',
                 'nrc_number' => '13/TAUNG(N)384756',
                 'agent_code' => 'agt_phyowai',
                 'shop_name' => 'Phyo Wai Wallet Center',
@@ -86,7 +82,6 @@ class AgentSeeder extends Seeder
             [
                 'full_name' => 'Nyein Chan',
                 'phone_number' => '09944075005',
-                'email' => 'nyeinch@gmail.com',
                 'nrc_number' => '8/MABANA(N)475829',
                 'agent_code' => 'agt_nyeinc',
                 'shop_name' => 'Nyein Chan Agent Shop',
@@ -101,7 +96,6 @@ class AgentSeeder extends Seeder
             [
                 'full_name' => 'Htet Aung',
                 'phone_number' => '09944075006',
-                'email' => 'htetaung@gmail.com',
                 'nrc_number' => '12/HLAING(N)586739',
                 'agent_code' => 'agt_hteta',
                 'shop_name' => 'Htet Aung Digital Services',
@@ -128,7 +122,6 @@ class AgentSeeder extends Seeder
                 [
                     'role_id' => $role->id,
                     'full_name' => $data['full_name'],
-                    'email' => $data['email'],
                     'nrc_number' => $data['nrc_number'],
                     'status' => $data['status'],
                     'is_phone_verified' => true,

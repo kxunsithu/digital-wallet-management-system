@@ -25,7 +25,6 @@ interface UserProfile {
   id: number;
   phone_number: string;
   full_name: string | null;
-  email: string | null;
   nrc_number: string | null;
   status: string;
   role?: string;
@@ -55,7 +54,6 @@ export default function ProfileScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [editFullName, setEditFullName] = useState("");
-  const [editEmail, setEditEmail] = useState("");
   const [editNrcNumber, setEditNrcNumber] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -74,7 +72,6 @@ export default function ProfileScreen() {
         const data = res.body.data;
         setProfile(data);
         setEditFullName(data.full_name ?? "");
-        setEditEmail(data.email ?? "");
         setEditNrcNumber(data.nrc_number ?? "");
       } else if (res.status === 401) {
         router.replace("/auth");
@@ -136,10 +133,9 @@ export default function ProfileScreen() {
       const res = await apiFetch("/profile", {
         method: "PUT",
         body: JSON.stringify({
-          full_name: editFullName.trim(),
-          email: editEmail.trim() || null,
-          nrc_number: editNrcNumber.trim(),
-        }),
+            full_name: editFullName.trim(),
+            nrc_number: editNrcNumber.trim(),
+          }),
       });
 
       if (res.status === 200 && res.body?.success) {

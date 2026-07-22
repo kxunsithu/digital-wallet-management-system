@@ -34,7 +34,6 @@ export default function EditAgent() {
 
   const [userForm, setUserForm] = useState({
     full_name: "",
-    email: "",
     nrc_number: "",
     phone_number: "",
   });
@@ -76,7 +75,6 @@ export default function EditAgent() {
         const agent = response.data.data;
         setUserForm({
           full_name: agent.user?.full_name || "",
-          email: agent.user?.email || "",
           nrc_number: agent.user?.nrc_number || "",
           phone_number: agent.user?.phone_number || "",
         });
@@ -196,19 +194,6 @@ export default function EditAgent() {
                     id="full_name"
                     name="full_name"
                     value={userForm.full_name}
-                    onChange={handleUserChange}
-                    className="h-9 text-sm rounded"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={userForm.email}
                     onChange={handleUserChange}
                     className="h-9 text-sm rounded"
                   />

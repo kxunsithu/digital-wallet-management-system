@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('phone_number')->nullable()->unique();
             $table->foreignId('role_id')->nullable()->constrained()->nullOnDelete();
             $table->string('full_name')->nullable();
-            $table->string('email')->nullable();
             $table->string('nrc_number')->nullable()->unique();
             $table->string('status')->default('active');
             $table->boolean('is_phone_verified')->default(false);

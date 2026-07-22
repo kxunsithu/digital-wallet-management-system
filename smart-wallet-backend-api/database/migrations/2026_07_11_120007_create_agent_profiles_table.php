@@ -22,7 +22,6 @@ return new class extends Migration
             $table->decimal('total_volume_monthly', 15, 2)->default(0);
             $table->foreignId('created_by_manager_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->string('status')->default('pending');
             $table->timestamps();
         });
     }

@@ -34,7 +34,6 @@ export default function CreateAgentManager() {
   const [userForm, setUserForm] = useState({
     phone_number: "",
     full_name: "",
-    email: "",
     nrc_number: "",
   });
 
@@ -174,18 +173,6 @@ export default function CreateAgentManager() {
                     value={userForm.full_name}
                     onChange={handleUserChange}
                     placeholder="e.g. Ko Aung"
-                    className="h-9 text-sm rounded"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={userForm.email}
-                    onChange={handleUserChange}
-                    placeholder="e.g. manager@example.com"
                     className="h-9 text-sm rounded"
                   />
                 </div>

@@ -44,7 +44,6 @@ class NrcUploadOnCreationTest extends TestCase
         $response = $this->actingAs($admin, 'sanctum')->postJson('/api/agent-managers', [
             'phone_number' => '09200000001',
             'full_name' => 'Agent Manager User',
-            'email' => 'agent-manager@example.com',
             'nrc_number' => '12/ABCDE(N)123456',
             'state_region_id' => $stateRegionId,
             'township_id' => $townshipId,
@@ -56,7 +55,7 @@ class NrcUploadOnCreationTest extends TestCase
 
         $response->assertStatus(201);
 
-        $createdUserId = DB::table('users')->where('email', 'agent-manager@example.com')->value('id');
+        $createdUserId = DB::table('users')->where('phone_number', '09200000001')->value('id');
 
         $this->assertDatabaseHas('images', [
             'user_id' => $createdUserId,
@@ -110,7 +109,6 @@ class NrcUploadOnCreationTest extends TestCase
         $response = $this->actingAs($manager, 'sanctum')->postJson('/api/agents', [
             'phone_number' => '09200000002',
             'full_name' => 'Agent User',
-            'email' => 'agent@example.com',
             'nrc_number' => '13/ABCDE(N)123457',
             'shop_name' => 'Test Shop',
             'shop_address' => 'Main Street',
@@ -123,7 +121,7 @@ class NrcUploadOnCreationTest extends TestCase
 
         $response->assertStatus(201);
 
-        $createdUserId = DB::table('users')->where('email', 'agent@example.com')->value('id');
+        $createdUserId = DB::table('users')->where('phone_number', '09200000002')->value('id');
 
         $this->assertDatabaseHas('images', [
             'user_id' => $createdUserId,

@@ -25,7 +25,6 @@ interface UserProfile {
   id: number;
   phone_number: string;
   full_name: string | null;
-  email: string | null;
   status: string;
   role?: string;
   agent_profile: {
