@@ -30,6 +30,12 @@ export default function CreatePinScreen() {
   const [fullName, setFullName] = useState('');
   const [nrcNumber, setNrcNumber] = useState('');
   const [showProfileFields, setShowProfileFields] = useState(false);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
   const [step, setStep] = useState<'pin' | 'confirm'>('pin');
   const [loading, setLoading] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
@@ -125,7 +131,7 @@ export default function CreatePinScreen() {
 
     setLoading(true);
     const response = await createPin(userId, pinString, fullName.trim() || undefined, nrcNumber.trim() || undefined);
-    setLoading(false);
+    if (isMounted.current) setLoading(false);
 
     if ((response.status === 201 || response.status === 200) && response.body?.success) {
       Toast.show({ type: 'success', text1: 'PIN Created', text2: 'Your PIN was created successfully.' });
@@ -147,8 +153,8 @@ export default function CreatePinScreen() {
       const message = response.body?.message ?? '';
 
       if (needsFullName || needsNrc || (typeof message === 'string' && message.toLowerCase().includes('full name'))) {
-        setShowProfileFields(true);
-        Toast.show({ type: 'error', text1: 'Additional Info Required', text2: 'Please provide your full name and NRC number to complete registration.' });
+        if (isMounted.current) setShowProfileFields(true);
+        if (isMounted.current) Toast.show({ type: 'error', text1: 'Additional Info Required', text2: 'Please provide your full name and NRC number to complete registration.' });
         return;
       }
 

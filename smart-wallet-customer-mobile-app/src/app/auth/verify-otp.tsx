@@ -48,6 +48,12 @@ export default function VerifyOtpScreen() {
   const [resendCount, setResendCount] = useState(0);
 
   const inputRefs = useRef<(TextInput | null)[]>([]);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -118,21 +124,23 @@ export default function VerifyOtpScreen() {
     }
     setResendLoading(true);
     const response = await requestOtp(phone);
-    setResendLoading(false);
+    if (isMounted.current) setResendLoading(false);
     if (response.status === 200 && response.body?.success) {
       const newExpiresAt = response.body?.data?.expires_at ?? new Date(Date.now() + 5 * 60 * 1000).toISOString();
       const remaining = Math.max(0, Math.round((new Date(newExpiresAt).getTime() - Date.now()) / 1000));
-      await setPendingAuthRoute({
-        path: '/auth/verify-otp',
-        params: { phone, expiresAt: newExpiresAt },
-        expiresAt: newExpiresAt,
-      });
-      setTimeLeft(remaining);
-      setCanResend(false);
-      setResendCount((prev) => prev + 1);
-      setOtp(Array(OTP_LENGTH).fill(''));
-      setTimeout(() => inputRefs.current[0]?.focus(), 100);
-      Toast.show({ type: 'success', text1: 'OTP Resent', text2: `New code sent (${resendCount + 1}/${MAX_RESEND_ATTEMPTS})` });
+      if (isMounted.current) {
+        await setPendingAuthRoute({
+          path: '/auth/verify-otp',
+          params: { phone, expiresAt: newExpiresAt },
+          expiresAt: newExpiresAt,
+        });
+        setTimeLeft(remaining);
+        setCanResend(false);
+        setResendCount((prev) => prev + 1);
+        setOtp(Array(OTP_LENGTH).fill(''));
+        setTimeout(() => inputRefs.current[0]?.focus(), 100);
+        Toast.show({ type: 'success', text1: 'OTP Resent', text2: `New code sent (${resendCount + 1}/${MAX_RESEND_ATTEMPTS})` });
+      }
     } else {
       Toast.show({ type: 'error', text1: 'Failed to Resend', text2: response.body?.message ?? 'Please try again' });
     }
@@ -145,7 +153,7 @@ export default function VerifyOtpScreen() {
 
     setLoading(true);
     const response = await verifyOtp(phone, otpString);
-    setLoading(false);
+    if (isMounted.current) setLoading(false);
 
     if (response.status === 200 && response.body?.success) {
       const data = response.body.data || {};
@@ -153,20 +161,24 @@ export default function VerifyOtpScreen() {
       const nextStep = data.next_step === 'create_pin' ? '/auth/create-pin' : '/auth/verify-pin';
 
       // Both create-pin and verify-pin pending routes are persistent (expiresAt: null) once OTP is verified
-      await setPendingAuthRoute({
-        path: nextStep as '/auth/create-pin' | '/auth/verify-pin',
-        params: { user_id: userId, phone },
-        expiresAt: null, // Persistent — no expiry once OTP is verified
-      });
+      if (isMounted.current) {
+        await setPendingAuthRoute({
+          path: nextStep as '/auth/create-pin' | '/auth/verify-pin',
+          params: { user_id: userId, phone },
+          expiresAt: null, // Persistent — no expiry once OTP is verified
+        });
 
-      Toast.show({ type: 'success', text1: 'OTP Verified', text2: 'Code verified successfully!' });
-      router.push({ pathname: nextStep, params: { user_id: userId, phone } });
+        Toast.show({ type: 'success', text1: 'OTP Verified', text2: 'Code verified successfully!' });
+        router.push({ pathname: nextStep, params: { user_id: userId, phone } });
+      }
     } else {
       if (response.status === 422 && response.body?.message?.toLowerCase().includes('expired')) {
-        await clearPendingAuthRoute();
-        Toast.show({ type: 'error', text1: 'OTP Expired', text2: 'Please request a new OTP' });
+        if (isMounted.current) {
+          await clearPendingAuthRoute();
+          Toast.show({ type: 'error', text1: 'OTP Expired', text2: 'Please request a new OTP' });
+        }
       } else {
-        Toast.show({ type: 'error', text1: 'Verification Failed', text2: response.body?.message ?? 'Invalid OTP' });
+        if (isMounted.current) Toast.show({ type: 'error', text1: 'Verification Failed', text2: response.body?.message ?? 'Invalid OTP' });
       }
     }
   };

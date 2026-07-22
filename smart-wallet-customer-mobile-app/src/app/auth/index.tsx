@@ -1,5 +1,5 @@
 // app/auth/index.tsx
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Text,
   View,
@@ -24,6 +24,12 @@ export default function RequestOtpScreen() {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
   const router = useRouter();
   const { theme, colors } = useTheme();
   const isDark = theme === 'dark';
@@ -37,17 +43,19 @@ export default function RequestOtpScreen() {
 
     setLoading(true);
     const response = await requestOtp(trimmedPhone);
-    setLoading(false);
+    if (isMounted.current) setLoading(false);
 
     if (response.status === 200 && response.body?.success) {
       const expiresAt = response.body?.data?.expires_at ?? new Date(Date.now() + 5 * 60 * 1000).toISOString();
-      await setPendingAuthRoute({
-        path: '/auth/verify-otp',
-        params: { phone: trimmedPhone, expiresAt },
-        expiresAt,
-      });
-      Toast.show({ type: 'success', text1: 'OTP Sent', text2: 'A code has been sent to your phone' });
-      router.push({ pathname: '/auth/verify-otp', params: { phone: trimmedPhone, expiresAt } });
+      if (isMounted.current) {
+        await setPendingAuthRoute({
+          path: '/auth/verify-otp',
+          params: { phone: trimmedPhone, expiresAt },
+          expiresAt,
+        });
+        Toast.show({ type: 'success', text1: 'OTP Sent', text2: 'A code has been sent to your phone' });
+        router.push({ pathname: '/auth/verify-otp', params: { phone: trimmedPhone, expiresAt } });
+      }
     } else {
       const serverMessage = response.body?.message ?? 'Could not request OTP';
 

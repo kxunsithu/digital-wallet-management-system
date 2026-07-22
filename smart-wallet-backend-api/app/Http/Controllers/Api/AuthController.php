@@ -81,13 +81,14 @@ class AuthController extends Controller
 
         // Prevent using an admin/agent phone number to register as a customer
         if ($user) {
-            $currentRoleName = null;
-            if (! empty($user->role_id)) {
-                $currentRoleName = DB::table('roles')->where('id', $user->role_id)->value('name');
-            }
+            // Resolve role IDs for admin/agent roles (robust against naming/casing differences)
+            $forbiddenRoles = DB::table('roles')->whereIn('name', ['admin', 'agent_manager', 'agent'])->pluck('id')->all();
 
-            if (strtolower((string) $requestedRoleName) === 'customer'
-                && in_array(strtolower((string) $currentRoleName), ['admin', 'agent_manager', 'agent'], true)) {
+            $isRequestingCustomerRole = strtolower((string) $requestedRoleName) === 'customer';
+            $userRoleId = $user->role_id ?? null;
+
+            if ($isRequestingCustomerRole && $userRoleId && in_array($userRoleId, $forbiddenRoles, true)) {
+                $currentRoleName = DB::table('roles')->where('id', $userRoleId)->value('name');
                 return response()->json([
                     'success' => false,
                     'message' => 'This phone number is already registered as ' . ($currentRoleName ?? 'another role') . '. Please use the appropriate login flow or contact support.',
