@@ -114,12 +114,12 @@ export default function QrCodeScreen() {
               )}
             </View>
 
-            {/* Agent Info */}
+            {/* User Info */}
             <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text, textAlign: 'center', marginTop: 20 }}>
-              {profile?.agent_profile?.shop_name ?? profile?.full_name ?? "Agent Shop"}
+              {profile?.full_name ?? "Smart Wallet User"}
             </Text>
             <Text style={{ fontSize: 12, color: colors.textSecondary, textAlign: 'center', marginTop: 4 }}>
-              Agent Code: {profile?.agent_profile?.agent_code ?? "AG-XXXX"}
+              Customer ID: {profile?.agent_profile?.agent_code ?? profile?.id ?? "N/A"}
             </Text>
 
             {/* Wallet Number Badge */}
@@ -138,7 +138,7 @@ export default function QrCodeScreen() {
 
             {/* Scan hint */}
             <Text style={{ fontSize: 12, color: colors.textSecondary, textAlign: 'center', paddingHorizontal: 16, lineHeight: 18 }}>
-              Scan this QR code to receive payments or float returns
+              Scan this QR code to receive payments from other users.
             </Text>
           </View>
         )}

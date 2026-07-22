@@ -1,8 +1,31 @@
-# Welcome to your Expo app 👋
+# Smart Wallet Agent Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A digital wallet management app built with Expo Router and React Native.
 
-## Get started
+This project provides a mobile wallet experience with PIN-based authentication, QR code scanning, secure storage, transaction history, and profile management.
+
+## Key features
+
+- PIN creation, verification, reset, and forgot PIN flows
+- QR code scanner for sending or receiving wallet details
+- Cash in / cash out screens for wallet operations
+- Transaction history and profile tabs
+- Secure storage using `expo-secure-store`
+- NativeWind + Tailwind CSS styling
+- Cross-platform support for Android, iOS, and web via Expo
+
+## Project structure
+
+- `app/` — Expo Router screens and routes
+  - `auth/` — authentication flows: create PIN, verify OTP, reset PIN, verify PIN
+  - `(tabs)/` — main authenticated tabs: home, transactions, profile
+  - `cash-in.tsx`, `cash-out.tsx`, `qr-code.tsx` — core wallet flows
+- `src/components/` — reusable UI components
+- `src/lib/api.ts` — API helper functions
+- `src/services/` — app services such as auth, notification store, and settings store
+- `src/providers/ThemeProvider.tsx` — theme context provider
+
+## Getting started
 
 1. Install dependencies
 
@@ -10,47 +33,50 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Start the Metro bundler
 
    ```bash
-   npx expo start
+   npm start
    ```
 
-In the output, you'll find options to open the app in a
+3. Run on a platform
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+   ```bash
+   npm run android
+   npm run ios
+   npm run web
+   ```
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Available scripts
 
-## Get a fresh project
+- `npm start` — launch Expo Metro bundler
+- `npm run android` — open the app on an Android device or emulator
+- `npm run ios` — open the app on an iOS simulator
+- `npm run web` — open the app in the browser
+- `npm run lint` — run Expo linting
+- `npm run reset-project` — reset starter project structure via `scripts/reset-project.js`
 
-When you're ready, run:
+## Dependencies
 
-```bash
-npm run reset-project
-```
+This app uses Expo SDK 57 with React 19 and includes several Expo modules, such as:
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- `expo-router`
+- `expo-camera`
+- `expo-barcode-scanner`
+- `expo-secure-store`
+- `expo-splash-screen`
+- `react-native-svg`
+- `react-native-toast-message`
+- `nativewind`
 
-### Other setup steps
+## Notes
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+- Update the `app.json` Expo configuration before building production versions.
+- Use the `app/` directory for new screens and route files.
+- Keep UI logic inside `src/components` and app state in `src/services`.
 
 ## Learn more
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Expo docs: https://docs.expo.dev/
+- Expo Router: https://expo.github.io/router/docs
+- Tailwind with Expo: https://www.nativewind.dev/

@@ -71,7 +71,7 @@ export default function VerifyPinScreen() {
     if (pinString.length !== PIN_LENGTH) { Toast.show({ type: 'error', text1: 'Invalid PIN', text2: 'PIN must be exactly 4 digits' }); return; }
 
     setLoading(true);
-    const response = await verifyPin(userId, pinString, 'smart-wallet-agent-app');
+    const response = await verifyPin(userId, pinString, 'smart-wallet-customer-app');
     setLoading(false);
 
     if (response.status === 200 && response.body?.success) {

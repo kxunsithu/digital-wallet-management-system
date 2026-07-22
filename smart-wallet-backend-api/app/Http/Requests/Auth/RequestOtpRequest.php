@@ -16,6 +16,8 @@ class RequestOtpRequest extends FormRequest
         return [
             'phone_number' => ['required', 'string', 'max:20'],
             'role_id' => ['required', 'integer', 'exists:roles,id'],
+            'full_name' => ['nullable', 'string', 'max:255'],
+            'nrc_number' => ['nullable', 'string', 'max:50'],
         ];
     }
 }

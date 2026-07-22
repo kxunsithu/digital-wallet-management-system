@@ -257,7 +257,7 @@ export default function DashboardScreen() {
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 12, color: colors.textSecondary }}>{formattedDate}</Text>
             <Text style={{ fontSize: 22, fontWeight: '800', color: colors.text, marginTop: 2, letterSpacing: -0.5 }}>
-              {profile?.full_name ?? 'Agent User'}
+              {profile?.full_name ?? 'Customer User'}
             </Text>
           </View>
 
@@ -394,7 +394,7 @@ export default function DashboardScreen() {
           </LinearGradient>
         </View>
 
-        {/* ── Agent Code Info Card ── */}
+        {/* ── Account Code Info Card ── */}
         {profile?.agent_profile && (
           <View style={{ paddingHorizontal: 24, marginTop: 16 }}>
             <View style={{
@@ -414,7 +414,7 @@ export default function DashboardScreen() {
                 </View>
                 <View>
                   <Text style={{ fontSize: 10, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6 }}>
-                    Agent Code
+                    Customer ID
                   </Text>
                   <Text style={{ fontSize: 16, fontWeight: '800', color: colors.text, marginTop: 2 }}>
                     {profile.agent_profile.agent_code}
@@ -442,8 +442,7 @@ export default function DashboardScreen() {
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
             {[
-              { label: 'Cash In', icon: 'arrow-up-right', color: colors.primary, bg: `${colors.primary}1F`, route: '/cash-in' },
-              { label: 'Return Float', icon: 'corner-right-up', color: colors.success, bg: `${colors.success}1F`, route: '/cash-out' },
+              { label: 'Send Money', icon: 'arrow-up-right', color: colors.primary, bg: `${colors.primary}1F`, route: '/cash-in' },
               { label: 'My QR', icon: 'grid', color: colors.primary, bg: `${colors.primary}1F`, route: '/qr-code' },
               { label: 'Scan QR', icon: 'camera', color: colors.success, bg: `${colors.success}1F`, route: '/cash-in?scan=true' },
             ].map((action, idx) => (

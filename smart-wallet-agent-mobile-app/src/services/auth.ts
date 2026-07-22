@@ -110,10 +110,12 @@ export async function clearPendingAuthRoute(): Promise<void> {
 }
 
 // Auth API Functions
-export async function requestOtp(phone: string, roleId?: number) {
+export async function requestOtp(phone: string, roleId?: number, fullName?: string, nrcNumber?: string) {
   const payload: any = { phone_number: phone };
   const rid = typeof roleId === 'number' ? roleId : ROLE_ID;
   if (rid) payload.role_id = rid;
+  if (fullName) payload.full_name = fullName;
+  if (nrcNumber) payload.nrc_number = nrcNumber;
 
   return apiFetch('/auth/request-otp', {
     method: 'POST',

@@ -280,10 +280,10 @@ export default function ProfileScreen() {
             }}>
               <View style={{ flex: 1, alignItems: 'center' }}>
                 <Text style={{ fontSize: 10, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: '600' }}>
-                  Agent Code
+                  Customer ID
                 </Text>
                 <Text style={{ fontSize: 14, fontWeight: '800', color: colors.text, marginTop: 4 }}>
-                  {profile?.agent_profile?.agent_code ?? 'N/A'}
+                  {profile?.agent_profile?.agent_code ?? String(profile?.id ?? 'N/A')}
                 </Text>
               </View>
               <View style={{ width: 1, backgroundColor: `${colors.primary}33` }} />

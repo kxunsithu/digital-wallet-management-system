@@ -94,7 +94,7 @@ export default function RequestOtpScreen() {
                 Smart Wallet
               </Text>
               <Text style={{ fontSize: 14, color: `${colors.secondary}99`, marginTop: 2 }}>
-                Agent Portal
+                Customer Portal
               </Text>
             </View>
 

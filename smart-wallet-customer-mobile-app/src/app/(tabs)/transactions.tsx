@@ -7,6 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   TextInput,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useEffect, useCallback } from "react";
@@ -34,21 +35,17 @@ interface Transaction {
 
 const FILTER_OPTIONS = [
   { label: "All", value: "all" },
-  { label: "Cash In", value: "agent_to_customer" },
-  { label: "Float Return", value: "agent_to_agent_manager" },
-  { label: "Cash Out", value: "customer_to_agent" },
+  { label: "Received", value: "agent_to_customer" },
+  { label: "Sent to Agent", value: "customer_to_agent" },
+  { label: "P2P", value: "customer_to_customer" },
 ];
 
 const getTxMeta = (type: string, colors: any) => {
   switch (type) {
     case 'agent_to_customer':
-      return { label: 'Cash In', icon: 'arrow-up-right' as const, color: colors.primary, bg: `${colors.primary}1F`, sign: '-' };
-    case 'agent_to_agent_manager':
-      return { label: 'Float Return', icon: 'corner-right-up' as const, color: colors.success, bg: `${colors.success}1F`, sign: '-' };
-    case 'agent_manager_to_agent':
-      return { label: 'Float Received', icon: 'corner-left-down' as const, color: colors.success, bg: `${colors.success}1F`, sign: '+' };
+      return { label: 'Money Received', icon: 'arrow-up-right' as const, color: colors.primary, bg: `${colors.primary}1F`, sign: '+' };
     case 'customer_to_agent':
-      return { label: 'Cash Out', icon: 'arrow-down-left' as const, color: colors.primary, bg: `${colors.primary}1F`, sign: '+' };
+      return { label: 'Sent to Agent', icon: 'arrow-down-left' as const, color: colors.primary, bg: `${colors.primary}1F`, sign: '-' };
     case 'customer_to_customer':
       return { label: 'P2P Transfer', icon: 'repeat' as const, color: colors.success, bg: `${colors.success}1F`, sign: '±' };
     default:
@@ -127,6 +124,9 @@ export default function TransactionsScreen() {
     return flat;
   })();
 
+  const totalTransacted = transactions.reduce((total, transaction) => total + Number(transaction.amount || 0), 0);
+  const completedTransactions = transactions.filter((transaction) => transaction.status === "completed").length;
+
   const renderItem = ({ item }: { item: any }) => {
     // Header row
     if (item.type === 'header') {
@@ -148,8 +148,8 @@ export default function TransactionsScreen() {
     const date = new Date(tx.created_at);
     const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     const counterparty = tx.transaction_type.startsWith('agent_to')
-      ? (tx.receiver_name || tx.receiver_phone)
-      : (tx.sender_name || tx.sender_phone);
+      ? (tx.sender_name || tx.sender_phone)
+      : (tx.receiver_name || tx.receiver_phone);
 
     return (
       <TouchableOpacity
@@ -250,14 +250,52 @@ export default function TransactionsScreen() {
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: colors.background }}>
 
       {/* Header */}
-      <View style={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 14 }}>
+      <View style={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 14 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View>
-            <Text style={{ fontSize: 26, fontWeight: '900', color: colors.text, letterSpacing: -0.8 }}>
-              History
+            <Text style={{ fontSize: 28, fontWeight: '900', color: colors.text, letterSpacing: -1 }}>
+              Transactions
             </Text>
-            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-              {transactions.length} record{transactions.length !== 1 ? 's' : ''}
+            <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 3 }}>
+              Keep track of every wallet movement
+            </Text>
+          </View>
+          <View style={{
+            width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center',
+            backgroundColor: `${colors.primary}18`, borderWidth: 1, borderColor: `${colors.primary}30`,
+          }}>
+            <Feather name="bar-chart-2" size={19} color={colors.primary} />
+          </View>
+        </View>
+
+        <View style={{
+          marginTop: 18, padding: 16, borderRadius: 22, backgroundColor: colors.primary,
+          shadowColor: colors.primary, shadowOffset: { width: 0, height: 7 }, shadowOpacity: isDark ? 0 : 0.16,
+          shadowRadius: 14, elevation: 3,
+        }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <View>
+              <Text style={{ fontSize: 11, color: colors.background, opacity: 0.78, fontWeight: '700' }}>
+                TOTAL ACTIVITY
+              </Text>
+              <Text style={{ fontSize: 23, fontWeight: '900', color: colors.background, marginTop: 3, letterSpacing: -0.5 }}>
+                {totalTransacted.toLocaleString()} <Text style={{ fontSize: 12, fontWeight: '700' }}>Ks</Text>
+              </Text>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={{ fontSize: 22, fontWeight: '900', color: colors.background }}>
+                {transactions.length}
+              </Text>
+              <Text style={{ fontSize: 10, color: colors.background, opacity: 0.78, fontWeight: '700' }}>
+                RECORDS
+              </Text>
+            </View>
+          </View>
+          <View style={{ height: 1, backgroundColor: colors.background, opacity: 0.18, marginVertical: 13 }} />
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Feather name="check-circle" size={13} color={colors.background} />
+            <Text style={{ fontSize: 11, color: colors.background, opacity: 0.9, marginLeft: 6 }}>
+              {completedTransactions} completed transaction{completedTransactions !== 1 ? 's' : ''}
             </Text>
           </View>
         </View>
@@ -265,7 +303,7 @@ export default function TransactionsScreen() {
         {/* Search bar */}
         <View style={{
           flexDirection: 'row', alignItems: 'center',
-          marginTop: 14, borderRadius: 16, borderWidth: 1.5,
+          marginTop: 18, borderRadius: 16, borderWidth: 1.5,
           borderColor: isFocused ? colors.primary : colors.border,
           backgroundColor: colors.surface,
           paddingHorizontal: 14,
@@ -293,7 +331,11 @@ export default function TransactionsScreen() {
         </View>
 
         {/* Filter Pills */}
-        <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8, paddingRight: 20, marginTop: 13 }}
+        >
           {FILTER_OPTIONS.map((opt) => (
             <TouchableOpacity
               key={opt.value}
@@ -315,7 +357,7 @@ export default function TransactionsScreen() {
               </Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       </View>
 
       {/* Transaction List */}
@@ -328,7 +370,7 @@ export default function TransactionsScreen() {
           data={groupedData}
           keyExtractor={(item: any) => item.type === 'header' ? `h-${item.title}` : `tx-${item.id}`}
           renderItem={renderItem}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120, paddingTop: 4 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120, paddingTop: 4 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />

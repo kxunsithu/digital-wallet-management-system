@@ -13,7 +13,7 @@ export interface AppNotification {
   read: boolean;
 }
 
-const NOTIFICATIONS_STORAGE_KEY = 'agent_notifications';
+const NOTIFICATIONS_STORAGE_KEY = 'customer_notifications';
 
 export async function getNotifications(): Promise<AppNotification[]> {
   try {

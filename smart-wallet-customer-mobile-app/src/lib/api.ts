@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 
 export const API_BASE = process.env.API_BASE ?? 'https://smart-wallet-api-vm58.onrender.com/api';
-export const ROLE_ID = Number(process.env.ROLE_ID ?? 3);
+export const ROLE_ID = Number(process.env.ROLE_ID ?? 4);
 
 export async function getAuthToken(): Promise<string | null> {
   try {

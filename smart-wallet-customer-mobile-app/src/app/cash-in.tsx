@@ -86,9 +86,9 @@ export default function CashInScreen() {
         const userData = res.body.data?.user;
         const role = userData?.role;
 
-        if (role && role !== "customer") {
+        if (role && role !== "customer" && role !== "agent") {
           const roleDisplay = role.replace(/_/g, ' ');
-          const msg = `This number belongs to an ${roleDisplay}. Customer Transfer is ONLY allowed for Customer accounts.`;
+          const msg = `This number belongs to an ${roleDisplay}. Send Money is only allowed for Customer or Agent accounts.`;
           setRoleValidationError(msg);
           setPhoneLookupUser(null);
           Toast.show({
@@ -98,7 +98,7 @@ export default function CashInScreen() {
           });
           return false;
         } else {
-          setPhoneLookupUser({ full_name: userData?.full_name, role: 'customer' });
+          setPhoneLookupUser({ full_name: userData?.full_name, role: role ?? 'customer' });
           setRoleValidationError(null);
           return true;
         }
@@ -114,7 +114,7 @@ export default function CashInScreen() {
   // Step 1: Click Submit -> Validate form and open PIN Modal
   const handleInitiateTransfer = async () => {
     if (!customerPhone.trim()) {
-      Toast.show({ type: "error", text1: "Error", text2: "Please enter customer phone number" });
+      Toast.show({ type: "error", text1: "Error", text2: "Please enter recipient phone number" });
       return;
     }
 
@@ -123,8 +123,8 @@ export default function CashInScreen() {
       return;
     }
 
-    if (selectedCustomerQr?.user?.role && selectedCustomerQr.user.role !== "customer") {
-      Toast.show({ type: "error", text1: "Role Restricted", text2: "Recipient is not a customer." });
+    if (selectedCustomerQr?.user?.role && selectedCustomerQr.user.role !== "customer" && selectedCustomerQr.user.role !== "agent") {
+      Toast.show({ type: "error", text1: "Role Restricted", text2: "Recipient is not a customer or agent." });
       return;
     }
 
@@ -151,7 +151,7 @@ export default function CashInScreen() {
 
     setSubmitting(true);
     try {
-      const res = await apiFetch("/transfers/agent", {
+      const res = await apiFetch("/transfers/customer", {
         method: "POST",
         body: JSON.stringify({
           receiver_phone: customerPhone,
@@ -164,10 +164,11 @@ export default function CashInScreen() {
       if (res.status === 200 && res.body?.success) {
         setPinModalVisible(false);
         const txData = res.body.data;
+        const receiverRole = selectedCustomerQr?.user?.role ?? 'customer';
         setReceiptTransaction({
           id: txData?.id,
           transaction_number: txData?.transaction_number || 'N/A',
-          transaction_type: txData?.transaction_type || 'agent_to_customer',
+          transaction_type: txData?.transaction_type || (receiverRole === 'agent' ? 'customer_to_agent' : 'customer_to_customer'),
           amount: Number(txData?.amount || amount),
           fee: Number(txData?.fee || 0),
           sender_name: txData?.sender_name,
@@ -181,8 +182,8 @@ export default function CashInScreen() {
         setReceiptVisible(true);
         Toast.show({
           type: "success",
-          text1: "Customer Cash In Successful",
-          text2: `Transferred ${Number(amount).toLocaleString()} MMK to customer`
+          text1: "Transfer Successful",
+          text2: `Transferred ${Number(amount).toLocaleString()} MMK ${receiverRole === 'agent' ? 'to agent' : 'to customer'}`
         });
       } else {
         const msg = res.body?.message ?? "Could not complete transfer";
@@ -190,7 +191,7 @@ export default function CashInScreen() {
           Toast.show({
             type: "error",
             text1: "Recipient Role Error",
-            text2: "Customer Money Transfer can only be sent to Customer accounts.",
+            text2: "Send Money can only be sent to Customer or Agent accounts.",
           });
         } else {
           Toast.show({ type: "error", text1: "Failed", text2: msg });
@@ -234,28 +235,28 @@ export default function CashInScreen() {
       if (res.status === 200 && res.body?.success) {
         const qrData = res.body.data as QrLookupResult;
 
-        if (qrData.user?.role && qrData.user.role !== "customer") {
+        if (qrData.user?.role && qrData.user.role !== "customer" && qrData.user.role !== "agent") {
           const roleDisplay = qrData.user.role.replace(/_/g, ' ');
           Toast.show({
             type: "error",
             text1: "Role Restricted 🛑",
-            text2: `Scanned user is an ${roleDisplay}. Customer Transfer ONLY accepts Customer accounts.`
+            text2: `Scanned user is an ${roleDisplay}. Send Money ONLY accepts Customer or Agent accounts.`
           });
           setSelectedCustomerQr(null);
-          setRoleValidationError(`Scanned user is an ${roleDisplay}. Customer Transfer ONLY accepts Customer accounts.`);
+          setRoleValidationError(`Scanned user is an ${roleDisplay}. Send Money ONLY accepts Customer or Agent accounts.`);
           setScannerVisible(false);
           return;
         }
 
         setSelectedCustomerQr(qrData);
         setCustomerPhone(qrData.user?.phone_number ?? "");
-        setPhoneLookupUser({ full_name: qrData.user?.full_name, role: 'customer' });
+        setPhoneLookupUser({ full_name: qrData.user?.full_name, role: qrData.user?.role ?? 'customer' });
         setRoleValidationError(null);
         setScannerVisible(false);
         Toast.show({
           type: "success",
-          text1: "Customer QR Scanned",
-          text2: `${qrData.user?.full_name ?? qrData.user?.phone_number ?? "Customer"} verified.`
+          text1: "QR Scanned",
+          text2: `${qrData.user?.full_name ?? qrData.user?.phone_number ?? "Recipient"} verified.`
         });
       } else {
         Toast.show({ type: "error", text1: "Lookup Failed", text2: res.body?.message ?? "Could not recognize QR code." });
@@ -307,7 +308,7 @@ export default function CashInScreen() {
         <View style={{ alignItems: 'center' }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text }}>
-              Customer Money Transfer
+              Send Money
             </Text>
           </View>
         </View>
@@ -333,7 +334,7 @@ export default function CashInScreen() {
             <View>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8 }}>
-                  Customer Phone Number
+                  Recipient Phone Number
                 </Text>
                 <TouchableOpacity
                   onPress={() => setScannerVisible(true)}
@@ -342,7 +343,7 @@ export default function CashInScreen() {
                 >
                   <MaterialCommunityIcons name="qrcode-scan" size={14} color={colors.primary} />
                   <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary, marginLeft: 4 }}>
-                    Scan Customer QR
+                    Scan Recipient QR
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -406,11 +407,11 @@ export default function CashInScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <Feather name="check-circle" size={14} color={colors.primary} style={{ marginRight: 6 }} />
                       <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>
-                        Customer: {selectedCustomerQr?.user?.full_name ?? phoneLookupUser?.full_name ?? selectedCustomerQr?.user?.phone_number ?? customerPhone}
+                        Recipient: {selectedCustomerQr?.user?.full_name ?? phoneLookupUser?.full_name ?? selectedCustomerQr?.user?.phone_number ?? customerPhone}
                       </Text>
                     </View>
                     <Text style={{ fontSize: 10, color: colors.textSecondary, marginTop: 2, marginLeft: 20 }}>
-                      Verified Customer Account ✓
+                      Verified recipient account ✓
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -431,7 +432,7 @@ export default function CashInScreen() {
             {/* Amount Input */}
             <View>
               <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
-                Cash In Amount (MMK)
+                Amount (MMK)
               </Text>
               <View style={{
                 flexDirection: 'row', alignItems: 'center',
@@ -517,7 +518,7 @@ export default function CashInScreen() {
                 style={{ paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center' }}
               >
                 <Text style={{ fontSize: 16, fontWeight: '800', color: colors.secondary }}>
-                  Proceed to Deposit
+                  Proceed to Send
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -636,7 +637,7 @@ export default function CashInScreen() {
                   Camera Access Needed
                 </Text>
                 <Text style={{ fontSize: 13, color: colors.textSecondary, marginBottom: 20 }}>
-                  Please enable camera permission to scan customer QR codes.
+                  Please enable camera permission to scan recipient QR codes.
                 </Text>
                 <TouchableOpacity
                   onPress={() => setScannerVisible(false)}
@@ -658,7 +659,7 @@ export default function CashInScreen() {
               <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 24 }}>
                 <View style={{ borderRadius: 24, backgroundColor: `${colors.background}EE`, padding: 20 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text }}>Scan Customer QR Code</Text>
+                    <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text }}>Scan Recipient QR Code</Text>
                     <TouchableOpacity onPress={() => setScannerVisible(false)}>
                       <Feather name="x" size={20} color={colors.text} />
                     </TouchableOpacity>
@@ -667,7 +668,7 @@ export default function CashInScreen() {
                     <Text style={{ fontSize: 12, color: colors.error, marginBottom: 12 }}>{scanError}</Text>
                   ) : (
                     <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 12 }}>
-                      Align the customer's QR code within the frame to scan.
+                      Align the recipient's QR code within the frame to scan.
                     </Text>
                   )}
                   {qrScanLoading && (

@@ -77,12 +77,51 @@ class AuthController extends Controller
             }
         }
 
+        // Prevent using an admin/agent phone number to register as a customer
+        if ($user) {
+            $currentRoleName = null;
+            if (! empty($user->role_id)) {
+                $currentRoleName = DB::table('roles')->where('id', $user->role_id)->value('name');
+            }
+
+            if (strtolower((string) $requestedRoleName) === 'customer'
+                && in_array(strtolower((string) $currentRoleName), ['admin', 'agent_manager', 'agent'], true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This phone number is already registered as ' . ($currentRoleName ?? 'another role') . '. Please use the appropriate login flow or contact support.',
+                ], 422);
+            }
+        }
+
         if (! $user) {
-            $user = User::create([
+            if (strtolower((string) $requestedRoleName) === 'customer') {
+                if (empty($data['full_name']) || empty($data['nrc_number'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Full name and NRC number are required for customer registration.',
+                        'errors' => [
+                            'full_name' => empty($data['full_name']) ? ['Full name is required.'] : [],
+                            'nrc_number' => empty($data['nrc_number']) ? ['NRC number is required.'] : [],
+                        ],
+                    ], 422);
+                }
+            }
+
+            $userAttributes = [
                 'phone_number' => $data['phone_number'],
                 'status' => 'active',
                 'role_id' => $data['role_id'] ?? null,
-            ]);
+            ];
+
+            if (! empty($data['full_name'])) {
+                $userAttributes['full_name'] = $data['full_name'];
+            }
+
+            if (! empty($data['nrc_number'])) {
+                $userAttributes['nrc_number'] = $data['nrc_number'];
+            }
+
+            $user = User::create($userAttributes);
         } else {
             if (array_key_exists('role_id', $data) && $data['role_id'] !== null && $data['role_id'] != $user->role_id) {
                 $user->role_id = $data['role_id'];
