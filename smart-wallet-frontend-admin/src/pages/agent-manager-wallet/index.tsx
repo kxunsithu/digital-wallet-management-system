@@ -25,7 +25,7 @@ import AgentManagerLayout from "@/components/layouts/AgentManagerLayout";
 import TransferReceiptModal from "@/components/common/TransferReceiptModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -111,7 +111,7 @@ const ManagerTransferPage = () => {
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [receiptTx, setReceiptTx] = useState<any>(null);
   const [pinModalOpen, setPinModalOpen] = useState(false);
-  const [autoSaveReceipt, setAutoSaveReceipt] = useState(false);
+
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -1010,22 +1010,7 @@ const ManagerTransferPage = () => {
               </div>
 
               {/* ── Actions Footer ── */}
-              <div className="flex flex-col gap-4 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="auto-save"
-                    checked={autoSaveReceipt}
-                    onCheckedChange={(checked) =>
-                      setAutoSaveReceipt(checked === true)
-                    }
-                  />
-                  <Label
-                    htmlFor="auto-save"
-                    className="cursor-pointer text-xs font-medium text-muted-foreground"
-                  >
-                    Auto-download receipt PDF after transfer
-                  </Label>
-                </div>
+              <div className="flex justify-end border-t border-border pt-4">
                 <Button
                   type="submit"
                   disabled={submitting}
@@ -1070,7 +1055,6 @@ const ManagerTransferPage = () => {
         open={receiptOpen}
         onOpenChange={setReceiptOpen}
         transaction={receiptTx}
-        autoDownload={autoSaveReceipt}
       />
 
       {/* ── PIN Modal ── */}

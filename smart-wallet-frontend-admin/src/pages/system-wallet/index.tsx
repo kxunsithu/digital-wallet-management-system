@@ -23,7 +23,7 @@ import MainLayout from "@/components/layouts/MainLayout";
 import TransferReceiptModal from "@/components/common/TransferReceiptModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -101,7 +101,7 @@ const SystemWalletPage = () => {
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [receiptTx, setReceiptTx] = useState<any>(null);
   const [pinModalOpen, setPinModalOpen] = useState(false);
-  const [autoSaveReceipt, setAutoSaveReceipt] = useState(false);
+
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [adminUserId, setAdminUserId] = useState<number | string | undefined>(undefined);
 
@@ -724,18 +724,8 @@ const SystemWalletPage = () => {
                 />
               </div>
 
-              {/* Submit & Auto Save Toggle */}
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="auto-save" 
-                    checked={autoSaveReceipt} 
-                    onCheckedChange={(checked) => setAutoSaveReceipt(checked === true)} 
-                  />
-                  <Label htmlFor="auto-save" className="text-sm font-medium text-slate-600 cursor-pointer">
-                    Auto-save receipt to device
-                  </Label>
-                </div>
+              {/* Submit */}
+              <div className="flex justify-end">
                 <Button
                   type="submit"
                   disabled={submitting}
@@ -771,7 +761,6 @@ const SystemWalletPage = () => {
           open={receiptOpen}
           onOpenChange={setReceiptOpen}
           transaction={receiptTx}
-          autoDownload={autoSaveReceipt}
         />
 
         <Dialog open={pinModalOpen} onOpenChange={setPinModalOpen}>
