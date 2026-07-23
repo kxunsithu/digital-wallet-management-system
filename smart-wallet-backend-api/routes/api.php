@@ -59,6 +59,7 @@ Route::prefix('agents')->middleware('auth:sanctum')->group(function () {
     Route::put('/{id}', [AgentController::class, 'update']);
     Route::delete('/{id}', [AgentController::class, 'destroy']);
     Route::post('/{id}/toggle-status', [AgentController::class, 'toggleStatus'])->middleware('ensure.admin');
+    Route::post('/{id}/toggle-nrc-status', [AgentController::class, 'toggleNrcStatus']);
 });
 
 Route::prefix('customers')->group(function () {

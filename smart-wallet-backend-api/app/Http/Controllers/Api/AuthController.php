@@ -379,16 +379,7 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
-        DB::table('user_devices')->insert([
-            'user_id' => $user->id,
-            'device_id' => $data['device_id'] ?? null,
-            'device_name' => $data['device_name'] ?? null,
-            'ip_address' => $request->ip(),
-            'login_at' => now(),
-            'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+
 
         $roleName = null;
         if (! empty($user->role_id)) {

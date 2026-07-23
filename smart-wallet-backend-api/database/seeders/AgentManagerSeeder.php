@@ -31,7 +31,6 @@ class AgentManagerSeeder extends Seeder
                 'region_name' => 'Yangon Region',
                 'township_name' => 'Kamayut',
                 'status' => 'active',
-                'approval_limit' => 10000000.00
             ],
             [
                 'full_name' => 'Zayar Lynn',
@@ -41,7 +40,6 @@ class AgentManagerSeeder extends Seeder
                 'region_name' => 'Yangon Region',
                 'township_name' => 'Bahan',
                 'status' => 'active',
-                'approval_limit' => 8000000.00
             ],
             [
                 'full_name' => 'Thiri Swe',
@@ -51,7 +49,6 @@ class AgentManagerSeeder extends Seeder
                 'region_name' => 'Mandalay Region',
                 'township_name' => 'Mahar Aung Myay',
                 'status' => 'active',
-                'approval_limit' => 12000000.00
             ],
             [
                 'full_name' => 'Kyaw Zin Win',
@@ -61,7 +58,6 @@ class AgentManagerSeeder extends Seeder
                 'region_name' => 'Ayeyarwady Region',
                 'township_name' => 'Pathein',
                 'status' => 'pending',
-                'approval_limit' => 5000000.00
             ],
             [
                 'full_name' => 'Nan Khin Lay',
@@ -71,7 +67,6 @@ class AgentManagerSeeder extends Seeder
                 'region_name' => 'Shan State',
                 'township_name' => 'Taunggyi',
                 'status' => 'active',
-                'approval_limit' => 9000000.00
             ],
             [
                 'full_name' => 'Hla Hla Win',
@@ -81,7 +76,6 @@ class AgentManagerSeeder extends Seeder
                 'region_name' => 'Bago Region',
                 'township_name' => 'Pyay',
                 'status' => 'inactive',
-                'approval_limit' => 3000000.00
             ],
         ];
 
@@ -109,7 +103,6 @@ class AgentManagerSeeder extends Seeder
                     'manager_code' => $data['manager_code'],
                     'state_region_id' => $region ? $region->id : null,
                     'township_id' => $township ? $township->id : null,
-                    'approval_limit' => $data['approval_limit']
                 ]
             );
         }

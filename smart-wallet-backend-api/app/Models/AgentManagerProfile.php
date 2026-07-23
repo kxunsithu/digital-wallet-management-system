@@ -16,9 +16,7 @@ class AgentManagerProfile extends Model
         'manager_code',
         'state_region_id',
         'township_id',
-        'approval_limit',
         'parent_manager_id',
-        'approved_by',
     ];
 
     public function user()

@@ -142,9 +142,6 @@ class AgentSeeder extends Seeder
                     'shop_address' => $data['shop_address'],
                     'state_region_id' => $region?->id,
                     'township_id' => $township?->id,
-                    'float_balance' => $data['float_balance'],
-                    'total_volume_monthly' => $data['total_volume_monthly'],
-                    'custom_commission_override' => $data['custom_commission_override'] ?? null,
                     'created_by_manager_id' => $managerProfile?->user_id,
                     'parent_agent_id' => $parentAgentId,
                 ]

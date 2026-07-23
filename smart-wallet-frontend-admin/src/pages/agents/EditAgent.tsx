@@ -52,6 +52,8 @@ export default function EditAgent() {
   const [townships, setTownships] = useState<any[]>([]);
   const [nrcFront, setNrcFront] = useState<File | null>(null);
   const [nrcBack, setNrcBack] = useState<File | null>(null);
+  const [nrcFrontUrl, setNrcFrontUrl] = useState<string | null>(null);
+  const [nrcBackUrl, setNrcBackUrl] = useState<string | null>(null);
 
   useEffect(() => {
     getStateRegions().then((res) => setRegions(res.data.data)).catch(() => {});
@@ -87,6 +89,11 @@ export default function EditAgent() {
           township_id: agent.township_id?.toString() || agent.township?.id?.toString() || "",
           status: agent.status || "pending",
         });
+        const baseUrl = (import.meta.env.VITE_API_URL?.replace('/api', '') ?? '') + '/storage/';
+        const frontImg = agent.user?.images?.find((img: any) => img.image_type === 'nrc_front_image');
+        const backImg  = agent.user?.images?.find((img: any) => img.image_type === 'nrc_back_image');
+        if (frontImg) setNrcFrontUrl(baseUrl + frontImg.image_path);
+        if (backImg)  setNrcBackUrl(baseUrl + backImg.image_path);
       } catch {
         toast.error("Failed to load agent");
         navigate("/agents");
@@ -121,7 +128,8 @@ export default function EditAgent() {
       const data = new FormData();
 
       Object.entries(userForm).forEach(([key, value]) => {
-        if (key !== "phone_number" && value) data.append(key, value);
+        // phone_number and nrc_number are immutable, skip them
+        if (key !== "phone_number" && key !== "nrc_number" && value) data.append(key, value);
       });
 
       Object.entries(profileForm).forEach(([key, value]) => {
@@ -355,8 +363,8 @@ export default function EditAgent() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <ImageUpload label="NRC Front Image" onChange={(file) => setNrcFront(file)} />
-                <ImageUpload label="NRC Back Image" onChange={(file) => setNrcBack(file)} />
+                <ImageUpload label="NRC Front Image" initialPreview={nrcFrontUrl} onChange={(file) => setNrcFront(file)} />
+                <ImageUpload label="NRC Back Image" initialPreview={nrcBackUrl} onChange={(file) => setNrcBack(file)} />
               </div>
             </CardContent>
           </Card>

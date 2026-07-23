@@ -36,8 +36,6 @@ interface UserProfile {
     agent_code: string;
     shop_name: string | null;
     shop_address: string | null;
-    float_balance: number;
-    total_volume_monthly: number;
   } | null;
   wallet: {
     id: number;

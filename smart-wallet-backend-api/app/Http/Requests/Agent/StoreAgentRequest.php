@@ -25,7 +25,7 @@ class StoreAgentRequest extends FormRequest
             'state_region_id' => ['required', 'integer', 'exists:state_regions,id'],
             'township_id' => ['required', 'integer', 'exists:townships,id'],
             'status' => ['required', 'string', 'in:pending,active,inactive'],
-            'custom_commission_override' => ['nullable', 'numeric'],
+
             'parent_agent_id' => ['nullable', 'integer', 'exists:agent_profiles,id'],
 
             // NRC images

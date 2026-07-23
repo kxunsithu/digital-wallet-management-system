@@ -61,7 +61,18 @@ export async function addMoneyReceivedNotification(params: {
     read: false,
   };
 
-  const updated = [newNotif, ...current].slice(0, 50); // Keep last 50
+  // NOTE: SecureStore has a ~2048 byte per-key limit.
+  // Cap at 20 notifications and trim if the serialised size would exceed 1900 bytes.
+  let updated = [newNotif, ...current];
+  while (updated.length > 20) updated.pop();
+
+  // Extra safety: trim until it fits
+  let serialised = JSON.stringify(updated);
+  while (serialised.length > 1900 && updated.length > 1) {
+    updated.pop();
+    serialised = JSON.stringify(updated);
+  }
+
   await saveNotifications(updated);
   return updated;
 }

@@ -36,8 +36,6 @@ interface UserProfile {
     agent_code: string;
     shop_name: string | null;
     shop_address: string | null;
-    float_balance: number;
-    total_volume_monthly: number;
   } | null;
   wallet: {
     id: number;
@@ -109,6 +107,7 @@ export default function DashboardScreen() {
   const isDark = theme === 'dark';
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const profileRef = useRef<UserProfile | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -136,12 +135,27 @@ export default function DashboardScreen() {
   }, [loadNotifs]);
 
   // Real-time balance polling (3 seconds interval)
+  // Uses profileRef instead of profile state to avoid re-creating the interval on every poll cycle
   const pollData = useCallback(async (showInitialSpinner = false) => {
-    if (showInitialSpinner && !profile) setLoading(true);
+    if (showInitialSpinner && !profileRef.current) setLoading(true);
     try {
       const profileRes = await apiFetch("/profile");
       if (profileRes.status === 200 && profileRes.body?.success) {
         const newProfile = profileRes.body.data;
+
+        // ── Role guard: only agents may use this app ──────────────────────
+        if (newProfile?.role && newProfile.role !== 'agent') {
+          await logout();
+          router.replace('/auth');
+          Toast.show({
+            type: 'error',
+            text1: 'Access Denied',
+            text2: 'This app is only for Agent accounts.',
+          });
+          return;
+        }
+        // ─────────────────────────────────────────────────────────────────
+
         const newBalance = Number(newProfile?.wallet?.balance ?? 0);
 
         // Detect incoming transfer from another user
@@ -162,6 +176,7 @@ export default function DashboardScreen() {
         }
 
         prevBalanceRef.current = newBalance;
+        profileRef.current = newProfile;
         setProfile(newProfile);
       } else if (profileRes.status === 401) {
         router.replace("/auth");
@@ -178,7 +193,7 @@ export default function DashboardScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [profile, router]);
+  }, [router]);
 
   // Initial load
   useEffect(() => {

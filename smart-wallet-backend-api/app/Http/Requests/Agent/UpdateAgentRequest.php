@@ -29,7 +29,7 @@ class UpdateAgentRequest extends FormRequest
             'state_region_id' => ['nullable', 'integer', 'exists:state_regions,id'],
             'township_id' => ['nullable', 'integer', 'exists:townships,id'],
             'status' => ['nullable', 'string', 'in:pending,active,inactive'],
-            'custom_commission_override' => ['nullable', 'numeric'],
+
             'parent_agent_id' => ['nullable', 'integer', 'exists:agent_profiles,id'],
 
             // NRC images

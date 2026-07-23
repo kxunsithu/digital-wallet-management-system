@@ -14,7 +14,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { useTheme } from '../../providers/ThemeProvider';
-import { verifyPin, clearPendingAuthRoute } from '../../services/auth';
+import { verifyPin, clearPendingAuthRoute, logout } from '../../services/auth';
+import apiFetch from '../../lib/api';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -75,8 +76,26 @@ export default function VerifyPinScreen() {
     setLoading(false);
 
     if (response.status === 200 && response.body?.success) {
+      // ── Role guard: only allow 'agent' accounts ──────────────────────────
+      try {
+        const profileRes = await apiFetch('/profile');
+        const userRole = profileRes.body?.data?.role;
+        if (userRole && userRole !== 'agent') {
+          await logout(); // clear token immediately
+          Toast.show({
+            type: 'error',
+            text1: 'Access Denied',
+            text2: 'This app is only for Agent accounts.',
+          });
+          router.replace('/auth');
+          return;
+        }
+      } catch {
+        // If profile fetch fails let it through — backend will guard on next request
+      }
+      // ─────────────────────────────────────────────────────────────────────
       Toast.show({ type: 'success', text1: 'Welcome Back!', text2: 'You are now signed in.' });
-      await clearPendingAuthRoute(); // Clear persistent route on successful login
+      await clearPendingAuthRoute();
       router.replace('/');
     } else {
       setFailCount((prev) => prev + 1);

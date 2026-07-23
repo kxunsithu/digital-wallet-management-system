@@ -14,16 +14,12 @@ class AgentProfile extends Model
     protected $fillable = [
         'user_id',
         'agent_code',
-        'custom_commission_override',
         'shop_name',
         'shop_address',
         'state_region_id',
         'township_id',
-        'float_balance',
         'parent_agent_id',
-        'total_volume_monthly',
         'created_by_manager_id',
-        'approved_by',
     ];
 
     public function user()

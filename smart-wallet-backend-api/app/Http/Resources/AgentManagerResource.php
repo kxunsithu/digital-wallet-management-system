@@ -38,7 +38,6 @@ class AgentManagerResource extends JsonResource
             'township_id' => $this->township_id,
             'status' => $this->user?->status,
             'parent_manager_id' => $this->parent_manager_id,
-            'approved_by' => $this->approved_by,
             'created_at' => optional($this->created_at)?->toISOString(),
             'updated_at' => optional($this->updated_at)?->toISOString(),
             'user' => $this->whenLoaded('user', function () use ($formattedImages) {

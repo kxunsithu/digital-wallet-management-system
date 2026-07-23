@@ -255,30 +255,7 @@ export default function AgentDetail() {
                   <p className="text-sm font-semibold text-slate-700">{agent.shop_address || "-"}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 rounded-xl border border-border bg-white p-3">
-                <WalletIcon className="mt-0.5 h-4 w-4 text-slate-400" />
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    Float Balance
-                  </p>
-                  <p className="text-sm font-bold text-slate-700">
-                    {Number(agent.float_balance ?? 0).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-              {agent.custom_commission_override != null && (
-                <div className="flex items-start gap-3 rounded-xl border border-border bg-white p-3">
-                  <CreditCard className="mt-0.5 h-4 w-4 text-slate-400" />
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                      Commission Override
-                    </p>
-                    <p className="text-sm font-bold text-slate-700">
-                      {Number(agent.custom_commission_override).toLocaleString()}%
-                    </p>
-                  </div>
-                </div>
-              )}
+
             </div>
           </CardContent>
         </Card>

@@ -32,7 +32,6 @@ interface UserProfile {
     agent_code: string;
     shop_name: string | null;
     shop_address: string | null;
-    float_balance: number;
   } | null;
   wallet: {
     wallet_number: string;

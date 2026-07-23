@@ -22,8 +22,6 @@ const STEPS = ['Phone', 'OTP', 'PIN'];
 
 export default function RequestOtpScreen() {
   const [phone, setPhone] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [nrcNumber, setNrcNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const router = useRouter();
@@ -40,9 +38,7 @@ export default function RequestOtpScreen() {
     setLoading(true);
     const response = await requestOtp(
       trimmedPhone,
-      undefined,
-      fullName.trim() || undefined,
-      nrcNumber.trim() || undefined,
+      undefined
     );
     setLoading(false);
 
@@ -56,8 +52,7 @@ export default function RequestOtpScreen() {
       Toast.show({ type: 'success', text1: 'OTP Sent', text2: 'A code has been sent to your phone' });
       router.push({ pathname: '/auth/verify-otp', params: { phone: trimmedPhone, expiresAt } });
     } else {
-      const fieldErrors = response.body?.errors;
-      const errorText = fieldErrors?.full_name?.[0] || fieldErrors?.nrc_number?.[0] || response.body?.message || 'Could not request OTP';
+      const errorText = response.body?.message || 'Could not request OTP';
       Toast.show({
         type: 'error',
         text1: 'Failed',
@@ -103,7 +98,7 @@ export default function RequestOtpScreen() {
                 Smart Wallet
               </Text>
               <Text style={{ fontSize: 14, color: `${colors.secondary}99`, marginTop: 2 }}>
-                Customer Portal
+                Agent Portal
               </Text>
             </View>
 
@@ -221,82 +216,7 @@ export default function RequestOtpScreen() {
               }}>
                 We'll send a 6-digit OTP to this number
               </Text>
-            </View>
-
-            {/* Registration Fields */}
-            <View style={{ marginBottom: 20 }}>
-              <Text style={{
-                fontSize: 11, fontWeight: '600',
-                color: colors.textSecondary,
-                textTransform: 'uppercase',
-                letterSpacing: 0.8,
-                marginBottom: 8,
-              }}>
-                Full Name
-              </Text>
-              <View style={{
-                borderRadius: 16,
-                borderWidth: 1.5,
-                borderColor: colors.border,
-                backgroundColor: colors.surface,
-                paddingHorizontal: 16,
-              }}>
-                <TextInput
-                  placeholder="Your full name"
-                  placeholderTextColor={colors.textSecondary}
-                  style={{
-                    paddingVertical: 16,
-                    fontSize: 16,
-                    fontWeight: '500',
-                    color: colors.text,
-                  }}
-                  value={fullName}
-                  onChangeText={setFullName}
-                  editable={!loading}
-                />
               </View>
-            </View>
-
-            <View style={{ marginBottom: 24 }}>
-              <Text style={{
-                fontSize: 11, fontWeight: '600',
-                color: colors.textSecondary,
-                textTransform: 'uppercase',
-                letterSpacing: 0.8,
-                marginBottom: 8,
-              }}>
-                NRC Number
-              </Text>
-              <View style={{
-                borderRadius: 16,
-                borderWidth: 1.5,
-                borderColor: colors.border,
-                backgroundColor: colors.surface,
-                paddingHorizontal: 16,
-              }}>
-                <TextInput
-                  placeholder="NRC number"
-                  placeholderTextColor={colors.textSecondary}
-                  style={{
-                    paddingVertical: 16,
-                    fontSize: 16,
-                    fontWeight: '500',
-                    color: colors.text,
-                  }}
-                  value={nrcNumber}
-                  onChangeText={setNrcNumber}
-                  editable={!loading}
-                />
-              </View>
-              <Text style={{
-                fontSize: 11,
-                color: colors.textSecondary,
-                marginTop: 6,
-                marginLeft: 4,
-              }}>
-                If you are registering for the first time, please provide your customer details.
-              </Text>
-            </View>
 
             {/* Submit Button */}
             <TouchableOpacity

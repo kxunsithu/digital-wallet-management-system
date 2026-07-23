@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 
-export const API_BASE = process.env.API_BASE ?? 'https://smart-wallet-api-vm58.onrender.com/api';
-export const ROLE_ID = Number(process.env.ROLE_ID ?? 3);
+export const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
+export const ROLE_ID = Number(process.env.EXPO_PUBLIC_ROLE_ID ?? 3);
 
 export async function getAuthToken(): Promise<string | null> {
   try {
@@ -12,10 +12,13 @@ export async function getAuthToken(): Promise<string | null> {
 }
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
+  if (!API_BASE) {
+    throw new Error('API_BASE is not configured. Check your .env file.');
+  }
   const token = await getAuthToken();
   const headers: Record<string, string> = {
     'Accept': 'application/json',
-    'Content-Type': 'application/json',
+    ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
     ...(options.headers as Record<string, string> || {}),
   };
 

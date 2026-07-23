@@ -92,6 +92,14 @@ class AgentManagerController extends Controller
                 $this->storeImageRecord($data['nrc_back_image'], $user->id, 'nrc_back_image');
             }
 
+            // 4. Auto-verify NRC status
+            \App\Models\NrcVerification::create([
+                'user_id' => $user->id,
+                'status' => 'verified',
+                'verified_by' => $request->user()?->id ?? null,
+                'verified_at' => now(),
+            ]);
+
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();

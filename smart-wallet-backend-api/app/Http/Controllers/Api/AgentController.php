@@ -101,7 +101,6 @@ class AgentController extends Controller
                 'shop_address' => $data['shop_address'] ?? null,
                 'state_region_id' => $data['state_region_id'] ?? null,
                 'township_id' => $data['township_id'] ?? null,
-                'custom_commission_override' => $data['custom_commission_override'] ?? null,
                 'parent_agent_id' => $data['parent_agent_id'] ?? null,
                 'created_by_manager_id' => $createdByManagerId,
             ]);
@@ -110,6 +109,14 @@ class AgentController extends Controller
                 $this->storeImageRecord($data['nrc_front_image'], $user->id, 'nrc_front_image');
                 $this->storeImageRecord($data['nrc_back_image'], $user->id, 'nrc_back_image');
             }
+
+            // Auto verify NRC status
+            \App\Models\NrcVerification::create([
+                'user_id' => $user->id,
+                'status' => 'verified',
+                'verified_by' => $request->user()?->id ?? null,
+                'verified_at' => now(),
+            ]);
 
             DB::commit();
         } catch (\Throwable $e) {
@@ -174,9 +181,8 @@ class AgentController extends Controller
 
     public function update(UpdateAgentRequest $request, $id): JsonResponse
     {
-        $authError = $this->ensureAdminOrAgentManager($request);
-        if ($authError) {
-            return $authError;
+        if (! $this->isAgentManager($request)) {
+            return response()->json(['success' => false, 'message' => 'Forbidden. Only agent managers can update agents.'], 403);
         }
 
         $agent = AgentProfile::find($id);
@@ -184,18 +190,18 @@ class AgentController extends Controller
             return response()->json(['success' => false, 'message' => 'Not found.'], 404);
         }
 
-        $accessError = $this->ensureCanAccessAgent($request, $agent);
-        if ($accessError) {
-            return $accessError;
+        if ((int) $agent->created_by_manager_id !== (int) $request->user()->id) {
+            return response()->json(['success' => false, 'message' => 'You can only update agents you created.'], 403);
         }
 
         $data = $request->validated();
+        // NRC number is immutable; only NRC images can be updated by the agent manager
+        unset($data['nrc_number']);
 
         DB::beginTransaction();
         try {
             $userFields = array_filter([
                 'full_name' => $data['full_name'] ?? null,
-                'nrc_number' => $data['nrc_number'] ?? null,
                 'status' => $data['status'] ?? null,
             ], fn ($v) => $v !== null);
 
@@ -209,7 +215,6 @@ class AgentController extends Controller
                 'shop_address' => $data['shop_address'] ?? null,
                 'state_region_id' => $data['state_region_id'] ?? null,
                 'township_id' => $data['township_id'] ?? null,
-                'custom_commission_override' => $data['custom_commission_override'] ?? null,
                 'parent_agent_id' => $data['parent_agent_id'] ?? null,
             ], fn ($v) => $v !== null);
 
@@ -294,6 +299,45 @@ class AgentController extends Controller
             ->additional(['success' => true, 'message' => 'Status toggled.', 'status' => $newStatus])
             ->response()
             ->setStatusCode(200);
+    }
+
+    public function toggleNrcStatus(Request $request, $id): JsonResponse
+    {
+        $authError = $this->ensureAdminOrAgentManager($request);
+        if ($authError) {
+            return $authError;
+        }
+
+        $agent = AgentProfile::find($id);
+        if (! $agent) {
+            return response()->json(['success' => false, 'message' => 'Not found.'], 404);
+        }
+
+        $accessError = $this->ensureCanAccessAgent($request, $agent);
+        if ($accessError) {
+            return $accessError;
+        }
+
+        $nrcVerification = \App\Models\NrcVerification::firstOrCreate(
+            ['user_id' => $agent->user_id],
+            ['status' => 'pending']
+        );
+
+        $currentStatus = $nrcVerification->status;
+        $newStatus = $currentStatus === 'verified' ? 'rejected' : 'verified';
+
+        $nrcVerification->update([
+            'status' => $newStatus,
+            'verified_by' => $newStatus === 'verified' ? ($request->user()?->id ?? null) : null,
+            'verified_at' => $newStatus === 'verified' ? now() : null,
+            'rejection_reason' => $newStatus === 'rejected' ? 'Rejected by administrator/manager' : null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'NRC status toggled.',
+            'status' => $newStatus,
+        ], 200);
     }
 
     protected function ensureAdminOrAgentManager(Request $request): ?JsonResponse

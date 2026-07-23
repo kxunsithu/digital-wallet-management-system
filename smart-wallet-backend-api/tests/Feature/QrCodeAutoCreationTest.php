@@ -20,6 +20,19 @@ class QrCodeAutoCreationTest extends TestCase
             'is_pin_created' => false,
         ]);
 
+        // Seed a verified OTP record (required by the createPin security guard)
+        DB::table('otp_verifications')->insert([
+            'user_id'    => $user->id,
+            'phone_number' => $user->phone_number,
+            'otp_code'   => '123456',
+            'purpose'    => 'login',
+            'status'     => 'verified',
+            'attempt_count' => 0,
+            'expires_at' => now()->addDays(7),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         $response = $this->postJson('/api/auth/create-pin', [
             'user_id' => $user->id,
             'pin' => '1234',
@@ -65,6 +78,19 @@ class QrCodeAutoCreationTest extends TestCase
             'amount' => null,
             'is_active' => true,
             'expires_at' => null,
+        ]);
+
+        // Seed a verified OTP record (required by the createPin security guard)
+        DB::table('otp_verifications')->insert([
+            'user_id'    => $user->id,
+            'phone_number' => $user->phone_number,
+            'otp_code'   => '123456',
+            'purpose'    => 'login',
+            'status'     => 'verified',
+            'attempt_count' => 0,
+            'expires_at' => now()->addDays(7),
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $this->postJson('/api/auth/create-pin', [

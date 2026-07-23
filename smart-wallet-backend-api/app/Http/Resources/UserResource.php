@@ -51,8 +51,6 @@ class UserResource extends JsonResource
                 'agent_code' => $agentProfile->agent_code,
                 'shop_name' => $agentProfile->shop_name,
                 'shop_address' => $agentProfile->shop_address,
-                'float_balance' => (float) $agentProfile->float_balance,
-                'total_volume_monthly' => (float) $agentProfile->total_volume_monthly,
             ] : null,
             'wallet' => $wallet ? [
                 'id' => $wallet->id,

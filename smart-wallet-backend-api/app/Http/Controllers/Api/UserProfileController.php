@@ -42,6 +42,11 @@ class UserProfileController extends Controller
             'nrc_number' => ['sometimes', 'string', 'max:255', 'unique:users,nrc_number,'.$user->id],
         ]);
 
+        $roleName = DB::table('roles')->where('id', $user->role_id)->value('name');
+        if (in_array(strtolower((string) $roleName), ['agent', 'agent_manager'])) {
+            unset($data['nrc_number']);
+        }
+
         $user->fill($data);
         $user->save();
 
