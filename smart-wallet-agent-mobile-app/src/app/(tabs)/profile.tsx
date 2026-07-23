@@ -150,7 +150,7 @@ export default function ProfileScreen() {
         const formData = new FormData();
         // @ts-ignore
         formData.append('profile_image', {
-          uri: Platform.OS === 'android' ? editProfileImageUri : editProfileImageUri.replace('file://', ''),
+          uri: editProfileImageUri,
           name: filename,
           type,
         });

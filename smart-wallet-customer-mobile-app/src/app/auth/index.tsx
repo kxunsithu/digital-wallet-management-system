@@ -194,17 +194,6 @@ export default function RequestOtpScreen() {
                 backgroundColor: colors.surface,
                 paddingHorizontal: 16,
               }}>
-                <View style={{
-                  paddingRight: 12,
-                  borderRightWidth: 1,
-                  borderRightColor: colors.border,
-                  marginRight: 12,
-                  paddingVertical: 16,
-                }}>
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: colors.primary }}>
-                    🇲🇲 +95
-                  </Text>
-                </View>
                 <TextInput
                   placeholder="09xxxxxxxx"
                   placeholderTextColor={colors.textSecondary}

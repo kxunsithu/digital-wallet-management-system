@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import ViewShot from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import { useTheme } from '../providers/ThemeProvider';
 import { getAutoSaveReceipt } from '../services/settingsStore';
 
@@ -207,12 +208,20 @@ export default function TransferReceiptModal({
       const imageUri = await captureReceiptAsPNG();
       if (!imageUri) return;
 
-      // Use React Native Share
-      await Share.share({
-        title: `Receipt-${transaction.transaction_number}`,
-        message: `Transaction Receipt: ${transaction.transaction_number}\nAmount: ${formatAmount(transaction.amount)} MMK\nType: ${formatType(transaction.transaction_type)}`,
-        url: imageUri,
-      });
+      const isSharingAvailable = await Sharing.isAvailableAsync();
+      if (isSharingAvailable) {
+        await Sharing.shareAsync(imageUri, {
+          mimeType: 'image/png',
+          dialogTitle: 'Share Receipt',
+          UTI: 'public.png',
+        });
+      } else {
+        // Fallback if not available
+        await Share.share({
+          title: `Receipt-${transaction.transaction_number}`,
+          url: imageUri,
+        });
+      }
       
       Toast.show({ 
         type: 'success', 
