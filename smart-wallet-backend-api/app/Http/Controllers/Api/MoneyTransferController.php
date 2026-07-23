@@ -8,6 +8,7 @@ use App\Http\Resources\TransactionResource;
 use App\Models\AgentProfile;
 use App\Models\CustomerProfile;
 use App\Models\User;
+use App\Traits\NormalizesPhoneNumber;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ use Illuminate\Support\Str;
 
 class MoneyTransferController extends Controller
 {
+    use NormalizesPhoneNumber;
 
     /**
      * Money transfer role rules:
@@ -346,27 +348,7 @@ class MoneyTransferController extends Controller
 
     protected function normalizePhoneNumber(string $phone): string
     {
-        $cleanPhone = preg_replace('/[^\d+]/', '', $phone) ?: '';
-        if ($cleanPhone === '') {
-            return '';
-        }
-
-        // International with + prefix: +959xxxxxxxx → 09xxxxxxxx
-        if (str_starts_with($cleanPhone, '+959')) {
-            return '09' . substr($cleanPhone, 4);
-        }
-
-        // Without + prefix: 959xxxxxxxx → 09xxxxxxxx
-        if (str_starts_with($cleanPhone, '959')) {
-            return '09' . substr($cleanPhone, 3);
-        }
-
-        // Already local format
-        if (str_starts_with($cleanPhone, '09')) {
-            return $cleanPhone;
-        }
-
-        return $cleanPhone;
+        return $this->normalizePhone($phone);
     }
 
 

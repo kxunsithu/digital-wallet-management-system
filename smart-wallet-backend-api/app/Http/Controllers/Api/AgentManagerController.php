@@ -9,12 +9,14 @@ use App\Models\AgentManagerProfile;
 use App\Models\Image;
 use App\Models\User;
 use App\Http\Resources\AgentManagerResource;
+use App\Traits\NormalizesPhoneNumber;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AgentManagerController extends Controller
 {
+    use NormalizesPhoneNumber;
     public function index(Request $request): JsonResponse
     {
         $perPage = (int) $request->query('per_page', 15);
@@ -65,7 +67,7 @@ class AgentManagerController extends Controller
         try {
             // 1. Create the user
             $user = User::create([
-                'phone_number' => $data['phone_number'],
+                'phone_number' => $this->normalizePhone($data['phone_number']),
                 'full_name'    => $data['full_name'] ?? null,
                 'nrc_number'   => $data['nrc_number'] ?? null,
                 'role_id'      => $agentManagerRoleId,

@@ -13,6 +13,7 @@ use App\Models\CustomerProfile;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Services\QrCodeService;
+use App\Traits\NormalizesPhoneNumber;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    use NormalizesPhoneNumber;
     public function __construct(private readonly QrCodeService $qrCodeService)
     {
     }
@@ -31,6 +33,9 @@ class AuthController extends Controller
     public function requestOtp(RequestOtpRequest $request): JsonResponse
     {
         $data = $request->validated();
+
+        // Normalize phone to 09 format before any storage or lookup
+        $data['phone_number'] = $this->normalizePhone($data['phone_number']);
 
         $requestedRoleId = $data['role_id'] ?? null;
         // If role_id not provided by client, treat the request as coming from customer app
@@ -586,52 +591,21 @@ class AuthController extends Controller
         ];
     }
 
-    /**
-     * Normalize phone number to local 09xxxxxxxx format for storage.
-     */
     protected function formatPhoneNumber(string $phoneNumber): string
     {
-        $phoneNumber = preg_replace('/[\s-]/', '', $phoneNumber);
-
-        // Already local format
-        if (str_starts_with($phoneNumber, '09')) {
-            return $phoneNumber;
-        }
-
-        // International with + prefix: +959xxxxxxxx → 09xxxxxxxx
-        if (str_starts_with($phoneNumber, '+959')) {
-            return '09' . substr($phoneNumber, 4);
-        }
-
-        // Without + prefix: 959xxxxxxxx → 09xxxxxxxx
-        if (str_starts_with($phoneNumber, '959')) {
-            return '09' . substr($phoneNumber, 3);
-        }
-
-        return $phoneNumber;
+        return $this->normalizePhone($phoneNumber);
     }
 
-    /**
-     * Format phone number to international +959 format for SMS delivery only.
-     */
     protected function formatPhoneForSms(string $phoneNumber): string
     {
-        $local = $this->formatPhoneNumber($phoneNumber);
-
-        if (str_starts_with($local, '09')) {
-            return '+959' . substr($local, 2);
-        }
-
-        return $local;
+        return $this->phoneToInternational($phoneNumber);
     }
 
     protected function findUserByPhoneNumber(string $phoneNumber): ?User
     {
-        $localPhone = $this->formatPhoneNumber($phoneNumber);
-
-        // Build all possible variants to search
-        $intlPhone  = str_starts_with($localPhone, '09') ? '+959' . substr($localPhone, 2) : $localPhone;
-        $rawPhone   = str_starts_with($intlPhone, '+') ? substr($intlPhone, 1) : $intlPhone;
+        $localPhone = $this->normalizePhone($phoneNumber);
+        $intlPhone  = $this->phoneToInternational($localPhone);
+        $rawPhone   = ltrim($intlPhone, '+');
 
         return User::where('phone_number', $localPhone)
             ->orWhere('phone_number', $intlPhone)

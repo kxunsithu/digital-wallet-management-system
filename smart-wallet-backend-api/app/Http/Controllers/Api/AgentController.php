@@ -9,12 +9,14 @@ use App\Http\Resources\AgentResource;
 use App\Models\AgentProfile;
 use App\Models\Image;
 use App\Models\User;
+use App\Traits\NormalizesPhoneNumber;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class AgentController extends Controller
 {
+    use NormalizesPhoneNumber;
     public function index(Request $request): JsonResponse
     {
         $authError = $this->ensureAdminOrAgentManager($request);
@@ -78,7 +80,7 @@ class AgentController extends Controller
         DB::beginTransaction();
         try {
             $user = User::create([
-                'phone_number' => $data['phone_number'],
+                'phone_number' => $this->normalizePhone($data['phone_number']),
                 'full_name' => $data['full_name'] ?? null,
                 'nrc_number' => $data['nrc_number'] ?? null,
                 'role_id' => $agentRoleId,
