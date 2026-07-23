@@ -117,10 +117,13 @@ export default function ProfilePage() {
     event.preventDefault();
     try {
       setSaving(true);
-      const response = await updateProfile({
+      const payload: { full_name?: string; nrc_number?: string } = {
         full_name: form.full_name || undefined,
-        nrc_number: form.nrc_number || undefined,
-      });
+      };
+      if (userRole !== "agent_manager") {
+        payload.nrc_number = form.nrc_number || undefined;
+      }
+      const response = await updateProfile(payload);
       const data = (response.data?.data ?? response.data) as ProfileData;
       setProfile((prev) => ({ ...prev, ...data }));
       syncSessionCookie({ ...profile, ...data, ...form });
@@ -326,8 +329,9 @@ export default function ProfilePage() {
                         onChange={(e) =>
                           setForm((prev) => ({ ...prev, nrc_number: e.target.value }))
                         }
+                        disabled={userRole === "agent_manager"}
                         placeholder="12/ABCDE(N)123456"
-                        className="focus-visible:ring-[#D5E726]/30"
+                        className="focus-visible:ring-[#D5E726]/30 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
                       />
                     </div>
                   </div>
