@@ -351,16 +351,19 @@ class MoneyTransferController extends Controller
             return '';
         }
 
-        if (str_starts_with($cleanPhone, '+')) {
-            return $cleanPhone;
+        // International with + prefix: +959xxxxxxxx → 09xxxxxxxx
+        if (str_starts_with($cleanPhone, '+959')) {
+            return '09' . substr($cleanPhone, 4);
         }
 
-        if (str_starts_with($cleanPhone, '09')) {
-            return '+959' . substr($cleanPhone, 2);
-        }
-
+        // Without + prefix: 959xxxxxxxx → 09xxxxxxxx
         if (str_starts_with($cleanPhone, '959')) {
-            return '+' . $cleanPhone;
+            return '09' . substr($cleanPhone, 3);
+        }
+
+        // Already local format
+        if (str_starts_with($cleanPhone, '09')) {
+            return $cleanPhone;
         }
 
         return $cleanPhone;

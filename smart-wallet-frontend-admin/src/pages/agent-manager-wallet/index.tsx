@@ -770,7 +770,7 @@ const ManagerTransferPage = () => {
                     </Label>
                     <Input
                       id="receiverPhone"
-                      placeholder="09xxxxxxxx or +959xxxxxxxx"
+                      placeholder="09xxxxxxxx"
                       value={receiverPhone}
                       onChange={(e) => setReceiverPhone(e.target.value)}
                       className="h-12 border-[#D5E726] font-mono focus-visible:ring-[#D5E726]/30"

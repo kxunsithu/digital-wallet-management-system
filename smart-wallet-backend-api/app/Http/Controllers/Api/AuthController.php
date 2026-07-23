@@ -539,7 +539,7 @@ class AuthController extends Controller
             ];
         }
 
-        $formattedPhone = $this->formatPhoneNumber($phoneNumber);
+        $formattedPhone = $this->formatPhoneForSms($phoneNumber);
         $baseUrl = rtrim($config['base_url'] ?? '', '/');
         $baseUrl = preg_replace('#/messages/?$#', '', $baseUrl) ?: $config['base_url'];
 
@@ -586,34 +586,55 @@ class AuthController extends Controller
         ];
     }
 
+    /**
+     * Normalize phone number to local 09xxxxxxxx format for storage.
+     */
     protected function formatPhoneNumber(string $phoneNumber): string
     {
         $phoneNumber = preg_replace('/[\s-]/', '', $phoneNumber);
 
+        // Already local format
         if (str_starts_with($phoneNumber, '09')) {
-            return '+959' . substr($phoneNumber, 2);
-        }
-
-        if (str_starts_with($phoneNumber, '959')) {
-            return '+' . $phoneNumber;
-        }
-
-        if (str_starts_with($phoneNumber, '+959')) {
             return $phoneNumber;
+        }
+
+        // International with + prefix: +959xxxxxxxx → 09xxxxxxxx
+        if (str_starts_with($phoneNumber, '+959')) {
+            return '09' . substr($phoneNumber, 4);
+        }
+
+        // Without + prefix: 959xxxxxxxx → 09xxxxxxxx
+        if (str_starts_with($phoneNumber, '959')) {
+            return '09' . substr($phoneNumber, 3);
         }
 
         return $phoneNumber;
     }
 
+    /**
+     * Format phone number to international +959 format for SMS delivery only.
+     */
+    protected function formatPhoneForSms(string $phoneNumber): string
+    {
+        $local = $this->formatPhoneNumber($phoneNumber);
+
+        if (str_starts_with($local, '09')) {
+            return '+959' . substr($local, 2);
+        }
+
+        return $local;
+    }
+
     protected function findUserByPhoneNumber(string $phoneNumber): ?User
     {
-        $formattedPhone = $this->formatPhoneNumber($phoneNumber);
+        $localPhone = $this->formatPhoneNumber($phoneNumber);
 
-        $localPhone = '09' . substr($formattedPhone, 4);
-        $rawPhone = substr($formattedPhone, 1);
+        // Build all possible variants to search
+        $intlPhone  = str_starts_with($localPhone, '09') ? '+959' . substr($localPhone, 2) : $localPhone;
+        $rawPhone   = str_starts_with($intlPhone, '+') ? substr($intlPhone, 1) : $intlPhone;
 
-        return User::where('phone_number', $formattedPhone)
-            ->orWhere('phone_number', $localPhone)
+        return User::where('phone_number', $localPhone)
+            ->orWhere('phone_number', $intlPhone)
             ->orWhere('phone_number', $rawPhone)
             ->orWhere('phone_number', $phoneNumber)
             ->first();

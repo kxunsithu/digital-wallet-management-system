@@ -86,15 +86,15 @@ const LoginPage = () => {
 
   const normalizePhoneNumber = (value: string) => {
     const digits = value.replace(/\D/g, "");
-    const normalized = digits.replace(/^0+/, "");
-    if (normalized.startsWith("959")) return `+${normalized}`;
-    return `+95${normalized}`;
+    // Convert any international format to local 09 format
+    if (digits.startsWith("959")) return `09${digits.slice(3)}`;
+    if (digits.startsWith("09")) return digits;
+    return `09${digits}`;
   };
 
   const normalizePhoneInput = (value: string) => {
-    const digits = value.replace(/\D/g, "");
-    const normalized = digits.replace(/^0+/, "");
-    return normalized.startsWith("95") ? normalized.slice(2) : normalized;
+    // Strip everything except digits
+    return value.replace(/\D/g, "");
   };
 
   const formattedPhoneNumber = () => {
@@ -256,7 +256,7 @@ const LoginPage = () => {
   const getStepDescription = () => {
     switch (step) {
       case "role": return "Select your role to continue.";
-      case "phone": return "Enter your local Myanmar number without the leading zero. We will prefix +95 automatically.";
+      case "phone": return "Enter your Myanmar phone number starting with 09.";
       case "otp": return "We sent a 6-digit code to your phone. Enter it below to continue.";
       case "pin": return "Create a new 4-digit PIN to complete your account setup.";
       case "verify-pin": return `Enter your 4-digit PIN to continue to the ${roleName === "agent_manager" ? "Agent Manager" : "Admin"} dashboard.`;
@@ -322,16 +322,12 @@ const LoginPage = () => {
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone number</Label>
                 <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
-                    +95
-                  </div>
                   <Input
                     id="phone"
                     value={phoneNumber}
                     onChange={(event) => setPhoneNumber(normalizePhoneInput(event.target.value))}
-                    placeholder="9944074981"
+                    placeholder="09xxxxxxxx"
                     required
-                    className="pl-14"
                   />
                 </div>
               </div>
