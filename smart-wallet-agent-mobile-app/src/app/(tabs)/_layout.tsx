@@ -1,5 +1,6 @@
 // app/(tabs)/_layout.tsx
 import { Feather } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import { Platform, View } from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
@@ -14,24 +15,32 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           position: 'absolute',
-          bottom: Platform.OS === 'ios' ? 28 : 20,
-          left: 20,
-          right: 20,
-          borderRadius: 28,
-          height: 68,
-          backgroundColor: colors.surface,
+          bottom: Platform.OS === 'ios' ? 24 : 16,
+          left: 16,
+          right: 16,
+          borderRadius: 30,
+          height: 74,
           borderTopWidth: 0,
           borderWidth: isDark ? 0 : 1,
-          borderColor: colors.border,
-          shadowColor: isDark ? colors.primary : colors.secondary,
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: isDark ? 0.12 : 0.08,
-          shadowRadius: 24,
+          borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.35)',
+          backgroundColor: isDark ? 'rgba(10, 14, 24, 0.7)' : 'rgba(255,255,255,0.72)',
+          overflow: 'hidden',
+          shadowColor: isDark ? colors.primary : '#000',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: isDark ? 0.22 : 0.14,
+          shadowRadius: 18,
           elevation: 16,
           paddingBottom: 0,
           paddingTop: 0,
-          marginHorizontal: 10,
+          marginHorizontal: 8,
         },
+        tabBarBackground: () => (
+          <BlurView
+            intensity={isDark ? 30 : 45}
+            tint={isDark ? 'dark' : 'light'}
+            style={{ flex: 1 }}
+          />
+        ),
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarLabelStyle: {
@@ -42,6 +51,7 @@ export default function TabLayout() {
         },
         tabBarItemStyle: {
           paddingVertical: 10,
+          borderRadius: 18,
         },
       }}
     >
@@ -52,10 +62,11 @@ export default function TabLayout() {
           title: 'History',
           tabBarIcon: ({ color, focused }) => (
             <View style={{
-              width: 40, height: 32,
+              width: 42, height: 34,
               borderRadius: 16,
               alignItems: 'center',
               justifyContent: 'center',
+              backgroundColor: focused ? `${colors.primary}16` : 'transparent',
             }}>
               <Feather name="clock" size={22} color={color} />
             </View>
@@ -70,12 +81,13 @@ export default function TabLayout() {
           title: 'Home',
           tabBarIcon: ({ color, focused }) => (
             <View style={{
-              width: 40, height: 32,
+              width: 42, height: 34,
               borderRadius: 16,
               alignItems: 'center',
               justifyContent: 'center',
+              backgroundColor: focused ? `${colors.primary}16` : 'transparent',
             }}>
-              <Feather name={focused ? 'home' : 'home'} size={22} color={color} />
+              <Feather name="home" size={22} color={color} />
             </View>
           ),
         }}
@@ -87,10 +99,11 @@ export default function TabLayout() {
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
             <View style={{
-              width: 40, height: 32,
+              width: 42, height: 34,
               borderRadius: 16,
               alignItems: 'center',
               justifyContent: 'center',
+              backgroundColor: focused ? `${colors.primary}16` : 'transparent',
             }}>
               <Feather name="user" size={22} color={color} />
             </View>

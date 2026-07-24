@@ -92,12 +92,7 @@ export default function QrCodeScreen() {
         ) : (
           <View style={{
             width: '100%', maxWidth: 360, padding: 24, borderRadius: 28,
-            borderWidth: 1, borderColor: colors.border,
-            backgroundColor: colors.surface,
             alignItems: 'center',
-            shadowColor: colors.primary, shadowOpacity: 0.08,
-            shadowRadius: 20, shadowOffset: { width: 0, height: 8 },
-            elevation: 6,
           }}>
             {/* QR Container */}
             <View style={{
@@ -117,9 +112,6 @@ export default function QrCodeScreen() {
             {/* Agent Info */}
             <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text, textAlign: 'center', marginTop: 20 }}>
               {profile?.agent_profile?.shop_name ?? profile?.full_name ?? "Agent Shop"}
-            </Text>
-            <Text style={{ fontSize: 12, color: colors.textSecondary, textAlign: 'center', marginTop: 4 }}>
-              Agent Code: {profile?.agent_profile?.agent_code ?? "AG-XXXX"}
             </Text>
 
             {/* Wallet Number Badge */}
