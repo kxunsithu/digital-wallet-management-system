@@ -185,7 +185,7 @@ export default function VerifyOtpScreen() {
       >
         {/* Header */}
         <LinearGradient
-          colors={[colors.primary, `${colors.primary}CC`]}
+          colors={[colors.primary, `${colors.primary}`]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ paddingTop: 20, paddingBottom: 32, paddingHorizontal: 24 }}
@@ -198,6 +198,7 @@ export default function VerifyOtpScreen() {
               backgroundColor: `${colors.secondary}26`,
               alignItems: 'center', justifyContent: 'center',
               marginBottom: 20,
+              marginTop: 20,
             }}
             activeOpacity={0.7}
           >

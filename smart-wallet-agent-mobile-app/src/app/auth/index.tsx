@@ -85,7 +85,6 @@ export default function RequestOtpScreen() {
             {/* Logo / App Name */}
             <View style={{ marginBottom: 24 }}>
               <View style={{
-                width: 100, height: 100,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 12,
@@ -145,7 +144,7 @@ export default function RequestOtpScreen() {
               letterSpacing: -0.5,
               marginBottom: 6,
             }}>
-              Welcome Back 
+              Welcome
             </Text>
             <Text style={{
               fontSize: 14,

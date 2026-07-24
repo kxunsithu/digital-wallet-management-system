@@ -17,6 +17,8 @@ import { useTheme } from '../../providers/ThemeProvider';
 import { verifyPin, clearPendingAuthRoute, logout } from '../../services/auth';
 import apiFetch from '../../lib/api';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 
 const PIN_LENGTH = 4;
 
@@ -116,28 +118,21 @@ export default function VerifyPinScreen() {
       >
         {/* Header */}
         <LinearGradient
-          colors={[colors.primary, `${colors.primary}CC`]}
+          colors={[colors.primary, `${colors.primary}`]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ paddingTop: 20, paddingBottom: 40, paddingHorizontal: 24 }}
         >
           {/* Logo */}
-          <View style={{ marginBottom: 24 }}>
-            <View style={{
-              width: 52, height: 52, borderRadius: 16,
-              backgroundColor: `${colors.secondary}26`,
-              alignItems: 'center', justifyContent: 'center',
-              marginBottom: 12,
-            }}>
-              <Feather name="shield" size={24} color={colors.secondary} />
-            </View>
+          <SafeAreaView style={{ marginBottom: 24, alignItems: 'center', justifyContent: 'center'}}>
+
             <Text style={{ fontSize: 22, fontWeight: '800', color: colors.secondary, letterSpacing: -0.5 }}>
               Enter Your PIN
             </Text>
             <Text style={{ fontSize: 13, color: `${colors.secondary}99`, marginTop: 4 }}>
               Enter your 4-digit security PIN to access your account
             </Text>
-          </View>
+          </SafeAreaView>
 
           {/* PIN Dots Preview */}
           <View style={{ flexDirection: 'row', gap: 16, justifyContent: 'center' }}>

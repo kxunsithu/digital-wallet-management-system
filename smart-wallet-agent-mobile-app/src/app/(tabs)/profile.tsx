@@ -42,6 +42,14 @@ interface UserProfile {
     agent_code: string;
     shop_name: string | null;
     shop_address: string | null;
+    state_region?: {
+      id: number;
+      name: string | null;
+    } | null;
+    township?: {
+      id: number;
+      name: string | null;
+    } | null;
   } | null;
   wallet: {
     id: number;
@@ -459,6 +467,8 @@ export default function ProfileScreen() {
               <InfoRow label="Shop Name" value={profile.agent_profile.shop_name ?? '—'} icon="shopping-bag" />
               <InfoRow label="Shop Address" value={profile.agent_profile.shop_address ?? '—'} icon="map-pin" />
               <InfoRow label="Agent Code" value={profile.agent_profile.agent_code ?? '—'} icon="hash" />
+              <InfoRow label="State / Region" value={profile.agent_profile.state_region?.name ?? '—'} icon="map" />
+              <InfoRow label="Township" value={profile.agent_profile.township?.name ?? '—'} icon="navigation" />
             </InfoCard>
           </View>
         )}

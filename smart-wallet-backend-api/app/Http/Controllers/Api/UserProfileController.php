@@ -21,7 +21,7 @@ class UserProfileController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
         }
 
-        return (new UserResource($user->load('images')))
+        return (new UserResource($user->load(['images', 'agentProfile', 'agentProfile.stateRegion', 'agentProfile.township'])))
             ->additional(['success' => true])
             ->response()
             ->setStatusCode(200);
@@ -61,7 +61,7 @@ class UserProfileController extends Controller
             );
         }
 
-        return (new UserResource($user))
+        return (new UserResource($user->load(['images', 'agentProfile', 'agentProfile.stateRegion', 'agentProfile.township'])))
             ->additional(['success' => true, 'message' => 'Profile updated.'])
             ->response()
             ->setStatusCode(200);
