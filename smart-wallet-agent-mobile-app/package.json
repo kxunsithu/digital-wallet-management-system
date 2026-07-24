@@ -1,5 +1,5 @@
 {
-  "name": "smart-wallet-agent-mobile-app",
+  "name": "digital-wallet-agent-mobile-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
