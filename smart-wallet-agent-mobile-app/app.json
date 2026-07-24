@@ -15,6 +15,9 @@
       "permissions": [
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.CAMERA"
       ],
       "predictiveBackGestureEnabled": false
@@ -29,7 +32,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#aeff0b",
           "image": "./assets/images/logo.png",
           "imageWidth": 76
         }
@@ -45,6 +48,12 @@
       "eas": {
         "projectId": "aedc38c0-5b53-4c1c-89cf-fbace89975f5"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/aedc38c0-5b53-4c1c-89cf-fbace89975f5"
     }
   }
 }

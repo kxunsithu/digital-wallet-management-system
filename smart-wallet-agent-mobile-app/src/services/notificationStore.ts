@@ -41,10 +41,10 @@ export async function addMoneyReceivedNotification(params: {
 }): Promise<AppNotification[]> {
   const current = await getNotifications();
   const title = params.type === 'float_received'
-    ? 'Float Received 📥'
+    ? 'Float Received '
     : params.type === 'cash_out_received'
-      ? 'Cash Out Received 💰'
-      : 'Money Received 💰';
+      ? 'Cash Out Received '
+      : 'Money Received ';
 
   const sender = params.senderName || params.senderPhone || 'Sender';
   const message = `Received +${params.amount.toLocaleString()} MMK from ${sender}`;
