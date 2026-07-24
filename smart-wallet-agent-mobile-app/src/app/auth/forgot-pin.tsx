@@ -15,7 +15,6 @@ import { Feather } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { useTheme } from '../../providers/ThemeProvider';
 import { forgotPin } from '../../services/auth';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function ForgotPinScreen() {
@@ -54,8 +53,7 @@ export default function ForgotPinScreen() {
   };
 
   return (
-    <SafeAreaView
-      edges={['top', 'bottom']}
+    <View
       style={{ flex: 1, backgroundColor: colors.background }}
     >
       <KeyboardAvoidingView
@@ -204,6 +202,6 @@ export default function ForgotPinScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

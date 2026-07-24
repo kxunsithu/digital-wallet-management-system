@@ -278,7 +278,7 @@ export default function ManageLocations() {
       {/* Header Banner */}
       <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
         <div className="flex items-center gap-4">
-          <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B] text-[#10110E]">
+          <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#BDF40B] text-[#10110E]">
             <MapPin className="h-6 w-6" />
           </div>
           <div>
@@ -289,7 +289,7 @@ export default function ManageLocations() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded-full border border-[#AEFF0B] bg-white px-3 py-1.5 text-xs font-bold text-[#10110E]">
+          <span className="rounded-full border border-[#BDF40B] bg-white px-3 py-1.5 text-xs font-bold text-[#10110E]">
             {regions.length} Regions
           </span>
           <span className="rounded-full border border-border bg-slate-50 px-3 py-1.5 text-xs font-semibold text-muted-foreground">
@@ -308,7 +308,7 @@ export default function ManageLocations() {
                 <h3 className="font-semibold text-foreground">States / Regions</h3>
                 <p className="text-xs text-muted-foreground">{totalRegions} records</p>
               </div>
-              <span className="rounded-full bg-[#AEFF0B] px-2.5 py-1 text-xs font-bold text-[#10110E]">
+              <span className="rounded-full bg-[#BDF40B] px-2.5 py-1 text-xs font-bold text-[#10110E]">
                 Geo Layer 1
               </span>
             </div>
@@ -329,7 +329,7 @@ export default function ManageLocations() {
               <Button
                 type="submit"
                 size="sm"
-                className="h-10 rounded-lg bg-[#AEFF0B] font-semibold text-[#10110E] hover:bg-[#AEFF0B]/90"
+                className="h-10 rounded-lg bg-[#BDF40B] font-semibold text-[#10110E] hover:bg-[#BDF40B]/90"
               >
                 <Plus className="mr-1 h-4 w-4" />
                 Add
@@ -364,7 +364,7 @@ export default function ManageLocations() {
               {paginatedRegions.map((r, index) => (
                 <TableRow
                   key={r.id}
-                  className="border-b border-border transition-colors last:border-0 hover:bg-[#AEFF0B]/10"
+                  className="border-b border-border transition-colors last:border-0 hover:bg-[#BDF40B]/10"
                 >
                   <TableCell className="px-5 py-3 text-sm text-muted-foreground">
                     {(regionPage - 1) * regionPerPage + index + 1}
@@ -377,7 +377,7 @@ export default function ManageLocations() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 rounded-lg border-border shadow-none hover:bg-[#AEFF0B]"
+                        className="h-8 w-8 rounded-lg border-border shadow-none hover:bg-[#BDF40B]"
                         onClick={() => setEditRegion({ id: r.id, name: r.name })}
                         title="Edit"
                       >
@@ -465,7 +465,7 @@ export default function ManageLocations() {
               <Button
                 type="submit"
                 size="sm"
-                className="h-10 rounded-lg bg-[#AEFF0B] font-semibold text-[#10110E] hover:bg-[#AEFF0B]/90"
+                className="h-10 rounded-lg bg-[#BDF40B] font-semibold text-[#10110E] hover:bg-[#BDF40B]/90"
               >
                 <Plus className="mr-1 h-4 w-4" />
                 Add
@@ -503,7 +503,7 @@ export default function ManageLocations() {
               {paginatedTownships.map((t, index) => (
                 <TableRow
                   key={t.id}
-                  className="border-b border-border transition-colors last:border-0 hover:bg-[#AEFF0B]/10"
+                  className="border-b border-border transition-colors last:border-0 hover:bg-[#BDF40B]/10"
                 >
                   <TableCell className="px-5 py-3 text-sm text-muted-foreground">
                     {(townshipPage - 1) * townshipPerPage + index + 1}
@@ -521,7 +521,7 @@ export default function ManageLocations() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 rounded-lg border-border shadow-none hover:bg-[#AEFF0B]"
+                        className="h-8 w-8 rounded-lg border-border shadow-none hover:bg-[#BDF40B]"
                         onClick={() =>
                           setEditTownship({
                             id: t.id,
@@ -638,7 +638,7 @@ export default function ManageLocations() {
             </div>
             <DialogFooter>
               <DialogClose render={<Button type="button" variant="outline" onClick={() => setEditRegion(null)}>Cancel</Button>} />
-              <Button type="submit" className="bg-[#AEFF0B] font-semibold text-[#10110E] hover:bg-[#AEFF0B]/90">Save Changes</Button>
+              <Button type="submit" className="bg-[#BDF40B] font-semibold text-[#10110E] hover:bg-[#BDF40B]/90">Save Changes</Button>
             </DialogFooter>
           </form>
         </DialogContent>
@@ -696,7 +696,7 @@ export default function ManageLocations() {
             </div>
             <DialogFooter>
               <DialogClose render={<Button type="button" variant="outline" onClick={() => setEditTownship(null)}>Cancel</Button>} />
-              <Button type="submit" className="bg-[#AEFF0B] font-semibold text-[#10110E] hover:bg-[#AEFF0B]/90">Save Changes</Button>
+              <Button type="submit" className="bg-[#BDF40B] font-semibold text-[#10110E] hover:bg-[#BDF40B]/90">Save Changes</Button>
             </DialogFooter>
           </form>
         </DialogContent>

@@ -148,10 +148,10 @@ export default function CreateAgentManager() {
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
           <div className="flex items-center gap-4">
-            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B] text-[#10110E]"><User className="h-6 w-6" /></div>
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#BDF40B] text-[#10110E]"><User className="h-6 w-6" /></div>
             <div><h2 className="text-xl font-bold tracking-tight text-foreground">New Agent Manager</h2><p className="mt-1 text-sm text-muted-foreground">Set up manager identity, location, and KYC documents.</p></div>
           </div>
-          <span className="w-fit rounded-full bg-[#AEFF0B] px-3 py-1.5 text-xs font-bold text-[#10110E]">Pending approval</span>
+          <span className="w-fit rounded-full bg-[#BDF40B] px-3 py-1.5 text-xs font-bold text-[#10110E]">Pending approval</span>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
 
@@ -267,7 +267,7 @@ export default function CreateAgentManager() {
             <Button variant="outline" type="button" onClick={() => navigate("/agent-managers")} className="h-11 rounded-lg">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="h-11 rounded-lg bg-[#AEFF0B] px-6 font-semibold text-[#10110E] hover:bg-[#AEFF0B]" >
+            <Button type="submit" disabled={loading} className="h-11 rounded-lg bg-[#BDF40B] px-6 font-semibold text-[#10110E] hover:bg-[#BDF40B]" >
               {loading ? "Creating..." : "Create Agent Manager"}
             </Button>
           </div>

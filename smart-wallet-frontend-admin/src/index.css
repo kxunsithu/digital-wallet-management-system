@@ -263,9 +263,9 @@ code {
   --bg: #FFFFFF;
   --border: #C7C7C7;
   --code-bg: #FFFFFF;
-  --accent: #AEFF0B;
+  --accent: #BDF40B;
   --accent-bg: #FFFFFF;
-  --accent-border: #AEFF0B;
+  --accent-border: #BDF40B;
   --social-bg: #FFFFFF;
   --shadow: #C7C7C7 0 10px 15px -3px, #C7C7C7 0 4px 6px -2px;
   --background: #FFFFFF;
@@ -274,30 +274,30 @@ code {
   --card-foreground: #10110E;
   --popover: #FFFFFF;
   --popover-foreground: #10110E;
-  --primary: #AEFF0B;
+  --primary: #BDF40B;
   --primary-foreground: #10110E;
   --secondary: #10110E;
   --secondary-foreground: #FFFFFF;
   --muted: #FFFFFF;
   --muted-foreground: #10110E;
-  --accent: #AEFF0B;
+  --accent: #BDF40B;
   --accent-foreground: #10110E;
   --destructive: #FF4D4F;
   --input: #C7C7C7;
-  --ring: #AEFF0B;
-  --chart-1: #AEFF0B;
+  --ring: #BDF40B;
+  --chart-1: #BDF40B;
   --chart-2: #52C41A;
   --chart-3: #C7C7C7;
   --chart-4: #2F332B;
   --chart-5: #10110E;
   --sidebar: #FFFFFF;
   --sidebar-foreground: #10110E;
-  --sidebar-primary: #AEFF0B;
+  --sidebar-primary: #BDF40B;
   --sidebar-primary-foreground: #10110E;
   --sidebar-accent: #FFFFFF;
   --sidebar-accent-foreground: #10110E;
   --sidebar-border: #C7C7C7;
-  --sidebar-ring: #AEFF0B;
+  --sidebar-ring: #BDF40B;
 }
 
 .admin-portal {
@@ -361,7 +361,7 @@ code {
 .admin-portal .text-emerald-600,
 .admin-portal .text-yellow-600,
 .admin-portal .text-yellow-700 {
-  color: #AEFF0B !important;
+  color: #BDF40B !important;
 }
 
 .admin-portal .bg-blue-50,
@@ -375,7 +375,7 @@ code {
 .admin-portal .border-indigo-200,
 .admin-portal .border-emerald-200,
 .admin-portal .border-yellow-200 {
-  border-color: #AEFF0B !important;
+  border-color: #BDF40B !important;
 }
 
 .admin-portal [data-slot="card"] {

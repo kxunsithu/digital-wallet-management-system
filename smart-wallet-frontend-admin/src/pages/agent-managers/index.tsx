@@ -181,10 +181,10 @@ export default function AgentManagersPage() {
         </Breadcrumb>
         <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
           <div className="flex items-center gap-4">
-            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B] text-[#10110E]"><User className="h-6 w-6" /></div>
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#BDF40B] text-[#10110E]"><User className="h-6 w-6" /></div>
             <div><h2 className="text-xl font-bold tracking-tight text-foreground">Agent Managers</h2><p className="mt-1 text-sm text-muted-foreground">Manage manager accounts, KYC records, and operating locations.</p></div>
           </div>
-          <Button onClick={() => navigate("/agent-managers/create")} className="h-11 rounded-lg bg-[#AEFF0B] px-5 font-semibold text-[#10110E] hover:bg-[#AEFF0B]">
+          <Button onClick={() => navigate("/agent-managers/create")} className="h-11 rounded-lg bg-[#BDF40B] px-5 font-semibold text-[#10110E] hover:bg-[#BDF40B]">
             <Plus className="mr-2 h-4 w-4" /> Create Agent Manager
           </Button>
         </div>
@@ -194,14 +194,14 @@ export default function AgentManagersPage() {
       <Card className="mb-6 rounded-2xl border border-border shadow-none">
         <div className="border-b border-border px-5 py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-lg bg-[#AEFF0B] text-[#10110E]"><SlidersHorizontal className="h-4 w-4" /></div><div><h3 className="text-sm font-semibold text-foreground">Search & Filters</h3><p className="text-xs text-muted-foreground">Narrow the manager directory by location or account status.</p></div></div>
+            <div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-lg bg-[#BDF40B] text-[#10110E]"><SlidersHorizontal className="h-4 w-4" /></div><div><h3 className="text-sm font-semibold text-foreground">Search & Filters</h3><p className="text-xs text-muted-foreground">Narrow the manager directory by location or account status.</p></div></div>
             <Button variant="outline" onClick={handleClearFilters} className="h-9 rounded-lg">Clear filters</Button>
           </div>
         </div>
         <div className="grid gap-4 p-5 xl:grid-cols-[minmax(280px,.85fr)_minmax(0,1.55fr)]">
           <div className="rounded-xl border border-border bg-white p-4">
             <label htmlFor="manager-search" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Find a manager</label>
-            <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input id="manager-search" placeholder="Search name, phone, or NRC number" value={search} onChange={(e) => setSearch(e.target.value)} className="h-12 border-[#AEFF0B] pl-10 focus-visible:ring-[#AEFF0B]/30" /></div>
+            <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input id="manager-search" placeholder="Search name, phone, or NRC number" value={search} onChange={(e) => setSearch(e.target.value)} className="h-12 border-[#BDF40B] pl-10 focus-visible:ring-[#BDF40B]/30" /></div>
           </div>
           <div className="rounded-xl border border-border bg-white p-4">
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Refine results</p>
@@ -235,7 +235,7 @@ export default function AgentManagersPage() {
       <div className="overflow-hidden rounded-2xl border border-border bg-white">
         <div className="flex flex-col gap-2 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div><h3 className="font-semibold text-foreground">Manager Directory</h3><p className="text-xs text-muted-foreground">{totalEntries} total managers · {activeManagers} active on this page</p></div>
-          <span className="w-fit rounded-full bg-[#AEFF0B] px-3 py-1 text-xs font-bold text-[#10110E]">KYC managed</span>
+          <span className="w-fit rounded-full bg-[#BDF40B] px-3 py-1 text-xs font-bold text-[#10110E]">KYC managed</span>
         </div>
         <Table>
           <TableHeader>
@@ -264,13 +264,13 @@ export default function AgentManagersPage() {
               </TableRow>
             ) : (
               managers.map((manager, index) => (
-                <TableRow key={manager.id} className="border-b border-border transition-colors last:border-0 hover:bg-[#AEFF0B]/10">
+                <TableRow key={manager.id} className="border-b border-border transition-colors last:border-0 hover:bg-[#BDF40B]/10">
                   <TableCell className="px-6 py-4 text-slate-500 text-sm">
                     {(page - 1) * perPage + index + 1}
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#AEFF0B] text-sm font-semibold text-[#10110E]">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#BDF40B] text-sm font-semibold text-[#10110E]">
                         {manager.user?.full_name?.charAt(0) || <User className="h-4 w-4" />}
                       </div>
                       <div className="flex flex-col">
@@ -294,7 +294,7 @@ export default function AgentManagersPage() {
                       className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${manager.status === "active"
                         ? "border border-[#52C41A] bg-white text-[#52C41A]"
                         : manager.status === "pending"
-                          ? "border border-[#AEFF0B] bg-[#AEFF0B] text-[#10110E]"
+                          ? "border border-[#BDF40B] bg-[#BDF40B] text-[#10110E]"
                           : "border border-[#FF4D4F] bg-white text-[#FF4D4F]"
                         }`}
                     >
@@ -306,7 +306,7 @@ export default function AgentManagersPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#AEFF0B]"
+                        className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#BDF40B]"
                         onClick={() => navigate(`/agent-managers/${manager.id}`)}
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -314,7 +314,7 @@ export default function AgentManagersPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#AEFF0B]"
+                        className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#BDF40B]"
                         onClick={() => handleToggleStatus(manager.id)}
                         title="Toggle Status"
                       >
@@ -323,7 +323,7 @@ export default function AgentManagersPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#AEFF0B]"
+                        className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#BDF40B]"
                         onClick={() => navigate(`/agent-managers/${manager.id}/edit`)}
                       >
                         <Edit2 className="w-3.5 h-3.5" />

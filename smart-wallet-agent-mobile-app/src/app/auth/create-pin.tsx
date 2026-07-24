@@ -16,7 +16,7 @@ import Toast from 'react-native-toast-message';
 import { useTheme } from '../../providers/ThemeProvider';
 import { createPin, setPendingAuthRoute } from '../../services/auth';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
 
 const PIN_LENGTH = 4;
 const STEPS = ['Phone', 'OTP', 'PIN'];
@@ -194,8 +194,7 @@ export default function CreatePinScreen() {
   );
 
   return (
-    <SafeAreaView
-      edges={['top', 'bottom']}
+    <View
       style={{ flex: 1, backgroundColor: colors.background }}
     >
       <KeyboardAvoidingView
@@ -367,6 +366,6 @@ export default function CreatePinScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

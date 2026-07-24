@@ -16,7 +16,6 @@ import Toast from 'react-native-toast-message';
 import { useTheme } from '../../providers/ThemeProvider';
 import { forgotPin, resetPin } from '../../services/auth';
 import apiFetch from '../../lib/api';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const OTP_LENGTH = 6;
@@ -328,8 +327,7 @@ export default function ResetPinScreen() {
   };
 
   return (
-    <SafeAreaView
-      edges={['top', 'bottom']}
+    <View
       style={{ flex: 1, backgroundColor: colors.background }}
     >
       <KeyboardAvoidingView
@@ -598,6 +596,6 @@ export default function ResetPinScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -13,7 +13,6 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { useTheme } from '../../providers/ThemeProvider';
 import { clearPendingAuthRoute, requestOtp, setPendingAuthRoute, verifyOtp } from '../../services/auth';
@@ -177,8 +176,7 @@ export default function VerifyOtpScreen() {
   const isButtonDisabled = loading || !isOtpComplete || isOtpExpired;
 
   return (
-    <SafeAreaView
-      edges={['top', 'bottom']}
+    <View
       style={{ flex: 1, backgroundColor: colors.background }}
     >
       <KeyboardAvoidingView
@@ -410,6 +408,6 @@ export default function VerifyOtpScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

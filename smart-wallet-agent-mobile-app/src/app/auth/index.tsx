@@ -17,7 +17,6 @@ import Toast from 'react-native-toast-message';
 import { useTheme } from '../../providers/ThemeProvider';
 import { requestOtp, setPendingAuthRoute } from '../../services/auth';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Logo from '../../../assets/images/logo.png';
 
 const STEPS = ['Phone', 'OTP', 'PIN'];
@@ -64,8 +63,7 @@ export default function RequestOtpScreen() {
   };
 
   return (
-    <SafeAreaView
-      edges={['top', 'bottom']}
+    <View
       style={{ flex: 1, backgroundColor: colors.background }}
     >
       <KeyboardAvoidingView
@@ -79,7 +77,7 @@ export default function RequestOtpScreen() {
         >
           {/* Top Gradient Hero */}
           <LinearGradient
-            colors={[colors.primary, `${colors.primary}CC`]}
+            colors={[colors.primary, `${colors.primary}`]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={{ paddingTop: 48, paddingBottom: 40, paddingHorizontal: 24 }}
@@ -251,6 +249,6 @@ export default function RequestOtpScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

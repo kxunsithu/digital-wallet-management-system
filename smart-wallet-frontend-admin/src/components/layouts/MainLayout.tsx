@@ -160,7 +160,7 @@ const MainLayout = ({ children, title = "Admin Portal" }: Props) => {
       >
         <DialogContent showCloseButton={false} className="max-w-sm rounded-2xl">
           <DialogHeader className="items-center text-center">
-            <div className="mb-3 grid h-14 w-14 place-items-center rounded-full bg-[#AEFF0B]">
+            <div className="mb-3 grid h-14 w-14 place-items-center rounded-full bg-[#BDF40B]">
               <LogOut className="h-6 w-6 text-[#10110E]" />
             </div>
             <DialogTitle className="text-lg font-bold">Sign out?</DialogTitle>
@@ -172,7 +172,7 @@ const MainLayout = ({ children, title = "Admin Portal" }: Props) => {
             <Button
               onClick={() => void handleLogout()}
               disabled={loggingOut}
-              className="w-full rounded-xl bg-[#AEFF0B] font-semibold text-[#10110E] hover:bg-[#AEFF0B]/90"
+              className="w-full rounded-xl bg-[#BDF40B] font-semibold text-[#10110E] hover:bg-[#BDF40B]/90"
             >
               {loggingOut ? "Signing out..." : "Yes, sign out"}
             </Button>

@@ -184,7 +184,7 @@ export default function EditAgent() {
         </Breadcrumb>
         <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
           <div className="flex items-center gap-4">
-            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B] text-[#10110E]">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#BDF40B] text-[#10110E]">
               <User className="h-6 w-6" />
             </div>
             <div>
@@ -205,7 +205,7 @@ export default function EditAgent() {
           <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
             <CardHeader className="border-b border-border py-5">
               <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
-                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#AEFF0B] text-[#10110E]">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#BDF40B] text-[#10110E]">
                   <User className="h-4 w-4" />
                 </div>
                 General Information
@@ -268,7 +268,7 @@ export default function EditAgent() {
           <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
             <CardHeader className="border-b border-border py-5">
               <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
-                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#AEFF0B] text-[#10110E]">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#BDF40B] text-[#10110E]">
                   <Store className="h-4 w-4" />
                 </div>
                 Shop &amp; Location
@@ -354,7 +354,7 @@ export default function EditAgent() {
           <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
             <CardHeader className="border-b border-border py-5">
               <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
-                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#AEFF0B] text-[#10110E]">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#BDF40B] text-[#10110E]">
                   <ImageIcon className="h-4 w-4" />
                 </div>
                 NRC Images
@@ -373,7 +373,7 @@ export default function EditAgent() {
             <Button variant="outline" type="button" onClick={() => navigate(`/agents/${id}`)} className="h-11 rounded-lg">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading} className="h-11 rounded-lg bg-[#AEFF0B] px-5 font-semibold text-[#10110E] hover:bg-[#AEFF0B]">
+            <Button type="submit" disabled={loading} className="h-11 rounded-lg bg-[#BDF40B] px-5 font-semibold text-[#10110E] hover:bg-[#BDF40B]">
               {loading ? "Saving..." : "Save Changes"}
             </Button>
           </div>

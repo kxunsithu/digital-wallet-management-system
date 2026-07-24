@@ -6,7 +6,7 @@ type Theme = 'dark' | 'light';
 
 // Colors from tailwind.config.js - central source of truth
 const COLORS = {
-  primary: '#AEFF0B',
+  primary: '#BDF40B',
   secondary: '#10110E',
   background: '#0A0B09',
   surface: '#161814',

@@ -17,7 +17,6 @@ import { useTheme } from '../../providers/ThemeProvider';
 import { verifyPin, clearPendingAuthRoute, logout } from '../../services/auth';
 import apiFetch from '../../lib/api';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const PIN_LENGTH = 4;
 
@@ -108,8 +107,7 @@ export default function VerifyPinScreen() {
   const isPinComplete = pin.every((digit) => digit !== '');
 
   return (
-    <SafeAreaView
-      edges={['top', 'bottom']}
+    <View
       style={{ flex: 1, backgroundColor: colors.background }}
     >
       <KeyboardAvoidingView
@@ -296,6 +294,6 @@ export default function VerifyPinScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

@@ -186,7 +186,7 @@ export default function WalletsPage() {
 
       <div className="mb-6 flex flex-col justify-between gap-4 rounded-2xl border border-border bg-white p-5 md:flex-row md:items-center md:p-6">
         <div>
-          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-[#AEFF0B] text-[#10110E]">
+          <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-[#BDF40B] text-[#10110E]">
             <WalletIcon className="h-5 w-5" />
           </div>
           <h2 className="text-xl font-bold tracking-tight text-foreground">Wallet Management</h2>
@@ -201,7 +201,7 @@ export default function WalletsPage() {
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Card className="rounded-2xl border border-border shadow-none">
           <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#AEFF0B] text-[#10110E]"><WalletIcon className="h-5 w-5" /></div>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#BDF40B] text-[#10110E]"><WalletIcon className="h-5 w-5" /></div>
             <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Visible wallets</p><p className="mt-1 text-xl font-bold text-foreground">{walletList.length}</p></div>
           </CardContent>
         </Card>
@@ -272,7 +272,7 @@ export default function WalletsPage() {
                     </TableHeader>
                     <TableBody>
                       {walletList.map((wallet) => (
-                        <TableRow key={wallet.id} className={id && Number(id) === wallet.id ? "bg-[#AEFF0B]/20" : "hover:bg-[#AEFF0B]/10"}>
+                        <TableRow key={wallet.id} className={id && Number(id) === wallet.id ? "bg-[#BDF40B]/20" : "hover:bg-[#BDF40B]/10"}>
                           <TableCell>
                             <div className="font-mono font-semibold text-foreground">{wallet.wallet_number ?? "—"}</div>
                             <div className="text-xs text-muted-foreground">#{wallet.id}</div>
@@ -282,7 +282,7 @@ export default function WalletsPage() {
                             <div className="mb-1 text-xs text-muted-foreground">{wallet.user?.phone_number || "—"}</div>
                             {wallet.user?.role?.name && (
                               <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-semibold border ${
-                                'border-[#AEFF0B] bg-[#AEFF0B] text-[#10110E]'
+                                'border-[#BDF40B] bg-[#BDF40B] text-[#10110E]'
                               }`}>
                                 {wallet.user.role.name === 'agent_manager'
                                   ? 'Agent Manager'
@@ -423,7 +423,7 @@ export default function WalletsPage() {
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Wallet Number</p>
                   <p className="mt-1 font-mono text-lg font-semibold text-foreground">{selectedWallet.wallet_number ?? "—"}</p>
                 </div>
-                <div className="rounded-xl border border-border bg-[#AEFF0B] p-4">
+                <div className="rounded-xl border border-border bg-[#BDF40B] p-4">
                   <p className="text-xs font-semibold uppercase tracking-wider text-[#10110E]">Balance</p>
                   <p className="mt-1 text-lg font-bold text-[#10110E]">
                     {formatBalance(selectedWallet.balance)} MMK
@@ -440,7 +440,7 @@ export default function WalletsPage() {
                    {selectedWallet.user?.role?.name && (
                      <div className="mt-2">
                        <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-semibold border ${
-                         'border-[#AEFF0B] bg-[#AEFF0B] text-[#10110E]'
+                         'border-[#BDF40B] bg-[#BDF40B] text-[#10110E]'
                        }`}>
                          {selectedWallet.user.role.name === 'agent_manager'
                            ? 'Agent Manager'
