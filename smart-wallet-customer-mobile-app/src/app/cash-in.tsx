@@ -613,7 +613,7 @@ export default function CashInScreen() {
                       <ActivityIndicator size="small" color={colors.secondary} />
                     ) : (
                       <Text style={{ fontSize: 14, fontWeight: '800', color: colors.secondary }}>
-                        Confirm Deposit
+                        Confirm Transfer
                       </Text>
                     )}
                   </LinearGradient>

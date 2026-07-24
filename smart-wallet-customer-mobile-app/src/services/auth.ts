@@ -16,6 +16,7 @@ export interface PendingAuthRoute {
     user_id?: number;
     phone?: string;
     expiresAt?: string | null;
+    requires_profile?: string | null;
   };
   expiresAt?: string | null; // null = no expiry (persistent until login)
 }
@@ -25,6 +26,7 @@ export interface PendingAuthStep {
   userId?: number;
   phone?: string;
   expiresAt?: string | null;
+  requires_profile?: string | null;
 }
 
 // Pending Auth Route Management
@@ -44,6 +46,7 @@ export async function setPendingAuthRoute(route: PendingAuthRoute): Promise<void
       phone: route.params?.phone,
       // null means persistent (no expiry)
       expiresAt: route.expiresAt !== undefined ? route.expiresAt : (route.params?.expiresAt ?? null),
+      requires_profile: route.params?.requires_profile,
     };
 
     await SecureStore.setItemAsync(PENDING_AUTH_STEP_KEY, JSON.stringify(stepData));
@@ -74,7 +77,7 @@ export async function getPendingAuthRoute(): Promise<PendingAuthRoute | null> {
     if (!rawStep) return null;
 
     const parsedStep = JSON.parse(rawStep);
-    const { step, userId, phone, expiresAt } = parsedStep;
+    const { step, userId, phone, expiresAt, requires_profile } = parsedStep;
 
     if (!step) return null;
 
@@ -92,7 +95,7 @@ export async function getPendingAuthRoute(): Promise<PendingAuthRoute | null> {
 
     return {
       path: pathMap[step as AuthStep],
-      params: { user_id: userId, phone, expiresAt: expiresAt ?? null },
+      params: { user_id: userId, phone, expiresAt: expiresAt ?? null, requires_profile: requires_profile ?? null },
       expiresAt: expiresAt ?? null,
     };
   } catch (error) {

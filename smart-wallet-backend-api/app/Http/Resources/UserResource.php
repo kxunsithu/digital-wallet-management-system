@@ -41,6 +41,7 @@ class UserResource extends JsonResource
             'is_phone_verified' => (bool) $this->is_phone_verified,
             'is_pin_created' => (bool) $this->is_pin_created,
             'role_id' => $this->role_id,
+            'role' => $this->role ? $this->role->name : null,
             'images' => $formattedImages,
             'nrc_images' => $formattedImages->filter(fn ($image) => in_array($image['image_type'], ['nrc_front_image', 'nrc_back_image'], true))->values(),
             'kyc_status' => $customerProfile ? $customerProfile->kyc_status : null,

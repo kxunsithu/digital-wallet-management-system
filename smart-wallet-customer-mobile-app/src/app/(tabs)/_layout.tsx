@@ -1,8 +1,48 @@
 // app/(tabs)/_layout.tsx
-import { Feather } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { Platform, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
+
+function TabIcon({
+  name,
+  focused,
+  isDark,
+  primaryColor,
+}: {
+  name: string;
+  focused: boolean;
+  isDark: boolean;
+  primaryColor: string;
+}) {
+  return (
+    <View style={styles.iconBox}>
+      {focused && (
+        <View
+          style={[
+            styles.activeCircle,
+            {
+              backgroundColor: isDark
+                ? 'rgba(255,255,255,0.09)'
+                : '#EBEBEB',
+            },
+          ]}
+        />
+      )}
+      <Ionicons
+        name={name as any}
+        size={22}
+        color={
+          focused
+            ? primaryColor
+            : isDark
+              ? 'rgba(255,255,255,0.30)'
+              : '#ADADAD'
+        }
+      />
+    </View>
+  );
+}
 
 export default function TabLayout() {
   const { theme, colors } = useTheme();
@@ -12,71 +52,69 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarShowLabel: false,
         tabBarStyle: {
           position: 'absolute',
-          bottom: Platform.OS === 'ios' ? 28 : 20,
-          left: 20,
-          right: 20,
-          borderRadius: 28,
-          height: 68,
-          backgroundColor: colors.surface,
+          bottom: Platform.OS === 'ios' ? 36 : 22,
+          left: 32,
+          right: 32,
+          borderRadius: 40,
+          height: 64,
           borderTopWidth: 0,
-          borderWidth: isDark ? 0 : 1,
-          borderColor: colors.border,
-          shadowColor: isDark ? colors.primary : colors.secondary,
+          borderWidth: 0,
+          backgroundColor: isDark ? '#1C1F1B' : '#FFFFFF',
+          overflow: 'hidden',
+          shadowColor: isDark ? '#000' : '#B0B8C1',
           shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: isDark ? 0.12 : 0.08,
-          shadowRadius: 24,
+          shadowOpacity: isDark ? 0.55 : 0.35,
+          shadowRadius: 20,
           elevation: 16,
           paddingBottom: 0,
           paddingTop: 0,
-          marginHorizontal: 10,
         },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '600',
-          marginTop: 2,
-          letterSpacing: 0.3,
+        // KEY FIX: override React Navigation's default icon margin
+        tabBarIconStyle: {
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 0,
+          marginBottom: 0,
         },
         tabBarItemStyle: {
-          paddingVertical: 10,
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: 64,
+          paddingTop: 0,
+          paddingBottom: 0,
         },
       }}
     >
-
       <Tabs.Screen
         name="transactions"
         options={{
           title: 'History',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={{
-              width: 40, height: 32,
-              borderRadius: 16,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Feather name="clock" size={22} color={color} />
-            </View>
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              name={focused ? 'document-text' : 'document-text-outline'}
+              focused={focused}
+              isDark={isDark}
+              primaryColor={colors.primary}
+            />
           ),
         }}
       />
 
-      {/* Home */}
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={{
-              width: 40, height: 32,
-              borderRadius: 16,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Feather name={focused ? 'home' : 'home'} size={22} color={color} />
-            </View>
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              name={focused ? 'home' : 'home-outline'}
+              focused={focused}
+              isDark={isDark}
+              primaryColor={colors.primary}
+            />
           ),
         }}
       />
@@ -85,18 +123,31 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, focused }) => (
-            <View style={{
-              width: 40, height: 32,
-              borderRadius: 16,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Feather name="user" size={22} color={color} />
-            </View>
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              name={focused ? 'person' : 'person-outline'}
+              focused={focused}
+              isDark={isDark}
+              primaryColor={colors.primary}
+            />
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconBox: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeCircle: {
+    position: 'absolute',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+});

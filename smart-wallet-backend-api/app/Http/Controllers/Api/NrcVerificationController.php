@@ -111,7 +111,7 @@ class NrcVerificationController extends Controller
         }
 
         $data = $request->validate([
-            'status' => ['required', 'in:approved,rejected'],
+            'status' => ['required', 'in:verified,rejected'],
             'rejection_reason' => ['nullable', 'string'],
         ]);
 
@@ -122,7 +122,7 @@ class NrcVerificationController extends Controller
             'verified_at' => now(),
         ]);
 
-        if ($data['status'] === 'approved') {
+        if ($data['status'] === 'verified') {
             $verifiedUser = User::find($verification->user_id);
             if ($verifiedUser) {
                 $verifiedUser->update(['nrc_number' => $verifiedUser->nrc_number ?? null]);

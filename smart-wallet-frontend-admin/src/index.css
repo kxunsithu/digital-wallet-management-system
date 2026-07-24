@@ -143,20 +143,24 @@ h1 {
   font-size: 56px;
   letter-spacing: -1.68px;
   margin: 32px 0;
+
   @media (max-width: 1024px) {
     font-size: 36px;
     margin: 20px 0;
   }
 }
+
 h2 {
   font-size: 24px;
   line-height: 118%;
   letter-spacing: -0.24px;
   margin: 0 0 8px;
+
   @media (max-width: 1024px) {
     font-size: 20px;
   }
 }
+
 p {
   margin: 0;
 }
@@ -263,9 +267,9 @@ code {
   --bg: #FFFFFF;
   --border: #C7C7C7;
   --code-bg: #FFFFFF;
-  --accent: #BDF40B;
+  --accent: #b0ff12ff;
   --accent-bg: #FFFFFF;
-  --accent-border: #BDF40B;
+  --accent-border: #b0ff12ff;
   --social-bg: #FFFFFF;
   --shadow: #C7C7C7 0 10px 15px -3px, #C7C7C7 0 4px 6px -2px;
   --background: #FFFFFF;
@@ -274,30 +278,30 @@ code {
   --card-foreground: #10110E;
   --popover: #FFFFFF;
   --popover-foreground: #10110E;
-  --primary: #BDF40B;
+  --primary: #b0ff12ff;
   --primary-foreground: #10110E;
   --secondary: #10110E;
   --secondary-foreground: #FFFFFF;
   --muted: #FFFFFF;
   --muted-foreground: #10110E;
-  --accent: #BDF40B;
+  --accent: #b0ff12ff;
   --accent-foreground: #10110E;
   --destructive: #FF4D4F;
   --input: #C7C7C7;
-  --ring: #BDF40B;
-  --chart-1: #BDF40B;
+  --ring: #b0ff12ff;
+  --chart-1: #b0ff12ff;
   --chart-2: #52C41A;
   --chart-3: #C7C7C7;
   --chart-4: #2F332B;
   --chart-5: #10110E;
   --sidebar: #FFFFFF;
   --sidebar-foreground: #10110E;
-  --sidebar-primary: #BDF40B;
+  --sidebar-primary: #b0ff12ff;
   --sidebar-primary-foreground: #10110E;
   --sidebar-accent: #FFFFFF;
   --sidebar-accent-foreground: #10110E;
   --sidebar-border: #C7C7C7;
-  --sidebar-ring: #BDF40B;
+  --sidebar-ring: #b0ff12ff;
 }
 
 .admin-portal {
@@ -361,7 +365,7 @@ code {
 .admin-portal .text-emerald-600,
 .admin-portal .text-yellow-600,
 .admin-portal .text-yellow-700 {
-  color: #BDF40B !important;
+  color: #b0ff12ff !important;
 }
 
 .admin-portal .bg-blue-50,
@@ -375,7 +379,7 @@ code {
 .admin-portal .border-indigo-200,
 .admin-portal .border-emerald-200,
 .admin-portal .border-yellow-200 {
-  border-color: #BDF40B !important;
+  border-color: #b0ff12ff !important;
 }
 
 .admin-portal [data-slot="card"] {
@@ -405,8 +409,14 @@ code {
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;}
+    @apply border-border outline-ring/50;
+  }
+
   body {
-    @apply bg-background text-foreground;}
+    @apply bg-background text-foreground;
+  }
+
   html {
-    @apply font-sans;}}
+    @apply font-sans;
+  }
+}

@@ -13,9 +13,10 @@ export async function getAuthToken(): Promise<string | null> {
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const token = await getAuthToken();
+  const isFormData = options.body && (options.body instanceof FormData || (options.body.constructor && options.body.constructor.name === 'FormData'));
   const headers: Record<string, string> = {
     'Accept': 'application/json',
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(options.headers as Record<string, string> || {}),
   };
 

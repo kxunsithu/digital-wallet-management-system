@@ -66,36 +66,29 @@ interface Transaction {
   created_at: string;
 }
 
-// This function uses colors from the theme config
+// Customer-specific transaction type metadata
 const getTxMeta = (tx: Transaction, colors: any) => {
   const type = tx.transaction_type;
   if (type === 'agent_to_customer') return {
-    label: 'Cash In',
-    icon: 'arrow-up-right' as const,
-    color: colors.primary,
-    bg: `${colors.primary}1F`,
-    sign: '-'
-  };
-  if (type === 'agent_to_agent_manager') return {
-    label: 'Float Return',
-    icon: 'corner-right-up' as const,
-    color: colors.success,
-    bg: `${colors.success}1F`,
-    sign: '-'
-  };
-  if (type === 'agent_manager_to_agent') return {
-    label: 'Float Received',
-    icon: 'corner-left-down' as const,
+    label: 'Money Received',
+    icon: 'arrow-down-left' as const,
     color: colors.success,
     bg: `${colors.success}1F`,
     sign: '+'
   };
   if (type === 'customer_to_agent') return {
-    label: 'Cash Out',
-    icon: 'arrow-down-left' as const,
+    label: 'Sent to Agent',
+    icon: 'arrow-up-right' as const,
     color: colors.primary,
     bg: `${colors.primary}1F`,
-    sign: '+'
+    sign: '-'
+  };
+  if (type === 'customer_to_customer') return {
+    label: 'P2P Transfer',
+    icon: 'repeat' as const,
+    color: colors.primary,
+    bg: `${colors.primary}1F`,
+    sign: '±'
   };
   return {
     label: type.replace(/_/g, ' '),
@@ -112,6 +105,7 @@ export default function DashboardScreen() {
   const isDark = theme === 'dark';
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const profileRef = useRef<UserProfile | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -139,8 +133,9 @@ export default function DashboardScreen() {
   }, [loadNotifs]);
 
   // Real-time balance polling (3 seconds interval)
+  // Uses profileRef instead of profile state to avoid re-creating the interval on every poll cycle
   const pollData = useCallback(async (showInitialSpinner = false) => {
-    if (showInitialSpinner && !profile) setLoading(true);
+    if (showInitialSpinner && !profileRef.current) setLoading(true);
     try {
       const profileRes = await apiFetch("/profile");
       if (profileRes.status === 200 && profileRes.body?.success) {
@@ -165,6 +160,7 @@ export default function DashboardScreen() {
         }
 
         prevBalanceRef.current = newBalance;
+        profileRef.current = newProfile;
         setProfile(newProfile);
       } else if (profileRes.status === 401) {
         router.replace("/auth");
@@ -181,7 +177,7 @@ export default function DashboardScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [profile, router]);
+  }, [router]);
 
   // Initial load
   useEffect(() => {
@@ -426,8 +422,8 @@ export default function DashboardScreen() {
           </LinearGradient>
         </View>
 
-        {/* ── Account Code Info Card ── */}
-        {profile?.agent_profile && (
+        {/* ── Wallet Info Card ── */}
+        {profile?.wallet && (
           <View style={{ paddingHorizontal: 24, marginTop: 16 }}>
             <View style={{
               padding: 16, borderRadius: 20,
@@ -438,31 +434,46 @@ export default function DashboardScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View style={{
                   width: 40, height: 40, borderRadius: 12,
-                  backgroundColor: `${colors.success}1F`,
+                  backgroundColor: `${colors.primary}1F`,
                   alignItems: 'center', justifyContent: 'center',
                   marginRight: 14,
                 }}>
-                  <Feather name="tag" size={18} color={colors.success} />
+                  <Feather name="smartphone" size={18} color={colors.primary} />
                 </View>
                 <View>
                   <Text style={{ fontSize: 10, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6 }}>
-                    Customer ID
+                    Phone Number
                   </Text>
                   <Text style={{ fontSize: 16, fontWeight: '800', color: colors.text, marginTop: 2 }}>
-                    {profile.agent_profile.agent_code}
+                    {profile.phone_number}
                   </Text>
                 </View>
               </View>
-              {profile.agent_profile.shop_name && (
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={{ fontSize: 10, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6 }}>
-                    Shop
-                  </Text>
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: colors.text, marginTop: 2 }}>
-                    {profile.agent_profile.shop_name}
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={{ fontSize: 10, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                  KYC Status
+                </Text>
+                <View style={{
+                  marginTop: 4, paddingHorizontal: 10, paddingVertical: 3,
+                  borderRadius: 12,
+                  backgroundColor: profile.kyc_status === 'verified'
+                    ? `${colors.success}22`
+                    : profile.kyc_status === 'rejected'
+                      ? `${colors.error}22`
+                      : `${colors.primary}22`,
+                }}>
+                  <Text style={{
+                    fontSize: 10, fontWeight: '800', textTransform: 'uppercase',
+                    color: profile.kyc_status === 'verified'
+                      ? colors.success
+                      : profile.kyc_status === 'rejected'
+                        ? colors.error
+                        : colors.primary,
+                  }}>
+                    {profile.kyc_status ?? 'Pending'}
                   </Text>
                 </View>
-              )}
+              </View>
             </View>
           </View>
         )}
@@ -472,21 +483,20 @@ export default function DashboardScreen() {
           <Text style={{ fontSize: 13, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 }}>
             Quick Actions
           </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
             {[
               { label: 'Send Money', icon: 'arrow-up-right', color: colors.primary, bg: `${colors.primary}1F`, route: '/cash-in' },
-              { label: 'My QR', icon: 'grid', color: colors.primary, bg: `${colors.primary}1F`, route: '/qr-code' },
-              { label: 'Scan QR', icon: 'camera', color: colors.success, bg: `${colors.success}1F`, route: '/cash-in?scan=true' },
-            ].map((action, idx) => (
+              { label: 'My QR Code', icon: 'grid', color: colors.success, bg: `${colors.success}1F`, route: '/qr-code' },
+              { label: 'Scan QR', icon: 'camera', color: colors.primary, bg: `${colors.primary}1F`, route: '/cash-in?scan=true' },
+            ].map((action) => (
               <TouchableOpacity
                 key={action.label}
                 onPress={() => router.push(action.route as any)}
                 activeOpacity={0.75}
                 style={{
-                  width: '48%', padding: 14, borderRadius: 18, alignItems: 'center',
+                  flex: 1, padding: 14, borderRadius: 18, alignItems: 'center',
                   backgroundColor: colors.surface,
                   borderWidth: 1, borderColor: colors.border,
-                  marginBottom: 12,
                 }}
               >
                 <View style={{
