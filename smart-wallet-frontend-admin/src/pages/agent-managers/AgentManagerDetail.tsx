@@ -77,10 +77,10 @@ export default function AgentManagerDetail() {
         </Breadcrumb>
         <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
           <div className="flex items-center gap-4">
-            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#aeff0b] text-[#10110E]"><User className="h-6 w-6" /></div>
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B] text-[#10110E]"><User className="h-6 w-6" /></div>
             <div><h2 className="text-xl font-bold tracking-tight text-foreground">{user?.full_name || "Agent Manager"}</h2><p className="mt-1 font-mono text-sm text-muted-foreground">{manager.manager_code || "—"}</p></div>
           </div>
-          <div className="flex items-center gap-3"><span className={`rounded-full border px-3 py-1.5 text-xs font-bold capitalize ${manager.status === "active" ? "border-[#52C41A] text-[#52C41A]" : manager.status === "pending" ? "border-[#aeff0b] bg-[#aeff0b] text-[#10110E]" : "border-[#FF4D4F] text-[#FF4D4F]"}`}>{manager.status || "inactive"}</span><Button onClick={() => navigate(`/agent-managers/${manager.id}/edit`)} className="h-10 rounded-lg bg-[#aeff0b] text-[#10110E] hover:bg-[#aeff0b]"><Edit2 className="mr-2 h-4 w-4" />Edit</Button></div>
+          <div className="flex items-center gap-3"><span className={`rounded-full border px-3 py-1.5 text-xs font-bold capitalize ${manager.status === "active" ? "border-[#52C41A] text-[#52C41A]" : manager.status === "pending" ? "border-[#AEFF0B] bg-[#AEFF0B] text-[#10110E]" : "border-[#FF4D4F] text-[#FF4D4F]"}`}>{manager.status || "inactive"}</span><Button onClick={() => navigate(`/agent-managers/${manager.id}/edit`)} className="h-10 rounded-lg bg-[#AEFF0B] text-[#10110E] hover:bg-[#AEFF0B]"><Edit2 className="mr-2 h-4 w-4" />Edit</Button></div>
         </div>
       </div>
 
@@ -234,7 +234,7 @@ export default function AgentManagerDetail() {
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Wallet Number</p>
                   <p className="mt-1 font-mono text-sm font-bold tracking-wide text-foreground">{user.wallet.wallet_number ?? "—"}</p>
                 </div>
-                <div className="rounded-xl border border-[#aeff0b] bg-[#aeff0b] p-4">
+                <div className="rounded-xl border border-[#AEFF0B] bg-[#AEFF0B] p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-[#10110E]">Balance</p>
                   <p className="mt-1 text-sm font-bold text-[#10110E]">
                     {new Intl.NumberFormat("en-MM").format(Number(user.wallet.balance ?? 0))}

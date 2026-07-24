@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -17,6 +18,7 @@ import { useTheme } from '../../providers/ThemeProvider';
 import { requestOtp, setPendingAuthRoute } from '../../services/auth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Logo from '../../../assets/images/logo.png';
 
 const STEPS = ['Phone', 'OTP', 'PIN'];
 
@@ -85,14 +87,12 @@ export default function RequestOtpScreen() {
             {/* Logo / App Name */}
             <View style={{ marginBottom: 24 }}>
               <View style={{
-                width: 52, height: 52,
-                borderRadius: 16,
-                backgroundColor: `${colors.secondary}26`,
+                width: 100, height: 100,
                 alignItems: 'center',
                 justifyContent: 'center',
                 marginBottom: 12,
               }}>
-                <Feather name="zap" size={26} color={colors.secondary} />
+                <Image source={Logo} style={{width: 100, height: 100, borderRadius: 8, resizeMode: 'contain' }} />
               </View>
               <Text style={{ fontSize: 26, fontWeight: '800', color: colors.secondary, letterSpacing: -0.5 }}>
                 Smart Wallet
@@ -147,7 +147,7 @@ export default function RequestOtpScreen() {
               letterSpacing: -0.5,
               marginBottom: 6,
             }}>
-              Welcome Back 👋
+              Welcome Back 
             </Text>
             <Text style={{
               fontSize: 14,

@@ -401,7 +401,7 @@ const ManagerTransferPage = () => {
         {/* ── Header Banner ── */}
         <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
           <div className="flex items-center gap-4">
-            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#aeff0b] text-[#10110E]">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B] text-[#10110E]">
               <Wallet className="h-6 w-6" />
             </div>
             <div>
@@ -431,7 +431,7 @@ const ManagerTransferPage = () => {
           <div className="border-b border-border px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#aeff0b] text-[#10110E]">
+                <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#AEFF0B] text-[#10110E]">
                   <Wallet className="h-4 w-4" />
                 </div>
                 <div>
@@ -443,7 +443,7 @@ const ManagerTransferPage = () => {
                   </p>
                 </div>
               </div>
-              <span className="rounded-full bg-[#aeff0b] px-3 py-1 text-xs font-bold text-[#10110E]">
+              <span className="rounded-full bg-[#AEFF0B] px-3 py-1 text-xs font-bold text-[#10110E]">
                 Agent Manager Float
               </span>
             </div>
@@ -467,7 +467,7 @@ const ManagerTransferPage = () => {
             ) : wallet ? (
               <div className="space-y-6">
                 {/* Balance highlight */}
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-[#aeff0b] bg-[#aeff0b] p-8 text-center text-[#10110E]">
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-[#AEFF0B] bg-[#AEFF0B] p-8 text-center text-[#10110E]">
                   <span className="mb-2 text-xs font-semibold uppercase tracking-wider opacity-80">
                     Available Float Balance
                   </span>
@@ -490,7 +490,7 @@ const ManagerTransferPage = () => {
                 {/* Wallet metadata */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="flex items-center gap-3 rounded-xl border border-border bg-slate-50/50 p-4">
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#10110E] text-[#aeff0b]">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#10110E] text-[#AEFF0B]">
                       <Hash className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
@@ -503,7 +503,7 @@ const ManagerTransferPage = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 rounded-xl border border-border bg-slate-50/50 p-4">
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#10110E] text-[#aeff0b]">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#10110E] text-[#AEFF0B]">
                       <CircleDollarSign className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
@@ -530,7 +530,7 @@ const ManagerTransferPage = () => {
           <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
             <CardHeader className="border-b border-border py-4">
               <CardTitle className="flex items-center gap-2.5 text-base font-semibold text-foreground">
-                <div className="grid h-7 w-7 place-items-center rounded-md bg-[#aeff0b] text-[#10110E]">
+                <div className="grid h-7 w-7 place-items-center rounded-md bg-[#AEFF0B] text-[#10110E]">
                   <QrCode className="h-4 w-4" />
                 </div>
                 Your Receive QR Code
@@ -544,7 +544,7 @@ const ManagerTransferPage = () => {
                     size={160}
                   />
                 </div>
-                <Badge className="mt-3 bg-[#aeff0b] text-[#10110E] hover:bg-[#aeff0b]">
+                <Badge className="mt-3 bg-[#AEFF0B] text-[#10110E] hover:bg-[#AEFF0B]">
                   Manager QR
                 </Badge>
               </div>
@@ -568,7 +568,7 @@ const ManagerTransferPage = () => {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="ml-3 h-8 shrink-0 border-border text-foreground hover:bg-[#aeff0b]"
+                    className="ml-3 h-8 shrink-0 border-border text-foreground hover:bg-[#AEFF0B]"
                     onClick={async () => {
                       try {
                         await navigator.clipboard.writeText(
@@ -593,7 +593,7 @@ const ManagerTransferPage = () => {
         <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
           <CardHeader className="border-b border-border py-5">
             <CardTitle className="flex items-center gap-2.5 text-base font-semibold text-foreground">
-              <div className="grid h-7 w-7 place-items-center rounded-md bg-[#aeff0b] text-[#10110E]">
+              <div className="grid h-7 w-7 place-items-center rounded-md bg-[#AEFF0B] text-[#10110E]">
                 <ArrowUpRight className="h-4 w-4" />
               </div>
               Transfer Funds
@@ -614,7 +614,7 @@ const ManagerTransferPage = () => {
                     type="button"
                     className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-bold transition-all ${
                       recipientType === "agent"
-                        ? "bg-[#aeff0b] text-[#10110E] shadow-sm"
+                        ? "bg-[#AEFF0B] text-[#10110E] shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                     onClick={() => {
@@ -631,7 +631,7 @@ const ManagerTransferPage = () => {
                     type="button"
                     className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-bold transition-all ${
                       recipientType === "admin"
-                        ? "bg-[#10110E] text-[#aeff0b] shadow-sm"
+                        ? "bg-[#10110E] text-[#AEFF0B] shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                     onClick={() => {
@@ -695,7 +695,7 @@ const ManagerTransferPage = () => {
                     type="button"
                     className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-bold transition-all ${
                       transferMode === "manual"
-                        ? "bg-[#aeff0b] text-[#10110E] shadow-sm"
+                        ? "bg-[#AEFF0B] text-[#10110E] shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                     onClick={() => {
@@ -711,7 +711,7 @@ const ManagerTransferPage = () => {
                     type="button"
                     className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-bold transition-all ${
                       transferMode === "qr"
-                        ? "bg-[#aeff0b] text-[#10110E] shadow-sm"
+                        ? "bg-[#AEFF0B] text-[#10110E] shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                     onClick={() => setTransferMode("qr")}
@@ -729,7 +729,7 @@ const ManagerTransferPage = () => {
                     type="button"
                     className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-bold transition-all ${
                       transferMode === "manual"
-                        ? "bg-[#10110E] text-[#aeff0b] shadow-sm"
+                        ? "bg-[#10110E] text-[#AEFF0B] shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                     onClick={() => {
@@ -745,7 +745,7 @@ const ManagerTransferPage = () => {
                     type="button"
                     className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-bold transition-all ${
                       transferMode === "qr"
-                        ? "bg-[#10110E] text-[#aeff0b] shadow-sm"
+                        ? "bg-[#10110E] text-[#AEFF0B] shadow-sm"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                     onClick={() => setTransferMode("qr")}
@@ -773,7 +773,7 @@ const ManagerTransferPage = () => {
                       placeholder="09xxxxxxxx"
                       value={receiverPhone}
                       onChange={(e) => setReceiverPhone(e.target.value)}
-                      className="h-12 border-[#aeff0b] font-mono focus-visible:ring-[#aeff0b]/30"
+                      className="h-12 border-[#AEFF0B] font-mono focus-visible:ring-[#AEFF0B]/30"
                     />
                     <p className="text-xs text-muted-foreground">
                       Enter the registered phone number of the target agent.
@@ -800,7 +800,7 @@ const ManagerTransferPage = () => {
                         onChange={(event) =>
                           setQrLookupValue(event.target.value)
                         }
-                        className="h-12 border-[#aeff0b] font-mono text-xs focus-visible:ring-[#aeff0b]/30"
+                        className="h-12 border-[#AEFF0B] font-mono text-xs focus-visible:ring-[#AEFF0B]/30"
                       />
                       <div className="flex gap-2">
                         <Button
@@ -808,7 +808,7 @@ const ManagerTransferPage = () => {
                           variant="outline"
                           disabled={lookupLoading}
                           onClick={() => void resolveQrLookup(qrLookupValue)}
-                          className="h-12 whitespace-nowrap border-border hover:bg-[#aeff0b]"
+                          className="h-12 whitespace-nowrap border-border hover:bg-[#AEFF0B]"
                         >
                           {lookupLoading ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -819,7 +819,7 @@ const ManagerTransferPage = () => {
                           type="button"
                           disabled={lookupLoading}
                           onClick={() => setScannerOpen(true)}
-                          className="h-12 bg-[#aeff0b] font-semibold text-[#10110E] hover:bg-[#aeff0b]/90"
+                          className="h-12 bg-[#AEFF0B] font-semibold text-[#10110E] hover:bg-[#AEFF0B]/90"
                         >
                           <Camera className="mr-1.5 h-4 w-4" />
                           Scan
@@ -868,7 +868,7 @@ const ManagerTransferPage = () => {
                     </div>
                   ) : adminWallet ? (
                     <div className="flex items-start gap-4">
-                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#10110E] text-[#aeff0b]">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#10110E] text-[#AEFF0B]">
                         <ShieldCheck className="h-5 w-5" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -878,7 +878,7 @@ const ManagerTransferPage = () => {
                         <p className="text-xs font-mono text-muted-foreground">
                           Wallet: {adminWallet.wallet_number ?? "—"}
                         </p>
-                        <Badge className="mt-2 bg-[#10110E] text-[#aeff0b] hover:bg-[#10110E]">
+                        <Badge className="mt-2 bg-[#10110E] text-[#AEFF0B] hover:bg-[#10110E]">
                           Admin Recipient
                         </Badge>
                       </div>
@@ -917,7 +917,7 @@ const ManagerTransferPage = () => {
                           variant="outline"
                           disabled={lookupLoading}
                           onClick={() => void resolveQrLookup(qrLookupValue)}
-                          className="h-12 whitespace-nowrap border-border hover:bg-[#10110E] hover:text-[#aeff0b]"
+                          className="h-12 whitespace-nowrap border-border hover:bg-[#10110E] hover:text-[#AEFF0B]"
                         >
                           {lookupLoading ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -928,7 +928,7 @@ const ManagerTransferPage = () => {
                           type="button"
                           disabled={lookupLoading}
                           onClick={() => setScannerOpen(true)}
-                          className="h-12 bg-[#10110E] font-semibold text-[#aeff0b] hover:bg-[#10110E]/90"
+                          className="h-12 bg-[#10110E] font-semibold text-[#AEFF0B] hover:bg-[#10110E]/90"
                         >
                           <Camera className="mr-1.5 h-4 w-4" />
                           Scan
@@ -939,7 +939,7 @@ const ManagerTransferPage = () => {
 
                   {selectedQr ? (
                     <div className="flex items-start gap-4 rounded-xl border border-[#10110E] bg-slate-50/80 p-4">
-                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#10110E] text-[#aeff0b]">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#10110E] text-[#AEFF0B]">
                         <ShieldCheck className="h-5 w-5" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -982,7 +982,7 @@ const ManagerTransferPage = () => {
                     placeholder="100,000"
                     value={amount}
                     onChange={(event) => setAmount(event.target.value)}
-                    className="h-12 border-[#aeff0b] font-bold text-base focus-visible:ring-[#aeff0b]/30"
+                    className="h-12 border-[#AEFF0B] font-bold text-base focus-visible:ring-[#AEFF0B]/30"
                   />
                 </div>
                 <div className="space-y-2">
@@ -1004,7 +1004,7 @@ const ManagerTransferPage = () => {
                     }
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
-                    className="h-12 border-border focus-visible:ring-[#aeff0b]/30"
+                    className="h-12 border-border focus-visible:ring-[#AEFF0B]/30"
                   />
                 </div>
               </div>
@@ -1016,8 +1016,8 @@ const ManagerTransferPage = () => {
                   disabled={submitting}
                   className={`h-12 rounded-xl px-8 font-bold ${
                     recipientType === "admin"
-                      ? "bg-[#10110E] text-[#aeff0b] hover:bg-[#10110E]/90"
-                      : "bg-[#aeff0b] text-[#10110E] hover:bg-[#aeff0b]/90"
+                      ? "bg-[#10110E] text-[#AEFF0B] hover:bg-[#10110E]/90"
+                      : "bg-[#AEFF0B] text-[#10110E] hover:bg-[#AEFF0B]/90"
                   }`}
                 >
                   {submitting ? (
@@ -1064,8 +1064,8 @@ const ManagerTransferPage = () => {
             <div
               className={`mb-2 grid h-12 w-12 place-items-center rounded-full ${
                 recipientType === "admin"
-                  ? "bg-[#10110E] text-[#aeff0b]"
-                  : "bg-[#aeff0b] text-[#10110E]"
+                  ? "bg-[#10110E] text-[#AEFF0B]"
+                  : "bg-[#AEFF0B] text-[#10110E]"
               }`}
             >
               <LockKeyhole className="h-6 w-6" />
@@ -1115,8 +1115,8 @@ const ManagerTransferPage = () => {
               <Button
                 className={`flex-1 rounded-xl font-bold ${
                   recipientType === "admin"
-                    ? "bg-[#10110E] text-[#aeff0b] hover:bg-[#10110E]/90"
-                    : "bg-[#aeff0b] text-[#10110E] hover:bg-[#aeff0b]/90"
+                    ? "bg-[#10110E] text-[#AEFF0B] hover:bg-[#10110E]/90"
+                    : "bg-[#AEFF0B] text-[#10110E] hover:bg-[#AEFF0B]/90"
                 }`}
                 disabled={submitting || pin.length !== 4}
                 onClick={() => void executeTransfer(pin)}
