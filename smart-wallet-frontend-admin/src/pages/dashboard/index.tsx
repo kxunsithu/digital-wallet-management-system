@@ -148,7 +148,7 @@ const DashboardPage = () => {
           {/* Header Banner */}
           <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
             <div className="flex items-center gap-4">
-              <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]">
+              <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B] text-[#10110E]">
                 <LayoutDashboard className="h-6 w-6" />
               </div>
               <div>
@@ -159,7 +159,7 @@ const DashboardPage = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="rounded-full border border-[#D5E726] bg-[#D5E726] px-3 py-1.5 text-xs font-bold text-[#10110E]">
+              <span className="rounded-full border border-[#AEFF0B] bg-[#AEFF0B] px-3 py-1.5 text-xs font-bold text-[#10110E]">
                 Manager Workspace
               </span>
               <span className="rounded-full border border-border bg-slate-50 px-3 py-1.5 text-xs font-semibold text-muted-foreground">
@@ -175,7 +175,7 @@ const DashboardPage = () => {
                 <div className="border-b border-border px-6 py-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                      <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#AEFF0B] text-[#10110E]">
                         <WalletIcon className="h-4 w-4" />
                       </div>
                       <div>
@@ -200,7 +200,7 @@ const DashboardPage = () => {
                   ) : wallet ? (
                     <div className="space-y-6">
                       {/* Balance Highlight Box */}
-                      <div className="flex flex-col items-center justify-center rounded-2xl border border-[#D5E726] bg-[#D5E726] p-8 text-center text-[#10110E]">
+                      <div className="flex flex-col items-center justify-center rounded-2xl border border-[#AEFF0B] bg-[#AEFF0B] p-8 text-center text-[#10110E]">
                         <span className="mb-2 text-xs font-semibold tracking-wider uppercase opacity-80">
                           Available Float Balance
                         </span>
@@ -219,7 +219,7 @@ const DashboardPage = () => {
                       {/* Detail Info Row */}
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="flex items-start gap-3 rounded-xl border border-border bg-slate-50/50 p-4">
-                          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#10110E] text-[#D5E726]">
+                          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#10110E] text-[#AEFF0B]">
                             <Hash className="h-4 w-4" />
                           </div>
                           <div className="min-w-0">
@@ -233,7 +233,7 @@ const DashboardPage = () => {
                         </div>
 
                         <div className="flex items-start gap-3 rounded-xl border border-border bg-slate-50/50 p-4">
-                          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#10110E] text-[#D5E726]">
+                          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#10110E] text-[#AEFF0B]">
                             <CircleDollarSign className="h-4 w-4" />
                           </div>
                           <div>
@@ -248,7 +248,7 @@ const DashboardPage = () => {
                       <div className="flex flex-wrap gap-3 pt-2">
                         <Button
                           onClick={() => navigate("/transfer")}
-                          className="h-11 bg-[#D5E726] font-semibold text-[#10110E] hover:bg-[#D5E726]/90 shadow-none border-0"
+                          className="h-11 bg-[#AEFF0B] font-semibold text-[#10110E] hover:bg-[#AEFF0B]/90 shadow-none border-0"
                         >
                           Transfer to Agent
                           <ArrowRight className="ml-2 h-4 w-4" />
@@ -272,27 +272,27 @@ const DashboardPage = () => {
 
               {/* Status Stats Summary */}
               <div className="grid gap-4 sm:grid-cols-2">
-                <Card className="border-border bg-white shadow-none hover:border-[#D5E726]/50 transition-all">
+                <Card className="border-border bg-white shadow-none hover:border-[#AEFF0B]/50 transition-all">
                   <CardContent className="p-5 flex items-center justify-between">
                     <div>
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Agents Managed</p>
                       <h3 className="text-3xl font-bold mt-1 text-foreground">{agentCount ?? "—"}</h3>
                       <p className="text-xs text-muted-foreground mt-1">Active retail outlets</p>
                     </div>
-                    <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726]/10 text-[#10110E]">
+                    <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B]/10 text-[#10110E]">
                       <Users className="h-6 w-6 text-[#10110E]" />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-border bg-white shadow-none hover:border-[#D5E726]/50 transition-all">
+                <Card className="border-border bg-white shadow-none hover:border-[#AEFF0B]/50 transition-all">
                   <CardContent className="p-5 flex items-center justify-between">
                     <div>
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Float Ledger</p>
                       <h3 className="text-sm font-semibold mt-2 text-foreground">Verified Transfers</h3>
                       <p className="text-xs text-muted-foreground mt-1">Status audited in real-time</p>
                     </div>
-                    <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726]/10 text-[#10110E]">
+                    <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B]/10 text-[#10110E]">
                       <TrendingUp className="h-6 w-6 text-[#10110E]" />
                     </div>
                   </CardContent>
@@ -374,7 +374,7 @@ const DashboardPage = () => {
         {/* Header Banner */}
         <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
           <div className="flex items-center gap-4">
-            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B] text-[#10110E]">
               <LayoutDashboard className="h-6 w-6" />
             </div>
             <div>
@@ -385,7 +385,7 @@ const DashboardPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="rounded-full border border-[#D5E726] bg-[#D5E726] px-3 py-1.5 text-xs font-bold text-[#10110E]">
+            <span className="rounded-full border border-[#AEFF0B] bg-[#AEFF0B] px-3 py-1.5 text-xs font-bold text-[#10110E]">
               Treasury Console
             </span>
             <span className="rounded-full border border-border bg-slate-50 px-3 py-1.5 text-xs font-semibold text-muted-foreground">
@@ -401,7 +401,7 @@ const DashboardPage = () => {
               <div className="border-b border-border px-6 py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                    <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#AEFF0B] text-[#10110E]">
                       <WalletIcon className="h-4 w-4" />
                     </div>
                     <div>
@@ -426,7 +426,7 @@ const DashboardPage = () => {
                 ) : wallet ? (
                   <div className="space-y-6">
                     {/* Balance Highlight Box */}
-                    <div className="flex flex-col items-center justify-center rounded-2xl border border-[#D5E726] bg-[#D5E726] p-8 text-center text-[#10110E]">
+                    <div className="flex flex-col items-center justify-center rounded-2xl border border-[#AEFF0B] bg-[#AEFF0B] p-8 text-center text-[#10110E]">
                       <span className="mb-2 text-xs font-semibold tracking-wider uppercase opacity-80">
                         Total Treasury Balance
                       </span>
@@ -445,7 +445,7 @@ const DashboardPage = () => {
                     {/* Detail Info Row */}
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="flex items-start gap-3 rounded-xl border border-border bg-slate-50/50 p-4">
-                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#10110E] text-[#D5E726]">
+                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#10110E] text-[#AEFF0B]">
                           <Hash className="h-4 w-4" />
                         </div>
                         <div className="min-w-0">
@@ -459,7 +459,7 @@ const DashboardPage = () => {
                       </div>
 
                       <div className="flex items-start gap-3 rounded-xl border border-border bg-slate-50/50 p-4">
-                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#10110E] text-[#D5E726]">
+                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#10110E] text-[#AEFF0B]">
                           <CircleDollarSign className="h-4 w-4" />
                         </div>
                         <div>
@@ -474,7 +474,7 @@ const DashboardPage = () => {
                     <div className="flex flex-wrap gap-3 pt-2">
                       <Button
                         onClick={() => navigate("/system-wallet")}
-                        className="h-11 bg-[#D5E726] font-semibold text-[#10110E] hover:bg-[#D5E726]/90 shadow-none border-0"
+                        className="h-11 bg-[#AEFF0B] font-semibold text-[#10110E] hover:bg-[#AEFF0B]/90 shadow-none border-0"
                       >
                         Manage Reserves
                         <ArrowRight className="ml-2 h-4 w-4" />
@@ -498,20 +498,20 @@ const DashboardPage = () => {
 
             {/* Quick stats cards */}
             <div className="grid gap-4 sm:grid-cols-2">
-              <Card className="border-border bg-white shadow-none hover:border-[#D5E726]/50 transition-all">
+              <Card className="border-border bg-white shadow-none hover:border-[#AEFF0B]/50 transition-all">
                 <CardContent className="p-5 flex items-center justify-between">
                   <div>
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">System Audits</p>
                     <h3 className="text-sm font-semibold mt-2 text-foreground">Global Ledger Summary</h3>
                     <p className="text-xs text-muted-foreground mt-1">Compliant ledger records</p>
                   </div>
-                  <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726]/10 text-[#10110E]">
+                  <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B]/10 text-[#10110E]">
                     <Shield className="h-6 w-6 text-[#10110E]" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-border bg-white shadow-none hover:border-[#D5E726]/50 transition-all">
+              <Card className="border-border bg-white shadow-none hover:border-[#AEFF0B]/50 transition-all">
                 <CardContent className="p-5 flex items-center justify-between">
                   <div>
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Engine Status</p>
@@ -524,7 +524,7 @@ const DashboardPage = () => {
                     </h3>
                     <p className="text-xs text-muted-foreground mt-1">Transaction core up & running</p>
                   </div>
-                  <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726]/10 text-[#10110E]">
+                  <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B]/10 text-[#10110E]">
                     <Activity className="h-6 w-6 text-[#10110E]" />
                   </div>
                 </CardContent>

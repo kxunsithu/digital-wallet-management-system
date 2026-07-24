@@ -199,7 +199,7 @@ export default function ProfilePage() {
         {/* Header Banner */}
         <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
           <div className="flex items-center gap-4">
-            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B] text-[#10110E]">
               <User className="h-6 w-6" />
             </div>
             <div>
@@ -215,7 +215,7 @@ export default function ProfilePage() {
                 className={`rounded-full border px-3 py-1.5 text-xs font-bold capitalize ${
                   profile.status === "active"
                     ? "border-[#52C41A] text-[#52C41A]"
-                    : "border-[#D5E726] bg-[#D5E726] text-[#10110E]"
+                    : "border-[#AEFF0B] bg-[#AEFF0B] text-[#10110E]"
                 }`}
               >
                 {profile.status || "active"}
@@ -237,7 +237,7 @@ export default function ProfilePage() {
             <div className="overflow-hidden rounded-2xl border border-border bg-white">
               <div className="border-b border-border px-5 py-4">
                 <div className="flex items-center gap-2">
-                  <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                  <div className="grid h-8 w-8 place-items-center rounded-lg bg-[#AEFF0B] text-[#10110E]">
                     <Camera className="h-4 w-4" />
                   </div>
                   <div>
@@ -290,7 +290,7 @@ export default function ProfilePage() {
             <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
               <CardHeader className="border-b border-border py-5">
                 <CardTitle className="flex items-center gap-2 text-base font-semibold text-foreground">
-                  <div className="grid h-7 w-7 place-items-center rounded-md bg-[#D5E726] text-[#10110E]">
+                  <div className="grid h-7 w-7 place-items-center rounded-md bg-[#AEFF0B] text-[#10110E]">
                     <User className="h-4 w-4" />
                   </div>
                   Personal Information
@@ -318,7 +318,7 @@ export default function ProfilePage() {
                         value={form.full_name}
                         onChange={(e) => setForm((prev) => ({ ...prev, full_name: e.target.value }))}
                         placeholder="Your full name"
-                        className="focus-visible:ring-[#D5E726]/30"
+                        className="focus-visible:ring-[#AEFF0B]/30"
                       />
                     </div>
                     <div className="space-y-1.5 md:col-span-2">
@@ -331,7 +331,7 @@ export default function ProfilePage() {
                         }
                         disabled={userRole === "agent_manager"}
                         placeholder="12/ABCDE(N)123456"
-                        className="focus-visible:ring-[#D5E726]/30 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+                        className="focus-visible:ring-[#AEFF0B]/30 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
                       />
                     </div>
                   </div>
@@ -339,7 +339,7 @@ export default function ProfilePage() {
                     <Button
                       type="submit"
                       disabled={saving}
-                      className="h-10 rounded-lg bg-[#D5E726] font-semibold text-[#10110E] hover:bg-[#D5E726]/90"
+                      className="h-10 rounded-lg bg-[#AEFF0B] font-semibold text-[#10110E] hover:bg-[#AEFF0B]/90"
                     >
                       {saving ? "Saving..." : "Save Changes"}
                     </Button>
@@ -407,7 +407,7 @@ export default function ProfilePage() {
                       return (
                         <button
                           type="button"
-                          className="group relative w-full cursor-pointer overflow-hidden rounded-xl border border-border bg-slate-50 transition-all hover:border-[#D5E726] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#D5E726]/50 focus:ring-offset-2"
+                          className="group relative w-full cursor-pointer overflow-hidden rounded-xl border border-border bg-slate-50 transition-all hover:border-[#AEFF0B] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#AEFF0B]/50 focus:ring-offset-2"
                           onClick={() => setLightboxImage({ url: imageUrl, label })}
                         >
                           <div className="aspect-[16/10] w-full">
@@ -496,7 +496,7 @@ export default function ProfilePage() {
                           }))
                         }
                         placeholder="••••"
-                        className="text-center tracking-widest focus-visible:ring-[#D5E726]/30"
+                        className="text-center tracking-widest focus-visible:ring-[#AEFF0B]/30"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -514,7 +514,7 @@ export default function ProfilePage() {
                           }))
                         }
                         placeholder="••••"
-                        className="text-center tracking-widest focus-visible:ring-[#D5E726]/30"
+                        className="text-center tracking-widest focus-visible:ring-[#AEFF0B]/30"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -532,7 +532,7 @@ export default function ProfilePage() {
                           }))
                         }
                         placeholder="••••"
-                        className="text-center tracking-widest focus-visible:ring-[#D5E726]/30"
+                        className="text-center tracking-widest focus-visible:ring-[#AEFF0B]/30"
                       />
                     </div>
                   </div>
@@ -541,7 +541,7 @@ export default function ProfilePage() {
                       type="submit"
                       variant="outline"
                       disabled={changingPin}
-                      className="h-10 rounded-lg border-[#D5E726] font-semibold text-[#10110E] hover:bg-[#D5E726]/10"
+                      className="h-10 rounded-lg border-[#AEFF0B] font-semibold text-[#10110E] hover:bg-[#AEFF0B]/10"
                     >
                       {changingPin ? "Updating..." : "Update PIN"}
                     </Button>

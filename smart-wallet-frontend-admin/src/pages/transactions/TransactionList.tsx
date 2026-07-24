@@ -140,7 +140,7 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
         </Breadcrumb>
         <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
           <div className="flex items-center gap-4">
-            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B] text-[#10110E]">
               <ArrowLeftRight className="h-6 w-6" />
             </div>
             <div>
@@ -158,7 +158,7 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
         <div className="border-b border-border px-5 py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#D5E726] text-[#10110E]">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#AEFF0B] text-[#10110E]">
                 <SlidersHorizontal className="h-4 w-4" />
               </div>
               <div>
@@ -188,7 +188,7 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
                 placeholder="Search transaction no. or phone number"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-12 border-[#D5E726] pl-10 focus-visible:ring-[#D5E726]/30"
+                className="h-12 border-[#AEFF0B] pl-10 focus-visible:ring-[#AEFF0B]/30"
               />
             </div>
           </div>
@@ -256,7 +256,7 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
               {totalEntries} total transactions recorded
             </p>
           </div>
-          <span className="w-fit rounded-full bg-[#D5E726] px-3 py-1 text-xs font-bold text-[#10110E]">
+          <span className="w-fit rounded-full bg-[#AEFF0B] px-3 py-1 text-xs font-bold text-[#10110E]">
             Audited logs
           </span>
         </div>
@@ -309,7 +309,7 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
               items.map((tx: any, index: number) => (
                 <TableRow
                   key={tx.id}
-                  className="border-b border-border transition-colors last:border-0 hover:bg-[#D5E726]/10"
+                  className="border-b border-border transition-colors last:border-0 hover:bg-[#AEFF0B]/10"
                 >
                   <TableCell className="px-6 py-4 text-slate-500 text-sm">
                     {(page - 1) * perPage + index + 1}
@@ -346,7 +346,7 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
                         tx.status === "completed"
                           ? "border border-[#52C41A] bg-white text-[#52C41A]"
                           : tx.status === "pending"
-                            ? "border border-[#D5E726] bg-[#D5E726] text-[#10110E]"
+                            ? "border border-[#AEFF0B] bg-[#AEFF0B] text-[#10110E]"
                             : "border border-[#FF4D4F] bg-white text-[#FF4D4F]"
                       }`}
                     >
@@ -360,7 +360,7 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#D5E726]"
+                      className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#AEFF0B]"
                       onClick={() => navigate(`/transactions/${tx.id}`)}
                       title="View Details"
                     >

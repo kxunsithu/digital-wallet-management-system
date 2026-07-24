@@ -177,7 +177,7 @@ export default function CustomerDetail() {
         </Breadcrumb>
         <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
           <div className="flex items-center gap-4">
-            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B] text-[#10110E]">
               <User className="h-6 w-6" />
             </div>
             <div>
@@ -195,7 +195,7 @@ export default function CustomerDetail() {
                 customer.kyc_status === "verified" || customer.kyc_status === "approved"
                   ? "border-[#52C41A] text-[#52C41A]"
                   : customer.kyc_status === "pending"
-                    ? "border-[#D5E726] bg-[#D5E726] text-[#10110E]"
+                    ? "border-[#AEFF0B] bg-[#AEFF0B] text-[#10110E]"
                     : "border-[#FF4D4F] text-[#FF4D4F]"
               }`}
             >
@@ -206,7 +206,7 @@ export default function CustomerDetail() {
                 variant="outline"
                 disabled={actionLoading}
                 onClick={handleToggleKycStatus}
-                className="h-9 rounded-lg border-border text-foreground hover:bg-[#D5E726] flex items-center gap-2"
+                className="h-9 rounded-lg border-border text-foreground hover:bg-[#AEFF0B] flex items-center gap-2"
               >
                 <ShieldCheck className="h-4 w-4" />
                 Toggle KYC
@@ -216,7 +216,7 @@ export default function CustomerDetail() {
               variant="outline"
               disabled={actionLoading}
               onClick={handleToggleStatus}
-              className="h-9 rounded-lg border-border text-foreground hover:bg-[#D5E726] flex items-center gap-2"
+              className="h-9 rounded-lg border-border text-foreground hover:bg-[#AEFF0B] flex items-center gap-2"
             >
               <Power className="h-4 w-4" />
               Toggle Status ({user?.status || "inactive"})
@@ -313,7 +313,7 @@ export default function CustomerDetail() {
                         customer.kyc_status === "verified" || customer.kyc_status === "approved"
                           ? "border border-[#52C41A] bg-white text-[#52C41A]"
                           : customer.kyc_status === "pending"
-                            ? "border border-[#D5E726] bg-[#D5E726] text-[#10110E]"
+                            ? "border border-[#AEFF0B] bg-[#AEFF0B] text-[#10110E]"
                             : "border border-[#FF4D4F] bg-white text-[#FF4D4F]"
                       }`}
                     >
@@ -396,7 +396,7 @@ export default function CustomerDetail() {
                       <Button
                         onClick={handleVerify}
                         disabled={actionLoading}
-                        className="h-10 rounded-lg bg-[#D5E726] font-semibold text-[#10110E] hover:bg-[#D5E726]"
+                        className="h-10 rounded-lg bg-[#AEFF0B] font-semibold text-[#10110E] hover:bg-[#AEFF0B]"
                       >
                         Approve NRC
                       </Button>
@@ -489,7 +489,7 @@ export default function CustomerDetail() {
                     {user.wallet.wallet_number ?? "—"}
                   </p>
                 </div>
-                <div className="rounded-xl border border-[#D5E726] bg-[#D5E726] p-4">
+                <div className="rounded-xl border border-[#AEFF0B] bg-[#AEFF0B] p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-[#10110E]">
                     Balance
                   </p>
@@ -536,7 +536,7 @@ export default function CustomerDetail() {
             <div className="grid grid-cols-3 gap-2">
               {[
                 { value: "verified", label: "Verified", activeColor: "border-[#52C41A] bg-[#52C41A]/10 text-[#52C41A]" },
-                { value: "pending", label: "Pending", activeColor: "border-[#D5E726] bg-[#D5E726]/10 text-[#10110E]" },
+                { value: "pending", label: "Pending", activeColor: "border-[#AEFF0B] bg-[#AEFF0B]/10 text-[#10110E]" },
                 { value: "rejected", label: "Rejected", activeColor: "border-[#FF4D4F] bg-[#FF4D4F]/10 text-[#FF4D4F]" }
               ].map((opt) => {
                 const isActive = selectedKycStatus === opt.value || (opt.value === "verified" && selectedKycStatus === "approved");
@@ -565,7 +565,7 @@ export default function CustomerDetail() {
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
                   placeholder="Specify why the verification was rejected..."
-                  className="w-full min-h-[100px] rounded-xl border border-border bg-white px-3 py-2 text-sm focus-visible:ring-[#D5E726]"
+                  className="w-full min-h-[100px] rounded-xl border border-border bg-white px-3 py-2 text-sm focus-visible:ring-[#AEFF0B]"
                 />
               </div>
             )}
@@ -583,7 +583,7 @@ export default function CustomerDetail() {
             <Button
               onClick={handleKycSubmit}
               disabled={actionLoading}
-              className="w-full rounded-xl bg-[#D5E726] hover:bg-[#D5E726]/90 font-semibold text-[#10110E]"
+              className="w-full rounded-xl bg-[#AEFF0B] hover:bg-[#AEFF0B]/90 font-semibold text-[#10110E]"
             >
               {actionLoading ? "Saving..." : "Save Changes"}
             </Button>

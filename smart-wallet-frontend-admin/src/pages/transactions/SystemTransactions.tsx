@@ -21,7 +21,7 @@ const SystemTransactionsPage = () => {
         {/* Header Banner */}
         <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
           <div className="flex items-center gap-4">
-            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B] text-[#10110E]">
               <Server className="h-6 w-6" />
             </div>
             <div>
@@ -32,7 +32,7 @@ const SystemTransactionsPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="rounded-full border border-[#D5E726] bg-[#D5E726] px-3 py-1.5 text-xs font-bold text-[#10110E]">
+            <span className="rounded-full border border-[#AEFF0B] bg-[#AEFF0B] px-3 py-1.5 text-xs font-bold text-[#10110E]">
               Admin View
             </span>
             <span className="rounded-full border border-border bg-slate-50 px-3 py-1.5 text-xs font-semibold text-muted-foreground">

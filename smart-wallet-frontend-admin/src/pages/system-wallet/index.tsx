@@ -304,7 +304,7 @@ const SystemWalletPage = () => {
   const statusColor = (status?: string) => {
     switch (status) {
       case "active":
-        return "border-[#D5E726] bg-[#D5E726] text-[#10110E]";
+        return "border-[#AEFF0B] bg-[#AEFF0B] text-[#10110E]";
       case "frozen":
         return "border-[#2F332B] bg-[#161814] text-white";
       case "suspended":
@@ -318,7 +318,7 @@ const SystemWalletPage = () => {
     <MainLayout title="System Wallet">
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          <div className="border-b border-border bg-[#D5E726] px-6 py-3 text-xs font-bold tracking-[0.2em] text-[#10110E] uppercase md:px-8">
+          <div className="border-b border-border bg-[#AEFF0B] px-6 py-3 text-xs font-bold tracking-[0.2em] text-[#10110E] uppercase md:px-8">
             System treasury
           </div>
           <div className="p-6 md:p-8">
@@ -337,7 +337,7 @@ const SystemWalletPage = () => {
             ) : wallet ? (
               <>
                 <div className="mb-6 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D5E726] text-[#10110E]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#AEFF0B] text-[#10110E]">
                     <Wallet className="h-5 w-5" />
                   </div>
                   <div>
@@ -373,7 +373,7 @@ const SystemWalletPage = () => {
                       type="button"
                       title="Refresh balance"
                       onClick={() => void refreshBalance()}
-                      className="ml-auto flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-white text-muted-foreground transition-colors hover:border-[#D5E726] hover:text-[#10110E]"
+                      className="ml-auto flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-white text-muted-foreground transition-colors hover:border-[#AEFF0B] hover:text-[#10110E]"
                     >
                       <RefreshCw className={`h-3.5 w-3.5 ${balanceLoading ? "animate-spin" : ""}`} />
                     </button>
@@ -393,8 +393,8 @@ const SystemWalletPage = () => {
 
                 {/* Wallet meta row */}
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  <div className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-colors hover:border-[#D5E726]">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                  <div className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-colors hover:border-[#AEFF0B]">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#AEFF0B] text-[#10110E]">
                       <Hash className="h-4 w-4" />
                     </div>
                     <div className="min-w-0">
@@ -406,8 +406,8 @@ const SystemWalletPage = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-colors hover:border-[#D5E726]">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                  <div className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-colors hover:border-[#AEFF0B]">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#AEFF0B] text-[#10110E]">
                       <CircleDollarSign className="h-4 w-4" />
                     </div>
                     <div className="min-w-0">
@@ -419,8 +419,8 @@ const SystemWalletPage = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-colors hover:border-[#D5E726]">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#D5E726] text-[#10110E]">
+                  <div className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-colors hover:border-[#AEFF0B]">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#AEFF0B] text-[#10110E]">
                       <ShieldCheck className="h-4 w-4" />
                     </div>
                     <div className="min-w-0">
@@ -450,7 +450,7 @@ const SystemWalletPage = () => {
         <Card className="overflow-hidden rounded-2xl border border-border shadow-none xl:sticky xl:top-24">
           <CardHeader className="border-b border-border px-6 py-5">
             <CardTitle className="flex items-center gap-2.5 text-lg font-semibold text-foreground">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D5E726] text-[#10110E]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#AEFF0B] text-[#10110E]">
                 <QrCode className="h-4 w-4" />
               </div>
               Receive Money via QR
@@ -465,7 +465,7 @@ const SystemWalletPage = () => {
             ) : myQrCode?.qr_code_value ? (
               <div className="flex flex-col items-center gap-6">
                 <div className="group relative flex-shrink-0">
-                  <div className="rounded-2xl border border-border bg-white p-5 shadow-sm transition-shadow group-hover:border-[#D5E726]">
+                  <div className="rounded-2xl border border-border bg-white p-5 shadow-sm transition-shadow group-hover:border-[#AEFF0B]">
                     <QRCode value={String(myQrCode.qr_code_value)} size={180} />
                   </div>
                   <div className="mt-3 flex justify-center">
@@ -479,7 +479,7 @@ const SystemWalletPage = () => {
                     <p className="text-sm leading-relaxed text-slate-600">
                       Agent managers can scan this QR code to send money to the system wallet
                       using the{" "}
-                      <span className="inline-flex items-center gap-1 rounded-md bg-[#D5E726] px-2 py-0.5 text-xs font-medium text-[#10110E]">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-[#AEFF0B] px-2 py-0.5 text-xs font-medium text-[#10110E]">
                         <ArrowUpRight className="h-3 w-3" />
                         manager → admin
                       </span>{" "}
@@ -544,7 +544,7 @@ const SystemWalletPage = () => {
         <Card className="overflow-hidden rounded-2xl border border-border shadow-none">
           <CardHeader className="space-y-1 border-b border-border px-6 py-5">
             <CardTitle className="flex items-center gap-2.5 text-lg font-semibold text-foreground">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#D5E726] text-[#10110E]">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#AEFF0B] text-[#10110E]">
                 <ArrowUpRight className="h-4 w-4" />
               </div>
               Transfer to Agent Manager
@@ -560,7 +560,7 @@ const SystemWalletPage = () => {
                 <button
                   type="button"
                   className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${transferMode === "manual"
-                      ? "bg-[#D5E726] text-[#10110E] shadow-sm"
+                      ? "bg-[#AEFF0B] text-[#10110E] shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                     }`}
                   onClick={() => {
@@ -574,7 +574,7 @@ const SystemWalletPage = () => {
                 <button
                   type="button"
                   className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${transferMode === "qr"
-                      ? "bg-[#D5E726] text-[#10110E] shadow-sm"
+                      ? "bg-[#AEFF0B] text-[#10110E] shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                     }`}
                   onClick={() => {
@@ -729,7 +729,7 @@ const SystemWalletPage = () => {
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="h-12 w-full gap-2 rounded-xl bg-[#D5E726] text-sm font-semibold tracking-wide text-[#10110E] shadow-none transition-all hover:bg-[#D5E726] disabled:opacity-60 md:w-auto md:px-8"
+                  className="h-12 w-full gap-2 rounded-xl bg-[#AEFF0B] text-sm font-semibold tracking-wide text-[#10110E] shadow-none transition-all hover:bg-[#AEFF0B] disabled:opacity-60 md:w-auto md:px-8"
                 >
                   {submitting ? (
                     <>

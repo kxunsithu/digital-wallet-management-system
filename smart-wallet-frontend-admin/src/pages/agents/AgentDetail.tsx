@@ -74,7 +74,7 @@ export default function AgentDetail() {
     agent.status === "active"
       ? "border-[#52C41A] text-[#52C41A]"
       : agent.status === "pending"
-        ? "border-[#D5E726] bg-[#D5E726] text-[#10110E]"
+        ? "border-[#aeff0b] bg-[#aeff0b] text-[#10110E]"
         : "border-[#FF4D4F] text-[#FF4D4F]";
 
   return (
@@ -97,7 +97,7 @@ export default function AgentDetail() {
         </Breadcrumb>
         <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
           <div className="flex items-center gap-4">
-            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#aeff0b] text-[#10110E]">
               <User className="h-6 w-6" />
             </div>
             <div>
@@ -116,7 +116,7 @@ export default function AgentDetail() {
             {isAgentManager ? (
               <Button
                 onClick={() => navigate(`/agents/${id}/edit`)}
-                className="h-10 rounded-lg bg-[#D5E726] text-[#10110E] hover:bg-[#D5E726]"
+                className="h-10 rounded-lg bg-[#aeff0b] text-[#10110E] hover:bg-[#aeff0b]"
               >
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit
@@ -331,7 +331,7 @@ export default function AgentDetail() {
                     {user.wallet.wallet_number ?? "—"}
                   </p>
                 </div>
-                <div className="rounded-xl border border-[#D5E726] bg-[#D5E726] p-4">
+                <div className="rounded-xl border border-[#aeff0b] bg-[#aeff0b] p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-[#10110E]">
                     Balance
                   </p>

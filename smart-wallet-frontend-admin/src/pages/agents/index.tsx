@@ -163,7 +163,7 @@ export default function AgentsPage() {
         </Breadcrumb>
         <div className="flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
           <div className="flex items-center gap-4">
-            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]">
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#AEFF0B] text-[#10110E]">
               <User className="h-6 w-6" />
             </div>
             <div>
@@ -176,7 +176,7 @@ export default function AgentsPage() {
             </div>
           </div>
           {isAgentManager ? (
-            <Button onClick={() => navigate("/agents/create")} className="h-11 rounded-lg bg-[#D5E726] px-5 font-semibold text-[#10110E] hover:bg-[#D5E726]">
+            <Button onClick={() => navigate("/agents/create")} className="h-11 rounded-lg bg-[#AEFF0B] px-5 font-semibold text-[#10110E] hover:bg-[#AEFF0B]">
               <Plus className="mr-2 h-4 w-4" />
               Create Agent
             </Button>
@@ -188,7 +188,7 @@ export default function AgentsPage() {
         <div className="border-b border-border px-5 py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#D5E726] text-[#10110E]">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#AEFF0B] text-[#10110E]">
                 <SlidersHorizontal className="h-4 w-4" />
               </div>
               <div>
@@ -215,7 +215,7 @@ export default function AgentsPage() {
                 placeholder="Search by name, phone, agent code, or shop..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-12 border-[#D5E726] pl-10 focus-visible:ring-[#D5E726]/30"
+                className="h-12 border-[#AEFF0B] pl-10 focus-visible:ring-[#AEFF0B]/30"
               />
             </div>
           </div>
@@ -303,7 +303,7 @@ export default function AgentsPage() {
               {totalEntries} total agents · {agents.filter((agent) => agent.status === "active").length} active on this page
             </p>
           </div>
-          <span className="w-fit rounded-full bg-[#D5E726] px-3 py-1 text-xs font-bold text-[#10110E]">Shop managed</span>
+          <span className="w-fit rounded-full bg-[#AEFF0B] px-3 py-1 text-xs font-bold text-[#10110E]">Shop managed</span>
         </div>
         <Table>
           <TableHeader>
@@ -348,14 +348,14 @@ export default function AgentsPage() {
               agents.map((agent, index) => (
                 <TableRow
                   key={agent.id}
-                  className="border-b border-border transition-colors last:border-0 hover:bg-[#D5E726]/10"
+                  className="border-b border-border transition-colors last:border-0 hover:bg-[#AEFF0B]/10"
                 >
                   <TableCell className="px-6 py-4 text-slate-500 text-sm">
                     {(page - 1) * perPage + index + 1}
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#D5E726] text-sm font-semibold text-[#10110E]">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#AEFF0B] text-sm font-semibold text-[#10110E]">
                         {agent.user?.full_name?.charAt(0) || (
                           <User className="w-4 h-4" />
                         )}
@@ -392,7 +392,7 @@ export default function AgentsPage() {
                         agent.status === "active"
                           ? "border border-[#52C41A] bg-white text-[#52C41A]"
                           : agent.status === "pending"
-                            ? "border border-[#D5E726] bg-[#D5E726] text-[#10110E]"
+                            ? "border border-[#AEFF0B] bg-[#AEFF0B] text-[#10110E]"
                             : "border border-[#FF4D4F] bg-white text-[#FF4D4F]"
                       }`}
                     >
@@ -404,7 +404,7 @@ export default function AgentsPage() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#D5E726]"
+                        className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#AEFF0B]"
                         onClick={() => navigate(`/agents/${agent.id}`)}
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -413,7 +413,7 @@ export default function AgentsPage() {
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#D5E726]"
+                          className="h-9 w-9 rounded-lg border-border text-foreground shadow-none hover:bg-[#AEFF0B]"
                           onClick={() => navigate(`/agents/${agent.id}/edit`)}
                         >
                           <Pencil className="w-3.5 h-3.5" />

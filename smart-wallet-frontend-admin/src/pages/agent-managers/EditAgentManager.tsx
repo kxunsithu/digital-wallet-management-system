@@ -186,7 +186,7 @@ export default function EditAgentManager() {
           <>
           <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-border bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
             <div className="flex items-center gap-4">
-              <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#D5E726] text-[#10110E]"><User className="h-6 w-6" /></div>
+              <div className="grid h-12 w-12 place-items-center rounded-xl bg-[#aeff0b] text-[#10110E]"><User className="h-6 w-6" /></div>
               <div><h2 className="text-xl font-bold tracking-tight text-foreground">Edit Agent Manager</h2><p className="mt-1 text-sm text-muted-foreground">Review identity, KYC information, and operating location.</p></div>
             </div>
             <span className="w-fit rounded-full border border-border px-3 py-1.5 text-xs font-bold capitalize text-foreground">{profileForm.status}</span>
@@ -328,7 +328,7 @@ export default function EditAgentManager() {
               <Button variant="outline" type="button" onClick={() => navigate("/agent-managers")} className="h-11 rounded-lg">
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading} className="h-11 rounded-lg bg-[#D5E726] px-6 font-semibold text-[#10110E] hover:bg-[#D5E726]">
+              <Button type="submit" disabled={loading} className="h-11 rounded-lg bg-[#aeff0b] px-6 font-semibold text-[#10110E] hover:bg-[#aeff0b]">
                 {loading ? "Updating..." : "Update Agent Manager"}
               </Button>
             </div>
