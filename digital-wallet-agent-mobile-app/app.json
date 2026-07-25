@@ -1,0 +1,60 @@
+{
+  "expo": {
+    "name": "Digital Wallet Agent",
+    "slug": "digital-wallet-agent-mobile-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/logo.png",
+    "scheme": "digitalwalletagentmobileapp",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "icon": "./assets/images/logo.png"
+    },
+    "android": {
+      "package": "com.kxunsithu.digitalwalletagent",
+      "permissions": [
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.CAMERA"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/logo.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#BDF40B",
+          "image": "./assets/images/logo.png",
+          "imageWidth": 76
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/aedc38c0-5b53-4c1c-89cf-fbace89975f5"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "aeb0c9b8-ada5-457d-a8e0-5df4ffecd66e"
+      }
+    },
+    "owner": "khunsithu2003"
+  }
+}

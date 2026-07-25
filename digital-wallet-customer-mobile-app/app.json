@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Digital Wallet Customer",
+    "slug": "digital-wallet-customer-mobile-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/logo.png",
+    "scheme": "digitalwalletcustomermobileapp",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "icon": "./assets/images/logo.png"
+    },
+    "android": {
+      "package": "com.kxunsithu.digitalwalletcustomer",
+      "permissions": [
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.CAMERA"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/logo.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#BDF40B",
+          "image": "./assets/images/logo.png",
+          "imageWidth": 76
+        }
+      ],
+      "expo-secure-store",
+      "expo-barcode-scanner"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3144640a-9629-4f3b-9d39-4648ebb18f65"
+      }
+    },
+    "owner": "khunsithu2003"
+  }
+}
