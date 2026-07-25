@@ -77,7 +77,6 @@ Admin reviews and updates customer KYC status.
 - Manage State Region and Township reference data.
 - Review system-wide transaction history and wallet data.
 - Send float to Agent Managers within the hierarchical flow.
-- Access administrative APIs with OTP and PIN security.
 
 ## Agent Manager
 
@@ -89,7 +88,7 @@ Admin reviews and updates customer KYC status.
 - Search and filter agents by status, region, township, phone, name, or code.
 - Distribute float to Agents and receive float returns.
 - Transfer float back to Admin when required.
-- Use authenticated agent manager APIs with OTP and PIN verification.
+- Use authenticated agent manager APIs with OTP and PIN
 
 ## Agent
 
