@@ -1,13 +1,10 @@
-
-# Digital Wallet Management System Specification & Architecture (မြန်မာ)
+# Digital Wallet Management System Specification & Architecture 
 
 ## အကျဉ်းချုပ်
 
 ဤစာရွက်စာတမ်းသည် **Digital Wallet Management System** ၏ System Architecture, Workflow, User Roles, Security Rules နှင့် Business Rules များကို နားလည်ရလွယ်ကူစေရန် စနစ်တကျ ပြန်လည်ရေးသားထားသော Documentation ဖြစ်သည်။
 
 ဤ Document ကို Developer များ၊ QA Tester များ၊ Project Manager များနှင့် System Administrator များအတွက် ရည်ရွယ်ထားသည်။
-
----
 
 # 1. Overall System Architecture
 
@@ -29,8 +26,6 @@ Customer
 Float သည် အထက်မှအောက်သို့ ဖြန့်ဝေပြီး၊ Float Return သည် အောက်မှအထက်သို့ ပြန်လည်အပ်နှံသည်။
 
 Customer များသည် Customer အချင်းချင်း P2P Transfer ပြုလုပ်နိုင်သည်။
-
----
 
 # 2. Core Workflows
 
@@ -71,8 +66,6 @@ Pending → Verified / Rejected
 
 အဆင့်များဖြင့် Admin မှ စစ်ဆေးသည်။
 
----
-
 # 3. User Roles
 
 ## Admin
@@ -85,8 +78,6 @@ Pending → Verified / Rejected
 - System Transaction History ကြည့်ရှုခြင်း
 - State / Township Data စီမံခန့်ခွဲခြင်း
 
----
-
 ## Agent Manager
 
 ### Responsibilities
@@ -96,8 +87,6 @@ Pending → Verified / Rejected
 - Float ဖြန့်ဝေခြင်း
 - Float Return လက်ခံခြင်း
 - Agent Wallet များ စောင့်ကြည့်ခြင်း
-
----
 
 ## Agent
 
@@ -109,8 +98,6 @@ Pending → Verified / Rejected
 - Agent QR အသုံးပြု၍ ငွေလက်ခံခြင်း
 - Balance Notification
 - PIN Verification
-
----
 
 ## Customer
 
@@ -125,27 +112,24 @@ Pending → Verified / Rejected
 - PIN Management
 - KYC Submission
 
----
-
 # 4. Money Transfer Rules
 
-| Sender | Receiver | Allowed |
-|--------|----------|---------|
-| Admin | Agent Manager | ✅ |
-| Agent Manager | Agent | ✅ |
-| Agent Manager | Admin | ✅ |
-| Agent | Customer | ✅ |
-| Agent | Agent Manager | ✅ |
-| Customer | Customer | ✅ |
-| Customer | Agent | ✅ |
+
+| Sender        | Receiver      | Allowed |
+| ------------- | ------------- | ------- |
+| Admin         | Agent Manager | ✅      |
+| Agent Manager | Agent         | ✅      |
+| Agent Manager | Admin         | ✅      |
+| Agent         | Customer      | ✅      |
+| Agent         | Agent Manager | ✅      |
+| Customer      | Customer      | ✅      |
+| Customer      | Agent         | ✅      |
 
 ## Disallowed
 
 - Admin ↔ Customer
 - Admin ↔ Agent
 - Agent Manager ↔ Customer
-
----
 
 # 5. Security Rules
 
@@ -155,8 +139,6 @@ Pending → Verified / Rejected
 - PIN ကို Bcrypt Hash ဖြင့် သိမ်းဆည်းထားသည်။
 - NRC Number နှင့် User Role ကို Account ဖန်တီးပြီးနောက် ပြောင်းလဲခွင့်မရှိ။
 - Profile Image နှင့် NRC Images များကို multipart/form-data ဖြင့် Upload ပြုလုပ်ရမည်။
-
----
 
 # 6. Notifications
 
@@ -169,8 +151,6 @@ Money Received ဖြစ်သည်နှင့်
 
 တို့ကို Real-time ပြသသည်။
 
----
-
 # 7. Transaction Receipt
 
 Transaction တိုင်းတွင်
@@ -180,8 +160,6 @@ Transaction တိုင်းတွင်
 - History Record
 
 တို့ကို အလိုအလျောက် ဖန်တီးသည်။
-
----
 
 # 8. Summary
 
