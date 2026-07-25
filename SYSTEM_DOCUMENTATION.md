@@ -4,6 +4,114 @@
 
 This document describes the Digital Wallet Management System architecture, workflows, user roles, security rules, and business policies. It is intended for developers, QA testers, product managers, and system administrators.
 
+## Use Case Diagram
+
+### Admin Use Case Diagram
+
+```mermaid
+flowchart LR
+    Admin[Admin]
+    UC1[Manage Agent Managers]
+    UC2[View Agent Accounts]
+    UC3[Approve KYC]
+    UC4[Manage Locations]
+    UC5[View Transactions]
+    UC6[Send Float]
+
+    Admin --> UC1
+    Admin --> UC2
+    Admin --> UC3
+    Admin --> UC4
+    Admin --> UC5
+    Admin --> UC6
+
+    UC3 -. includes .-> UC3a[Review NRC Verification]
+    UC6 -. includes .-> UC6a[Transfer Float]
+```
+
+### Agent Manager Use Case Diagram
+
+```mermaid
+flowchart LR
+    AgentManager[Agent Manager]
+    UC7[Create Agents]
+    UC8[Manage Agents]
+    UC9[Distribute Float]
+    UC10[Receive Float Returns]
+    UC11[View Agent Wallets]
+    UC12[Manage Own Profile]
+
+    AgentManager --> UC7
+    AgentManager --> UC8
+    AgentManager --> UC9
+    AgentManager --> UC10
+    AgentManager --> UC11
+    AgentManager --> UC12
+
+    UC7 -. includes .-> UC12
+    UC8 -. includes .-> UC12
+    UC9 -. includes .-> UC10
+```
+
+### Agent Use Case Diagram
+
+```mermaid
+flowchart LR
+    Agent[Agent]
+    UC13[Provide Customer Services]
+    UC14[Send Money]
+    UC15[Receive Payments]
+    UC16[Manage Own Profile]
+    UC17[Upload NRC Documents]
+    UC18[Use PIN]
+    UC19[Use QR Code]
+
+    Agent --> UC13
+    Agent --> UC14
+    Agent --> UC15
+    Agent --> UC16
+    Agent --> UC17
+    Agent --> UC18
+    Agent --> UC19
+
+    UC13 -. extends .-> UC14
+    UC13 -. extends .-> UC15
+    UC14 -. includes .-> UC18
+    UC14 -. includes .-> UC19
+    UC15 -. includes .-> UC19
+    UC17 -. includes .-> UC16
+```
+
+### Customer Use Case Diagram
+
+```mermaid
+flowchart LR
+    Customer[Customer]
+    UC20[Register and Login]
+    UC21[Manage PIN]
+    UC22[Submit KYC]
+    UC23[Update Profile]
+    UC24[Send Money]
+    UC25[Receive Money]
+    UC26[View Wallet]
+    UC27[Use QR Code]
+
+    Customer --> UC20
+    Customer --> UC21
+    Customer --> UC22
+    Customer --> UC23
+    Customer --> UC24
+    Customer --> UC25
+    Customer --> UC26
+    Customer --> UC27
+
+    UC24 -. includes .-> UC21
+    UC24 -. includes .-> UC27
+    UC25 -. includes .-> UC27
+    UC22 -. includes .-> UC23
+    UC23 -. includes .-> UC21
+```
+
 # 1. Overall System Architecture
 
 The Digital Wallet Management System uses a hierarchical wallet architecture with four primary roles.
@@ -69,51 +177,67 @@ Admin reviews and updates customer KYC status.
 
 ## Admin
 
-### Features
+### Main Features
 
-- Create, update, and delete Agent Manager accounts.
-- Manage Agent accounts and view their wallet status.
-- Approve or reject customer KYC/NRC verification requests.
-- Manage State Region and Township reference data.
-- Review system-wide transaction history and wallet data.
-- Send float to Agent Managers within the hierarchical flow.
+- Create, edit, and remove Agent Manager accounts.
+- View Agent accounts.
+- View Agent Manager, Agent, and Customer accounts.
+- View wallet balance and wallet status for other users.
+- Review customer KYC requests and approve or reject them.
+- Review and update NRC verification status for users.
+- Manage state regions and townships.
+- View system transactions and wallet activity.
+- Send money to Agent Managers.
+- Turn user status, wallet status, and verification status on or off.
+- Search users by name, phone number, NRC number, code, status, region, or township.
+- View own profile and account information.
 
 ## Agent Manager
 
-### Features
+### Main Features
 
-- Create new Agent accounts and assign unique agent codes.
-- Update agent details, including shop name, address, region, and NRC documents.
-- Manage agents they created and monitor agent wallet data.
-- Search and filter agents by status, region, township, phone, name, or code.
-- Distribute float to Agents and receive float returns.
-- Transfer float back to Admin when required.
-- Use authenticated agent manager APIs with OTP and PIN
+- Create new Agent accounts and assign each one an agent code.
+- Edit agent profile details such as name, shop name, address, region, township, and NRC images.
+- Manage the Agents created by this manager.
+- Search Agents by name, phone number, code, status, region, or township.
+- Send money to Agents.
+- Receive money from Agents and send money back to Admin when needed.
+- View Agent wallet balances and transaction history.
+- Upload or update agent-related NRC documents.
+- Use OTP and PIN to access the system safely.
+- View own profile and account information.
 
 ## Agent
 
-### Features
+### Main Features
 
-- Provide customer-facing services: Cash In, Cash Out, and QR Payment.
-- Transfer money to Customers and Agent Managers.
-- Receive payments via QR code, phone number, or wallet number.
-- Maintain wallet balance and transaction history.
-- Upload or update NRC documents and manage verification status.
-- Use secure PIN verification for all transactions.
+- Register and log in with phone number and OTP.
+- Create, change, and reset a PIN.
+- Provide Cash In, Cash Out, and QR Payment services to customers.
+- Send money to Customers and Agent Managers.
+- Receive money from Customers and other Agents by phone, wallet number, or QR code.
+- View wallet balance and transaction history.
+- Upload or update NRC documents.
+- View or update own NRC verification status.
+- Use PIN to confirm money transfers.
+- View own profile and account details.
+- Create and use a QR code for receiving payments.
 
 ## Customer
 
-### Features
+### Main Features
 
-- Register and authenticate with phone number and OTP.
-- Create, verify, reset, and change a secure 4-digit PIN.
-- Submit NRC front and back images for KYC verification.
-- Update profile information and upload a profile picture.
-- Access a personal QR code for receiving payments.
-- Send money to other Customers and Agents using phone, wallet number, or QR code.
-- Receive money from customers or agents.
-- View transaction receipts, transaction history, and wallet details.
-- Use authenticated customer APIs with PIN-secured transfers.
+- Register and log in with phone number and OTP.
+- Create, change, and reset a 4-digit PIN.
+- Submit NRC front and back images for KYC.
+- Update profile details and profile photo.
+- Create and use a personal QR code to receive money.
+- Send money to other Customers and Agents.
+- Receive money from Customers and Agents.
+- View wallet balance, receipts, and transaction history.
+- Use PIN to confirm transfers.
+- View own wallet and profile information.
+- View their own KYC status and account status.
 
 # 4. Money Transfer Rules
 
