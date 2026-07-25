@@ -118,6 +118,7 @@ Admin reviews and updates customer KYC status.
 
 # 4. Money Transfer Rules
 
+
 | Sender        | Receiver      | Allowed |
 | ------------- | ------------- | ------- |
 | Admin         | Agent Manager | ✅      |

@@ -3,7 +3,9 @@
 This document reflects the database schema currently implemented in the Laravel migrations and is written in DrawSQL-compatible table syntax.
 
 ## Overview
+
 The current backend supports:
+
 - Role-based user accounts
 - State and township reference data
 - Customer, agent, and agent-manager profile records
@@ -16,48 +18,63 @@ The current backend supports:
 ## Core Entities
 
 ### 1. roles
+
 Stores role definitions for the platform.
 
 ### 2. state_regions
+
 Stores Myanmar state/region reference data.
 
 ### 3. townships
+
 Stores township reference data linked to a state region.
 
 ### 4. users
+
 Stores the main user account information.
 
 ### 5. otp_verifications
+
 Tracks OTP requests used for verification flows.
 
 ### 6. pins
+
 Stores the user PIN hash and lock state.
 
 ### 7. customer_profiles
+
 Stores customer-specific profile data and referral/KYC details.
 
 ### 8. agent_profiles
+
 Stores agent profile information, hierarchy, and links to the creating manager.
 
 ### 9. agent_manager_profiles
+
 Stores agent-manager profile information and manager hierarchy.
 
 ### 10. wallets
+
 Represents each user's wallet account.
 
 ### 11. qr_codes
+
 Stores QR code payloads linked to a wallet.
 
 ### 12. transactions
+
 Records transfer/payment activity between wallets and optional QR usage.
 
 ### 13. nrc_verifications
+
 Tracks NRC verification submissions and approval outcomes.
 
 ### 14. images
+
 Stores uploaded image metadata for user-related documents.
 
 ## Relationships
+
 - A role has many users.
 - A state region has many townships.
 - A township belongs to one state region.
