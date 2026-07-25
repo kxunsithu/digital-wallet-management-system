@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digital Wallet Management System — Presentation</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css" />
+  <style>
+    :root {
+      --accent: #0f766e;
+      --accent-light: #14b8a6;
+      --dark: #0f172a;
+      --muted: #64748b;
+      --bg-soft: #f0fdfa;
+    }
+
+    .reveal {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      color: var(--dark);
+    }
+
+    .reveal h1, .reveal h2, .reveal h3 {
+      color: var(--dark);
+      text-transform: none;
+      letter-spacing: -0.02em;
+    }
+
+    .reveal h1 { font-size: 2.2em; font-weight: 700; }
+    .reveal h2 {
+      font-size: 1.6em;
+      font-weight: 700;
+      border-bottom: 3px solid var(--accent);
+      padding-bottom: 0.25em;
+      margin-bottom: 0.6em;
+    }
+    .reveal h3 { font-size: 1.1em; color: var(--accent); margin-bottom: 0.4em; }
+
+    .reveal .subtitle {
+      color: var(--muted);
+      font-size: 0.95em;
+      margin-top: 0.5em;
+    }
+
+    .reveal .title-slide {
+      text-align: center;
+    }
+
+    .reveal .title-slide .badge {
+      display: inline-block;
+      background: var(--bg-soft);
+      color: var(--accent);
+      padding: 0.35em 1em;
+      border-radius: 999px;
+      font-size: 0.55em;
+      font-weight: 600;
+      margin-bottom: 1em;
+      letter-spacing: 0.05em;
+    }
+
+    .reveal ul { text-align: left; }
+    .reveal li { margin-bottom: 0.35em; line-height: 1.45; }
+    .reveal li::marker { color: var(--accent); }
+
+    .reveal .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5em;
+      align-items: start;
+      text-align: left;
+    }
+
+    .reveal .card {
+      background: var(--bg-soft);
+      border-left: 4px solid var(--accent);
+      padding: 0.8em 1em;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.72em;
+      text-align: left;
+    }
+
+    .reveal .card h3 { margin-top: 0; }
+
+    .reveal table {
+      font-size: 0.58em;
+      margin: 0 auto;
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    .reveal table th {
+      background: var(--accent);
+      color: white;
+      padding: 0.5em 0.7em;
+      text-align: left;
+    }
+
+    .reveal table td {
+      padding: 0.45em 0.7em;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .reveal table tr:nth-child(even) td { background: #f8fafc; }
+
+    .reveal .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.8em;
+      font-size: 0.65em;
+      text-align: left;
+    }
+
+    .reveal .tech-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.7em;
+    }
+
+    .reveal .tech-item strong {
+      display: block;
+      color: var(--accent);
+      margin-bottom: 0.3em;
+    }
+
+    .reveal .diagram {
+      font-size: 0.55em;
+      font-family: "Courier New", monospace;
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1em;
+      border-radius: 8px;
+      text-align: left;
+      line-height: 1.6;
+      white-space: pre;
+    }
+
+    .reveal .flow-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5em;
+      flex-wrap: wrap;
+      font-size: 0.65em;
+      margin: 1em 0;
+    }
+
+    .reveal .flow-node {
+      background: var(--accent);
+      color: white;
+      padding: 0.5em 0.9em;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+
+    .reveal .flow-node.secondary { background: #334155; }
+    .reveal .flow-node.customer { background: var(--accent-light); color: var(--dark); }
+
+    .reveal .flow-arrow { color: var(--muted); font-size: 1.4em; }
+
+    .reveal .impl-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.8em;
+      font-size: 0.62em;
+      text-align: left;
+    }
+
+    .reveal .impl-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.7em;
+    }
+
+    .reveal .impl-card h3 { font-size: 1em; margin: 0 0 0.4em; }
+
+    .reveal .highlight { color: var(--accent); font-weight: 600; }
+
+    .reveal .small { font-size: 0.6em; color: var(--muted); }
+
+    .reveal .refs { font-size: 0.62em; text-align: left; }
+    .reveal .refs li { margin-bottom: 0.5em; }
+
+    .reveal .use-case-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.7em;
+      font-size: 0.58em;
+      text-align: left;
+    }
+
+    .reveal .role-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.6em 0.8em;
+    }
+
+    .reveal .role-card h4 {
+      margin: 0 0 0.4em;
+      color: var(--accent);
+      font-size: 1.1em;
+    }
+
+    .reveal .role-card ul { margin: 0; padding-left: 1.2em; }
+
+    .reveal img.arch {
+      max-height: 380px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .reveal .footer-note {
+      position: absolute;
+      bottom: 1em;
+      right: 1.5em;
+      font-size: 0.45em;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Title -->
+      <section class="title-slide" data-background-color="#f0fdfa">
+        <span class="badge">FINAL YEAR PROJECT</span>
+        <h1>Digital Wallet<br/>Management System</h1>
+        <p class="subtitle">A hierarchical mobile &amp; web platform for secure digital payments,<br/>float management, and KYC verification in Myanmar</p>
+        <p class="small" style="margin-top: 2em;">Presented by: Khun Si Thu &nbsp;|&nbsp; July 2026</p>
+      </section>
+
+      <!-- Outline -->
+      <section>
+        <h2>Presentation Outline</h2>
+        <ol style="font-size: 0.75em; max-width: 600px; margin: 0 auto; text-align: left;">
+          <li>Project Description</li>
+          <li>Motivation of the Project</li>
+          <li>Project Objectives</li>
+          <li>Background Technology</li>
+          <li>DB Design — ERD &amp; Schema</li>
+          <li>Use Case Diagram</li>
+          <li>Flow Diagram of the System</li>
+          <li>Project Implementation</li>
+          <li>Conclusion</li>
+          <li>References</li>
+        </ol>
+      </section>
+
+      <!-- 1. Project Description -->
+      <section>
+        <h2>1. Project Description</h2>
+        <div class="two-col">
+          <div>
+            <h3>Introduction</h3>
+            <p style="font-size: 0.68em; text-align: left;">
+              The <span class="highlight">Digital Wallet Management System (DWMS)</span> is a full-stack financial platform that enables secure digital money transfers, agent-based cash services, and hierarchical float distribution across four user roles: Admin, Agent Manager, Agent, and Customer.
+            </p>
+            <h3 style="margin-top: 0.8em;">Scope</h3>
+            <ul style="font-size: 0.65em;">
+              <li>REST API backend with role-based access control</li>
+              <li>Customer &amp; Agent mobile apps (React Native / Expo)</li>
+              <li>Admin web dashboard for system oversight</li>
+              <li>SMS OTP authentication microservice</li>
+              <li>KYC verification via NRC document upload</li>
+              <li>QR-based payments &amp; P2P transfers</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Problem Statement</h3>
+            <p style="margin: 0;">
+              Traditional cash-based economies lack accessible, secure, and traceable digital payment infrastructure — especially in regions where bank account penetration is low. Agents need a reliable float management system, customers need easy P2P transfers, and administrators require centralized oversight of wallets, KYC, and transactions.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Motivation -->
+      <section>
+        <h2>2. Motivation of the Project</h2>
+        <ul style="font-size: 0.72em; max-width: 780px; margin: 0 auto;">
+          <li><strong>Cash dependency</strong> — Many users rely on cash agents; a digital wallet bridges the gap between physical cash and electronic money.</li>
+          <li><strong>Financial inclusion</strong> — Phone-based registration (OTP + PIN) lowers the barrier to entry compared to traditional banking.</li>
+          <li><strong>Agent network scalability</strong> — A hierarchical float model (Admin → Manager → Agent → Customer) mirrors real-world cash distribution networks.</li>
+          <li><strong>Regulatory compliance</strong> — Built-in KYC/NRC verification ensures identity checks before high-value transactions.</li>
+          <li><strong>Transaction transparency</strong> — Every transfer generates a unique receipt with full audit trail.</li>
+          <li><strong>Local context</strong> — Bilingual UI (English / Myanmar), region &amp; township management tailored for Myanmar.</li>
+        </ul>
+      </section>
+
+      <!-- 3. Objectives -->
+      <section>
+        <h2>3. Project Objectives</h2>
+        <div class="two-col" style="font-size: 0.68em;">
+          <ul>
+            <li>Design a <span class="highlight">secure authentication</span> system using OTP + 4-digit PIN</li>
+            <li>Implement a <span class="highlight">hierarchical wallet architecture</span> with four distinct roles</li>
+            <li>Enable <span class="highlight">P2P money transfers</span> via phone, wallet number, or QR scan</li>
+            <li>Build <span class="highlight">agent cash-in/cash-out</span> services for customers</li>
+            <li>Develop an <span class="highlight">admin dashboard</span> for KYC review, user management, and analytics</li>
+          </ul>
+          <ul>
+            <li>Support <span class="highlight">float distribution &amp; return</span> across the agent hierarchy</li>
+            <li>Provide <span class="highlight">real-time balance updates</span> with in-app notifications</li>
+            <li>Generate <span class="highlight">transaction receipts</span> with save &amp; share functionality</li>
+            <li>Ensure <span class="highlight">role-based API security</span> via Laravel Sanctum tokens</li>
+            <li>Deploy a production-ready system on cloud platforms (Render, Vercel, EAS)</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 4. Background Technology -->
+      <section>
+        <h2>4. Background Technology</h2>
+        <div class="tech-grid">
+          <div class="tech-item">
+            <strong>Backend API</strong>
+            Laravel 13 · PHP 8.3<br/>
+            Sanctum Auth · PostgreSQL<br/>
+            Deployed on Render.com
+          </div>
+          <div class="tech-item">
+            <strong>Customer Mobile App</strong>
+            React Native · Expo 57<br/>
+            TypeScript · NativeWind 4<br/>
+            Expo Router · Secure Store
+          </div>
+          <div class="tech-item">
+            <strong>Agent Mobile App</strong>
+            React Native · Expo 57<br/>
+            TypeScript · OTA Updates<br/>
+            Role Guard · QR Scanner
+          </div>
+          <div class="tech-item">
+            <strong>Admin Dashboard</strong>
+            React 19 · Vite 8<br/>
+            TailwindCSS 4 · shadcn/ui<br/>
+            Zustand · Recharts · Vercel
+          </div>
+          <div class="tech-item">
+            <strong>OTP Engine</strong>
+            Spring Boot 3.2 · Java 17<br/>
+            6-digit OTP · 5-min expiry<br/>
+            Infinireach SMS Gateway
+          </div>
+          <div class="tech-item">
+            <strong>Security</strong>
+            bcrypt PIN hashing<br/>
+            Sanctum Bearer tokens<br/>
+            Role middleware · HTTPS
+          </div>
+        </div>
+      </section>
+
+      <!-- 4b. Architecture -->
+      <section>
+        <h2>System Architecture</h2>
+        <div class="flow-box">
+          <span class="flow-node">Admin<br/><small>Web Dashboard</small></span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-node secondary">Agent Manager<br/><small>Web Dashboard</small></span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-node">Agent<br/><small>Mobile App</small></span>
+          <span class="flow-arrow">→</span>
+          <span class="flow-node customer">Customer<br/><small>Mobile App</small></span>
+        </div>
+        <p style="font-size: 0.6em; color: var(--muted);">
+          Float flows top-down · Returns flow bottom-up · Customers perform P2P &amp; QR payments
+        </p>
+        <img src="../overall-system-architecture.png" alt="System Architecture" class="arch" style="margin-top: 0.5em;" />
+      </section>
+
+      <!-- 5. DB Design - ERD -->
+      <section>
+        <h2>5. DB Design — Entity-Relationship Diagram</h2>
+        <div class="diagram" style="font-size: 0.48em; max-height: 420px; overflow: hidden;">
+┌─────────┐     ┌──────────────┐     ┌───────────┐
+│  roles  │──┐  │ state_regions│──┐  │ townships │
+└─────────┘  │  └──────────────┘  │  └───────────┘
+             │                    │
+             ▼                    ▼
+        ┌─────────┐    ┌──────────────────┐  ┌─────────────────────┐
+        │  users  │───▶│ customer_profiles│  │  agent_profiles     │
+        └────┬────┘    └──────────────────┘  └─────────────────────┘
+             │          ┌──────────────────────┐
+             ├─────────▶│ agent_manager_profiles│
+             │          └──────────────────────┘
+             │
+    ┌────────┼────────┬──────────────┬─────────────────┐
+    ▼        ▼        ▼              ▼                 ▼
+┌────────┐ ┌─────┐ ┌─────────┐ ┌──────────────┐ ┌───────────────┐
+│ wallets│ │ pins│ │ qr_codes│ │ transactions │ │nrc_verifications│
+└────────┘ └─────┘ └─────────┘ └──────────────┘ └───────────────┘
+             │
+             ▼
+      ┌──────────────────┐
+      │ otp_verifications│
+      └──────────────────┘
+        </div>
+        <p class="small">14 core tables · Role-based profiles · Wallet-centric transaction model</p>
+      </section>
+
+      <!-- 5b. Schema -->
+      <section>
+        <h2>5. DB Design — Schema Design</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Table</th>
+              <th>Purpose</th>
+              <th>Key Fields</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>users</td><td>Core account records</td><td>phone_number, role_id, nrc_number, status</td></tr>
+            <tr><td>wallets</td><td>Balance tracking</td><td>wallet_number, balance, status</td></tr>
+            <tr><td>transactions</td><td>Transfer history</td><td>sender/receiver wallet, type, amount, fee</td></tr>
+            <tr><td>pins</td><td>Security</td><td>pin_hash (bcrypt), failed_attempts, is_locked</td></tr>
+            <tr><td>otp_verifications</td><td>Auth</td><td>otp_code, purpose, expires_at, status</td></tr>
+            <tr><td>customer_profiles</td><td>Customer data</td><td>kyc_status, referral_code, region</td></tr>
+            <tr><td>agent_profiles</td><td>Agent data</td><td>agent_code, shop_name, created_by_manager</td></tr>
+            <tr><td>nrc_verifications</td><td>KYC workflow</td><td>status, rejection_reason, verified_by</td></tr>
+            <tr><td>qr_codes</td><td>QR payments</td><td>qr_code_value, wallet_id, is_active</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 6. Use Case Diagram -->
+      <section>
+        <h2>6. Use Case Diagram</h2>
+        <div class="use-case-grid">
+          <div class="role-card">
+            <h4>Admin</h4>
+            <ul>
+              <li>Manage Agent Managers</li>
+              <li>Review KYC &amp; NRC documents</li>
+              <li>Transfer treasury float</li>
+              <li>Audit transactions &amp; wallets</li>
+              <li>Manage locations (regions/townships)</li>
+            </ul>
+          </div>
+          <div class="role-card">
+            <h4>Agent Manager</h4>
+            <ul>
+              <li>Create &amp; manage agents</li>
+              <li>Distribute float to agents</li>
+              <li>Receive float returns</li>
+              <li>Return float to admin</li>
+              <li>View agent wallets &amp; logs</li>
+            </ul>
+          </div>
+          <div class="role-card">
+            <h4>Agent</h4>
+            <ul>
+              <li>Authenticate (OTP + PIN)</li>
+              <li>Cash In to customers</li>
+              <li>Receive QR payments</li>
+              <li>Return float to manager</li>
+              <li>Submit NRC documents</li>
+            </ul>
+          </div>
+          <div class="role-card">
+            <h4>Customer</h4>
+            <ul>
+              <li>Send money (phone/wallet/QR)</li>
+              <li>Receive money via QR</li>
+              <li>Submit KYC verification</li>
+              <li>View wallet &amp; transactions</li>
+              <li>Manage profile &amp; preferences</li>
+            </ul>
+          </div>
+        </div>
+        <p class="small" style="margin-top: 0.8em;">All money transfers include &lt;&lt;include&gt;&gt; PIN verification</p>
+      </section>
+
+      <!-- 7. Flow Diagram -->
+      <section>
+        <h2>7. Flow Diagram — Money &amp; Float Flow</h2>
+        <div class="diagram" style="font-size: 0.52em;">
+  ┌─────────────────────────────────────────────────────────┐
+  │              FLOAT DISTRIBUTION (Top-Down)              │
+  └─────────────────────────────────────────────────────────┘
+
+  Admin ──[Distribute Float]──▶ Agent Manager
+                                    │
+                                    ▼
+                              Agent ──[Cash In]──▶ Customer
+
+  ┌─────────────────────────────────────────────────────────┐
+  │               FLOAT RETURN (Bottom-Up)                  │
+  └─────────────────────────────────────────────────────────┘
+
+  Agent ──[Return Float]──▶ Agent Manager ──[Return]──▶ Admin
+
+  ┌─────────────────────────────────────────────────────────┐
+  │                  CUSTOMER TRANSFERS                     │
+  └─────────────────────────────────────────────────────────┘
+
+  Customer ◀──P2P Transfer──▶ Customer
+  Customer ──[QR Payment]──▶ Agent
+        </div>
+      </section>
+
+      <!-- 7b. Auth Flow -->
+      <section>
+        <h2>7. Flow Diagram — Authentication</h2>
+        <div class="diagram" style="font-size: 0.55em;">
+  Customer / Agent / Admin / Manager
+              │
+              ▼
+  ┌───────────────────────┐
+  │  Enter Phone Number   │
+  └───────────┬───────────┘
+              ▼
+  ┌───────────────────────┐
+  │  Receive 6-digit OTP  │──── SMS via Infinireach Gateway
+  │  (expires in 5 min)   │
+  └───────────┬───────────┘
+              ▼
+       ┌──────┴──────┐
+       │  New User?  │
+       └──┬───────┬──┘
+     Yes │       │ No
+         ▼       ▼
+  Create PIN   Verify PIN
+  (4 digits)   (4 digits)
+         │       │
+         └───────┘
+              ▼
+  ┌───────────────────────┐
+  │ Issue Sanctum Token   │──── Stored in Secure Store (mobile)
+  └───────────────────────┘
+        </div>
+      </section>
+
+      <!-- 8. Implementation -->
+      <section>
+        <h2>8. Project Implementation</h2>
+        <div class="impl-grid">
+          <div class="impl-card">
+            <h3>Backend API</h3>
+            Laravel 13 REST API with 40+ endpoints<br/>
+            Role middleware, wallet transfers, KYC APIs<br/>
+            PostgreSQL (prod) · SQLite (dev)
+          </div>
+          <div class="impl-card">
+            <h3>Customer App</h3>
+            Send money · QR receive · KYC submit<br/>
+            Bilingual (EN/MY) · Dark/Light theme<br/>
+            Receipt save &amp; share · Real-time balance
+          </div>
+          <div class="impl-card">
+            <h3>Agent App</h3>
+            Cash In · Return Float · QR display<br/>
+            Role guard · OTA updates<br/>
+            Transaction history &amp; notifications
+          </div>
+          <div class="impl-card">
+            <h3>Admin Dashboard</h3>
+            User CRUD · KYC review · Float transfer<br/>
+            Analytics charts · Location management<br/>
+            Wallet status toggles · Transaction audit
+          </div>
+        </div>
+      </section>
+
+      <!-- 8b. Transaction Types -->
+      <section>
+        <h2>8. Project Implementation — Transaction Types</h2>
+        <table>
+          <thead>
+            <tr><th>Type</th><th>Sender</th><th>Receiver</th><th>API Endpoint</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>admin_to_agent_manager</td><td>Admin</td><td>Agent Manager</td><td>/transfers/admin</td></tr>
+            <tr><td>agent_manager_to_agent</td><td>Agent Manager</td><td>Agent</td><td>/transfers/manager</td></tr>
+            <tr><td>agent_to_customer</td><td>Agent</td><td>Customer</td><td>/transfers/agent</td></tr>
+            <tr><td>agent_to_agent_manager</td><td>Agent</td><td>Agent Manager</td><td>/transfers/agent</td></tr>
+            <tr><td>customer_to_customer</td><td>Customer</td><td>Customer</td><td>/transfers/customer</td></tr>
+            <tr><td>customer_to_agent</td><td>Customer</td><td>Agent</td><td>/transfers/customer</td></tr>
+          </tbody>
+        </table>
+        <p class="small" style="margin-top: 0.8em;">Each transaction generates a unique receipt (e.g. TXPYEY552MKNBO)</p>
+      </section>
+
+      <!-- 9. Conclusion -->
+      <section>
+        <h2>9. Conclusion</h2>
+        <ul style="font-size: 0.72em; max-width: 780px; margin: 0 auto;">
+          <li>Successfully built a <span class="highlight">complete digital wallet ecosystem</span> with 5 integrated sub-projects.</li>
+          <li>Implemented <span class="highlight">secure OTP + PIN authentication</span> with role-based access across all platforms.</li>
+          <li>Designed a <span class="highlight">hierarchical float management</span> model mirroring real-world agent networks.</li>
+          <li>Delivered <span class="highlight">mobile-first UX</span> with QR payments, real-time notifications, and bilingual support.</li>
+          <li>Established <span class="highlight">KYC compliance workflow</span> with admin review and document verification.</li>
+          <li>Deployed to production on <span class="highlight">Render, Vercel, and EAS</span> — ready for real-world use.</li>
+        </ul>
+        <p style="font-size: 0.65em; margin-top: 1.5em; color: var(--accent); font-weight: 600;">
+          Future work: iOS release, transaction limits, push notifications, and payment gateway integration.
+        </p>
+      </section>
+
+      <!-- 10. References -->
+      <section>
+        <h2>10. References</h2>
+        <ul class="refs">
+          <li>Laravel Documentation — <a href="https://laravel.com/docs">https://laravel.com/docs</a></li>
+          <li>React Native / Expo Documentation — <a href="https://docs.expo.dev">https://docs.expo.dev</a></li>
+          <li>React Documentation — <a href="https://react.dev">https://react.dev</a></li>
+          <li>Spring Boot Reference — <a href="https://spring.io/projects/spring-boot">https://spring.io/projects/spring-boot</a></li>
+          <li>Laravel Sanctum — <a href="https://laravel.com/docs/sanctum">https://laravel.com/docs/sanctum</a></li>
+          <li>PostgreSQL Documentation — <a href="https://www.postgresql.org/docs">https://www.postgresql.org/docs</a></li>
+          <li>TailwindCSS — <a href="https://tailwindcss.com/docs">https://tailwindcss.com/docs</a></li>
+          <li>UML Use Case Diagrams — Booch, Rumbaugh &amp; Jacobson, <em>The Unified Modeling Language User Guide</em></li>
+          <li>Digital Wallet System Documentation — <code>SYSTEM_DOCUMENTATION.md</code> (Project Repository)</li>
+        </ul>
+      </section>
+
+      <!-- Thank You -->
+      <section class="title-slide" data-background-color="#0f766e">
+        <h1 style="color: white;">Thank You</h1>
+        <p class="subtitle" style="color: #ccfbf1;">Questions &amp; Discussion</p>
+        <p class="small" style="color: #99f6e4; margin-top: 2em;">
+          Digital Wallet Management System · 2026
+        </p>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: 'c/t',
+      transition: 'slide',
+      width: 1100,
+      height: 700,
+      margin: 0.08,
+      controls: true,
+      progress: true,
+      center: true,
+    });
+  </script>
+</body>
+</html>
