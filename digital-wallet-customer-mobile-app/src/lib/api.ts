@@ -5,7 +5,7 @@ export const ROLE_ID = Number(process.env.ROLE_ID ?? 4);
 
 export async function getAuthToken(): Promise<string | null> {
   try {
-    return await SecureStore.getItemAsync('authToken');
+    return await SecureStore.getItemAsync('customerAuthToken');
   } catch (e) {
     return null;
   }

@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import apiFetch, { API_BASE, ROLE_ID } from '../lib/api';
 
 // Constants
-export const AUTH_TOKEN_KEY = 'authToken';
+export const AUTH_TOKEN_KEY = 'customerAuthToken';
 export const PENDING_AUTH_ROUTE_KEY = 'pendingAuthRoute';
 export const PENDING_AUTH_STEP_KEY = 'pendingAuthStep';
 

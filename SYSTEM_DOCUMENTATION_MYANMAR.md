@@ -1,14 +1,14 @@
-# Digital Wallet Management System Specification & Architecture 
+# Digital Wallet Management System Specification & Architecture
 
-## အကျဉ်းချုပ်
+## Executive Summary
 
-ဤစာရွက်စာတမ်းသည် **Digital Wallet Management System** ၏ System Architecture, Workflow, User Roles, Security Rules နှင့် Business Rules များကို နားလည်ရလွယ်ကူစေရန် စနစ်တကျ ပြန်လည်ရေးသားထားသော Documentation ဖြစ်သည်။
-
-ဤ Document ကို Developer များ၊ QA Tester များ၊ Project Manager များနှင့် System Administrator များအတွက် ရည်ရွယ်ထားသည်။
+This document describes the Digital Wallet Management System architecture, workflows, user roles, security rules, and business policies. It is intended for developers, QA testers, product managers, and system administrators.
 
 # 1. Overall System Architecture
 
-Digital Wallet Management System သည် **Hierarchical Wallet Architecture** ကို အသုံးပြုထားပြီး Role (၄) မျိုးဖြင့် လုပ်ဆောင်သည်။
+The Digital Wallet Management System uses a hierarchical wallet architecture with four primary roles.
+
+![Overall System Architecture](overall-system-architecture.png)
 
 ```text
 Admin
@@ -23,17 +23,15 @@ Agent
 Customer
 ```
 
-Float သည် အထက်မှအောက်သို့ ဖြန့်ဝေပြီး၊ Float Return သည် အောက်မှအထက်သို့ ပြန်လည်အပ်နှံသည်။
-
-Customer များသည် Customer အချင်းချင်း P2P Transfer ပြုလုပ်နိုင်သည်။
+Float is distributed from higher roles to lower roles, while float returns flow from lower roles back upward. Customers can also perform peer-to-peer transfers among themselves.
 
 # 2. Core Workflows
 
 ## Authentication
 
-- Phone Number ဖြင့် OTP အတည်ပြုရမည်။
-- OTP အောင်မြင်ပြီးနောက် PIN သတ်မှတ်ရမည်။
-- Authentication အောင်မြင်ပါက Laravel Sanctum Bearer Token ထုတ်ပေးသည်။
+- Users authenticate with phone number and OTP.
+- After OTP verification, users set a secure 4-digit PIN.
+- Successful authentication issues a Laravel Sanctum bearer token.
 
 ## Float Distribution
 
@@ -41,79 +39,84 @@ Admin → Agent Manager → Agent
 
 ## Customer Services
 
-Agent မှ
+Agents provide the following customer services:
 
 - Cash In
 - Cash Out
 - QR Payment
 
-တို့ကို ဝန်ဆောင်မှုပေးသည်။
+## Customer Transfers
 
-## Customer Transfer
+Customers can transfer money using:
 
-Customer များသည်
+- Phone number
+- Wallet number
+- QR code
 
-- Phone Number
-- QR Code
+## KYC Verification
 
-ဖြင့် P2P Money Transfer ပြုလုပ်နိုင်သည်။
+Customers can submit NRC front and back images for verification.
 
-## KYC
+The verification process moves through:
 
-Customer သည် NRC Front/Back Upload တင်သွင်းနိုင်ပြီး
+- Pending
+- Verified
+- Rejected
 
-Pending → Verified / Rejected
-
-အဆင့်များဖြင့် Admin မှ စစ်ဆေးသည်။
+Admin reviews and updates customer KYC status.
 
 # 3. User Roles
 
 ## Admin
 
-### Responsibilities
+### Features
 
-- Agent Manager စီမံခန့်ခွဲခြင်း
-- Float ဖြန့်ဝေခြင်း
-- Customer KYC Approval
-- System Transaction History ကြည့်ရှုခြင်း
-- State / Township Data စီမံခန့်ခွဲခြင်း
+- Create, update, and delete Agent Manager accounts.
+- Manage Agent accounts and view their wallet status.
+- Approve or reject customer KYC/NRC verification requests.
+- Manage State Region and Township reference data.
+- Review system-wide transaction history and wallet data.
+- Send float to Agent Managers within the hierarchical flow.
+- Access administrative APIs with OTP and PIN security.
 
 ## Agent Manager
 
-### Responsibilities
+### Features
 
-- Agent အသစ်ဖန်တီးခြင်း
-- Agent Code ထုတ်ပေးခြင်း
-- Float ဖြန့်ဝေခြင်း
-- Float Return လက်ခံခြင်း
-- Agent Wallet များ စောင့်ကြည့်ခြင်း
+- Create new Agent accounts and assign unique agent codes.
+- Update agent details, including shop name, address, region, and NRC documents.
+- Manage agents they created and monitor agent wallet data.
+- Search and filter agents by status, region, township, phone, name, or code.
+- Distribute float to Agents and receive float returns.
+- Transfer float back to Admin when required.
+- Use authenticated agent manager APIs with OTP and PIN verification.
 
 ## Agent
 
-### Responsibilities
+### Features
 
-- Customer Cash In
-- Customer Cash Out
-- Float Return
-- Agent QR အသုံးပြု၍ ငွေလက်ခံခြင်း
-- Balance Notification
-- PIN Verification
+- Provide customer-facing services: Cash In, Cash Out, and QR Payment.
+- Transfer money to Customers and Agent Managers.
+- Receive payments via QR code, phone number, or wallet number.
+- Maintain wallet balance and transaction history.
+- Upload or update NRC documents and manage verification status.
+- Use secure PIN verification for all transactions.
 
 ## Customer
 
-### Responsibilities
+### Features
 
-- Send Money
-- Receive Money
-- Cash Out
-- My QR
-- Transaction Receipt
-- Profile Management
-- PIN Management
-- KYC Submission
+- Register and authenticate with phone number and OTP.
+- Create, verify, reset, and change a secure 4-digit PIN.
+- Submit NRC front and back images for KYC verification.
+- Update profile information and upload a profile picture.
+- Access a personal QR code for receiving payments.
+- Send money to other Customers and Agents using phone, wallet number, or QR code.
+- Receive money from customers or agents.
+- View transaction receipts, transaction history, and wallet details.
+- Use authenticated customer APIs with PIN-secured transfers.
 
 # 4. Money Transfer Rules
-
 
 | Sender        | Receiver      | Allowed |
 | ------------- | ------------- | ------- |
@@ -125,7 +128,7 @@ Pending → Verified / Rejected
 | Customer      | Customer      | ✅      |
 | Customer      | Agent         | ✅      |
 
-## Disallowed
+## Disallowed Transfers
 
 - Admin ↔ Customer
 - Admin ↔ Agent
@@ -133,46 +136,42 @@ Pending → Verified / Rejected
 
 # 5. Security Rules
 
-- Sender နှင့် Receiver Account နှစ်ခုလုံး Active ဖြစ်ရမည်။
-- Wallet Status သည် Active ဖြစ်ရမည်။
-- Transaction တိုင်းတွင် PIN Verification ပြုလုပ်ရမည်။
-- PIN ကို Bcrypt Hash ဖြင့် သိမ်းဆည်းထားသည်။
-- NRC Number နှင့် User Role ကို Account ဖန်တီးပြီးနောက် ပြောင်းလဲခွင့်မရှိ။
-- Profile Image နှင့် NRC Images များကို multipart/form-data ဖြင့် Upload ပြုလုပ်ရမည်။
+- Both sender and receiver accounts must be active.
+- Wallets must be active to process transfers.
+- All transactions require PIN verification.
+- PINs are stored securely using bcrypt hashing.
+- NRC number and user role cannot be changed after account creation.
+- Profile and NRC images must be uploaded as multipart/form-data.
 
 # 6. Notifications
 
-Money Received ဖြစ်သည်နှင့်
+When money is received, the system provides:
 
-- Notification သိမ်းဆည်းခြင်း
-- Badge Update
-- Sound
-- Toast Message
-
-တို့ကို Real-time ပြသသည်။
+- Notification records
+- Badge count updates
+- Sound alerts
+- Real-time toast messages
 
 # 7. Transaction Receipt
 
-Transaction တိုင်းတွင်
+Each transaction automatically generates:
 
-- Unique Transaction Number
-- Receipt
-- History Record
-
-တို့ကို အလိုအလျောက် ဖန်တီးသည်။
+- A unique transaction number
+- A receipt
+- A history record
 
 # 8. Summary
 
-System သည်
+The system is built around:
 
-- Hierarchical Wallet Architecture
-- Secure Authentication
-- Float Management
-- Customer Wallet
-- QR Payment
-- Cash In / Cash Out
-- KYC Verification
-- Transaction Receipt
-- Notification System
+- Hierarchical wallet architecture
+- Secure authentication
+- Float management
+- Customer wallet services
+- QR payments
+- Cash In / Cash Out operations
+- KYC verification
+- Transaction receipts and history
+- Real-time notifications
 
-တို့ဖြင့် ဖွဲ့စည်းထားပြီး လုံခြုံရေး၊ စနစ်တကျ စီမံခန့်ခွဲမှုနှင့် အသုံးပြုရလွယ်ကူမှုကို ဦးစားပေး ဒီဇိုင်းရေးဆွဲထားသည်။
+This design prioritizes role separation, security, and usability.

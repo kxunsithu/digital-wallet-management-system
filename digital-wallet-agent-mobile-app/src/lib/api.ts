@@ -5,7 +5,7 @@ export const ROLE_ID = Number(process.env.EXPO_PUBLIC_ROLE_ID ?? 3);
 
 export async function getAuthToken(): Promise<string | null> {
   try {
-    return await SecureStore.getItemAsync('authToken');
+    return await SecureStore.getItemAsync('agentAuthToken');
   } catch (e) {
     return null;
   }
