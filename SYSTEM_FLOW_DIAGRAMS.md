@@ -11,20 +11,60 @@ flowchart TD
     Admin["Admin (System Treasury)"]
     Manager["Agent Manager"]
     Agent["Agent"]
-    Customer["Customer"]
+    CustomerA["Customer"]
+    CustomerB["Customer"]
 
     %% Distribution
     Admin -->|"1. Distribute Float"| Manager
     Manager -->|"2. Distribute Float"| Agent
-    Agent -->|"3. Cash In"| Customer
+    Agent -->|"3. Cash In"| CustomerA
 
     %% Return
-    Agent -.->"4. Return Float"| Manager
-    Manager -.->"5. Return Float"| Admin
+    Agent -.->|"4. Return Float"| Manager
+    Manager -.->|"5. Return Float"| Admin
 
     %% Transfers
-    Customer <-->|"P2P Money Transfer"| Customer
-    Customer ==>|"QR Payment"| Agent
+    CustomerA <-->|"P2P Money Transfer"| CustomerB
+    CustomerA ==>|"QR Payment"| Agent
+```
+
+---
+
+## 1.1 Money Transfer Flow
+
+```mermaid
+flowchart TD
+    Start([Start]) --> Login[/Input Phone & OTP/]
+    Login --> PINCheck{Valid PIN?}
+    PINCheck -- No --> Login
+    PINCheck -- Yes --> Dashboard[Customer Dashboard]
+
+    Dashboard --> SelectTransfer[Select Transfer Mode]
+    SelectTransfer --> P2P[P2P Transfer]
+    SelectTransfer --> QR[QR Payment]
+
+    P2P --> InputRecipient[/Input Receiver Phone or Wallet/]
+    QR --> ScanQR[/Scan Agent QR or Present Own QR/]
+
+    InputRecipient --> InputAmount[/Input Amount/]
+    ScanQR --> InputAmountQR[/Input Amount/]
+
+    InputAmount --> InputPIN[/Input Security PIN/]
+    InputAmountQR --> InputPIN
+
+    InputPIN --> CheckBalance{Sufficient Balance?}
+    CheckBalance -- No --> ErrorBalance[Display Insufficient Balance] --> Dashboard
+    CheckBalance -- Yes --> CheckPIN{Valid PIN?}
+    CheckPIN -- No --> ErrorPIN[Display Invalid PIN] --> Dashboard
+    CheckPIN -- Yes --> Execute[Execute Transfer]
+
+    Execute --> TransferType{Transfer Type}
+    TransferType -- P2P --> CreditReceiver[Credit Receiver Wallet]
+    TransferType -- QR --> CreditAgent[Credit Agent Wallet]
+
+    CreditReceiver --> Receipt[Generate Receipt]
+    CreditAgent --> Receipt
+    Receipt --> End([End])
 ```
 
 ---

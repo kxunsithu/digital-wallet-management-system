@@ -6,13 +6,14 @@ This document describes the complete Digital Wallet Management System (DWMS) arc
 
 The system is composed of five sub-projects:
 
-| Component | Type | Technology |
-|---|---|---|
-| `digital-wallet-backend-api` | REST API | Laravel 13 / PHP 8.3 |
-| `digital-wallet-customer-mobile-app` | Mobile App (Customer) | React Native / Expo 57 |
-| `digital-wallet-agent-mobile-app` | Mobile App (Agent) | React Native / Expo 57 |
-| `digital-wallet-frontend-admin` | Web Admin Dashboard | React 19 + Vite 8 |
-| `sms-gateway-otp-engine` | OTP Microservice | Spring Boot 3.2 / Java 17 |
+
+| Component                            | Type                  | Technology                |
+| ------------------------------------ | --------------------- | ------------------------- |
+| `digital-wallet-backend-api`         | REST API              | Laravel 13 / PHP 8.3      |
+| `digital-wallet-customer-mobile-app` | Mobile App (Customer) | React Native / Expo 57    |
+| `digital-wallet-agent-mobile-app`    | Mobile App (Agent)    | React Native / Expo 57    |
+| `digital-wallet-frontend-admin`      | Web Admin Dashboard   | React 19 + Vite 8         |
+| `sms-gateway-otp-engine`             | OTP Microservice      | Spring Boot 3.2 / Java 17 |
 
 ---
 
@@ -492,104 +493,111 @@ flowchart TD
 
 ## 2.1 Backend API — `digital-wallet-backend-api`
 
-| Item | Detail |
-|---|---|
-| Framework | Laravel 13.8 |
-| Language | PHP 8.3 |
-| Authentication | Laravel Sanctum 4.3 (Bearer Token) |
-| Database (Dev) | SQLite |
-| Database (Prod) | PostgreSQL (via `DATABASE_URL`) |
-| Queue | Database queue driver |
-| Cache | Database cache driver |
-| Session | Database session driver |
-| Password Hashing | bcrypt (12 rounds) |
-| SMS Integration | Infinireach SMS API |
-| Deployment | Render.com (Docker) |
-| API URL | `https://digital-wallet-backend-api.onrender.com` |
+
+| Item             | Detail                                            |
+| ---------------- | ------------------------------------------------- |
+| Framework        | Laravel 13.8                                      |
+| Language         | PHP 8.3                                           |
+| Authentication   | Laravel Sanctum 4.3 (Bearer Token)                |
+| Database (Dev)   | SQLite                                            |
+| Database (Prod)  | PostgreSQL (via`DATABASE_URL`)                    |
+| Queue            | Database queue driver                             |
+| Cache            | Database cache driver                             |
+| Session          | Database session driver                           |
+| Password Hashing | bcrypt (12 rounds)                                |
+| SMS Integration  | Infinireach SMS API                               |
+| Deployment       | Render.com (Docker)                               |
+| API URL          | `https://digital-wallet-backend-api.onrender.com` |
 
 **Key PHP Packages:**
 
-| Package | Version | Purpose |
-|---|---|---|
-| `laravel/framework` | ^13.8 | Core framework |
-| `laravel/sanctum` | ^4.3 | API token authentication |
-| `laravel/tinker` | ^3.0 | REPL for development |
+
+| Package             | Version | Purpose                  |
+| ------------------- | ------- | ------------------------ |
+| `laravel/framework` | ^13.8   | Core framework           |
+| `laravel/sanctum`   | ^4.3    | API token authentication |
+| `laravel/tinker`    | ^3.0    | REPL for development     |
 
 ## 2.2 Customer Mobile App — `digital-wallet-customer-mobile-app`
 
-| Item | Detail |
-|---|---|
-| Framework | Expo 57 + React Native 0.86 |
-| Language | TypeScript |
-| React Version | 19.2.3 |
-| Styling | NativeWind 4 (TailwindCSS for React Native) |
-| Navigation | Expo Router 57 (file-based) |
-| Storage | expo-secure-store (token), AsyncStorage (notifications) |
-| Android Package | `com.kxunsithu.digitalwalletcustomer` |
-| EAS Project ID | `3144640a-9629-4f3b-9d39-4648ebb18f65` |
+
+| Item            | Detail                                                  |
+| --------------- | ------------------------------------------------------- |
+| Framework       | Expo 57 + React Native 0.86                             |
+| Language        | TypeScript                                              |
+| React Version   | 19.2.3                                                  |
+| Styling         | NativeWind 4 (TailwindCSS for React Native)             |
+| Navigation      | Expo Router 57 (file-based)                             |
+| Storage         | expo-secure-store (token), AsyncStorage (notifications) |
+| Android Package | `com.kxunsithu.digitalwalletcustomer`                   |
+| EAS Project ID  | `3144640a-9629-4f3b-9d39-4648ebb18f65`                  |
 
 **Key Libraries:**
 
-| Library | Purpose |
-|---|---|
-| `expo-camera` | QR code scanning |
-| `expo-image-picker` | Profile & NRC photo uploads |
-| `react-native-qrcode-svg` | Personal QR code display |
+
+| Library                       | Purpose                      |
+| ----------------------------- | ---------------------------- |
+| `expo-camera`                 | QR code scanning             |
+| `expo-image-picker`           | Profile & NRC photo uploads  |
+| `react-native-qrcode-svg`     | Personal QR code display     |
 | `expo-print` + `expo-sharing` | Receipt generation & sharing |
-| `expo-media-library` | Save receipts to gallery |
-| `expo-linear-gradient` | Wallet card gradient UI |
-| `react-native-toast-message` | In-app toast notifications |
-| `react-native-reanimated` | Smooth animations |
-| `expo-glass-effect` | Glassmorphism UI effects |
+| `expo-media-library`          | Save receipts to gallery     |
+| `expo-linear-gradient`        | Wallet card gradient UI      |
+| `react-native-toast-message`  | In-app toast notifications   |
+| `react-native-reanimated`     | Smooth animations            |
+| `expo-glass-effect`           | Glassmorphism UI effects     |
 
 ## 2.3 Agent Mobile App — `digital-wallet-agent-mobile-app`
 
-| Item | Detail |
-|---|---|
-| Framework | Expo 57 + React Native 0.86 |
-| Language | TypeScript |
-| React Version | 19.2.3 |
-| Styling | NativeWind 4 (TailwindCSS for React Native) |
-| Navigation | Expo Router 57 (file-based) |
-| Storage | expo-secure-store (token) |
-| OTA Updates | expo-updates 57 |
-| Android Package | `com.kxunsithu.digitalwalletagent` |
-| EAS Project ID | `aeb0c9b8-ada5-457d-a8e0-5df4ffecd66e` |
+
+| Item            | Detail                                                    |
+| --------------- | --------------------------------------------------------- |
+| Framework       | Expo 57 + React Native 0.86                               |
+| Language        | TypeScript                                                |
+| React Version   | 19.2.3                                                    |
+| Styling         | NativeWind 4 (TailwindCSS for React Native)               |
+| Navigation      | Expo Router 57 (file-based)                               |
+| Storage         | expo-secure-store (token)                                 |
+| OTA Updates     | expo-updates 57                                           |
+| Android Package | `com.kxunsithu.digitalwalletagent`                        |
+| EAS Project ID  | `aeb0c9b8-ada5-457d-a8e0-5df4ffecd66e`                    |
 | EAS Updates URL | `https://u.expo.dev/aedc38c0-5b53-4c1c-89cf-fbace89975f5` |
 
 The Agent app shares the same core library set as the Customer app, plus `expo-blur` and `expo-updates` for OTA deployments.
 
 ## 2.4 Admin Web Dashboard — `digital-wallet-frontend-admin`
 
-| Item | Detail |
-|---|---|
-| Framework | React 19 + Vite 8 |
-| Language | TypeScript |
-| Styling | TailwindCSS 4 + shadcn/ui + Base UI |
-| HTTP Client | Axios |
-| Routing | react-router-dom v7 |
-| State Management | Zustand (store/) |
-| Charts | Recharts |
-| QR Scanning | @yudiel/react-qr-scanner |
-| QR Display | react-qr-code |
-| Icons | lucide-react |
-| Toasts | Sonner |
-| Theme | next-themes (dark/light) |
-| Date Utilities | date-fns |
-| Deployment | Vercel |
+
+| Item             | Detail                              |
+| ---------------- | ----------------------------------- |
+| Framework        | React 19 + Vite 8                   |
+| Language         | TypeScript                          |
+| Styling          | TailwindCSS 4 + shadcn/ui + Base UI |
+| HTTP Client      | Axios                               |
+| Routing          | react-router-dom v7                 |
+| State Management | Zustand (store/)                    |
+| Charts           | Recharts                            |
+| QR Scanning      | @yudiel/react-qr-scanner            |
+| QR Display       | react-qr-code                       |
+| Icons            | lucide-react                        |
+| Toasts           | Sonner                              |
+| Theme            | next-themes (dark/light)            |
+| Date Utilities   | date-fns                            |
+| Deployment       | Vercel                              |
 
 ## 2.5 SMS Gateway OTP Engine — `sms-gateway-otp-engine`
 
-| Item | Detail |
-|---|---|
-| Framework | Spring Boot 3.2.0 |
-| Language | Java 17 |
-| Build Tool | Maven |
-| Database | PostgreSQL |
+
+| Item         | Detail                  |
+| ------------ | ----------------------- |
+| Framework    | Spring Boot 3.2.0       |
+| Language     | Java 17                 |
+| Build Tool   | Maven                   |
+| Database     | PostgreSQL              |
 | SMS Provider | Infinireach SMS Gateway |
-| OTP Length | 6 digits |
-| OTP Expiry | 5 minutes |
-| Port | 8080 |
+| OTP Length   | 6 digits                |
+| OTP Expiry   | 5 minutes               |
+| Port         | 8080                    |
 
 ---
 
@@ -623,16 +631,18 @@ sequenceDiagram
 
 **Auth Screens (Customer & Agent Mobile Apps):**
 
-| Screen | File | Description |
-|---|---|---|
-| Login | `auth/index.tsx` | Phone number entry |
+
+| Screen     | File                  | Description                            |
+| ---------- | --------------------- | -------------------------------------- |
+| Login      | `auth/index.tsx`      | Phone number entry                     |
 | OTP Verify | `auth/verify-otp.tsx` | 6-digit OTP entry with countdown timer |
-| Create PIN | `auth/create-pin.tsx` | First-time 4-digit PIN setup |
-| Verify PIN | `auth/verify-pin.tsx` | Returning user PIN login |
-| Forgot PIN | `auth/forgot-pin.tsx` | PIN reset via OTP |
-| Reset PIN | `auth/reset-pin.tsx` | New PIN after OTP verification |
+| Create PIN | `auth/create-pin.tsx` | First-time 4-digit PIN setup           |
+| Verify PIN | `auth/verify-pin.tsx` | Returning user PIN login               |
+| Forgot PIN | `auth/forgot-pin.tsx` | PIN reset via OTP                      |
+| Reset PIN  | `auth/reset-pin.tsx`  | New PIN after OTP verification         |
 
 **Security details:**
+
 - OTPs expire in 5 minutes; maximum resend attempts are enforced.
 - PINs are exactly 4 digits and stored as bcrypt hashes (12 rounds).
 - Successful login issues a Laravel Sanctum Bearer token stored in `expo-secure-store`.
@@ -665,13 +675,15 @@ All customer transfers go through `POST /api/transfers/customer`, authenticated 
 
 ## 3.4 Agent Cash In / Cash Out
 
-| Service | Description | API |
-|---|---|---|
-| Cash In | Agent sends money TO a customer | `POST /api/transfers/agent` (`agent_to_customer`) |
+
+| Service      | Description                          | API                                                    |
+| ------------ | ------------------------------------ | ------------------------------------------------------ |
+| Cash In      | Agent sends money TO a customer      | `POST /api/transfers/agent` (`agent_to_customer`)      |
 | Return Float | Agent returns float to Agent Manager | `POST /api/transfers/agent` (`agent_to_agent_manager`) |
-| QR Payment | Customer pays Agent via QR scan | `POST /api/transfers/customer` (`customer_to_agent`) |
+| QR Payment   | Customer pays Agent via QR scan      | `POST /api/transfers/customer` (`customer_to_agent`)   |
 
 **Agent App Quick Actions:**
+
 - **Cash In** → `cash-in.tsx` (send to customer)
 - **Return Float** → `cash-out.tsx` (return to manager)
 - **My QR** → `qr-code.tsx` (display agent's QR)
@@ -712,111 +724,122 @@ Both mobile apps poll the `/api/profile` endpoint every **3 seconds** on the das
 
 ## 4.1 Authentication
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| POST | `/auth/request-otp` | — | Send OTP to phone number |
-| POST | `/auth/verify-otp` | — | Verify OTP code |
-| POST | `/auth/create-pin` | — | Create 4-digit PIN (new user) |
-| POST | `/auth/verify-pin` | — | Verify PIN and get token (returning user) |
-| POST | `/auth/logout` | ✅ | Revoke current Sanctum token |
-| POST | `/auth/resend-otp` | — | Resend OTP to phone number |
-| POST | `/auth/forgot-pin` | — | Request PIN reset OTP |
-| POST | `/auth/reset-pin` | — | Reset PIN using OTP |
+
+| Method | Endpoint            | Auth | Description                               |
+| ------ | ------------------- | ---- | ----------------------------------------- |
+| POST   | `/auth/request-otp` | —   | Send OTP to phone number                  |
+| POST   | `/auth/verify-otp`  | —   | Verify OTP code                           |
+| POST   | `/auth/create-pin`  | —   | Create 4-digit PIN (new user)             |
+| POST   | `/auth/verify-pin`  | —   | Verify PIN and get token (returning user) |
+| POST   | `/auth/logout`      | ✅   | Revoke current Sanctum token              |
+| POST   | `/auth/resend-otp`  | —   | Resend OTP to phone number                |
+| POST   | `/auth/forgot-pin`  | —   | Request PIN reset OTP                     |
+| POST   | `/auth/reset-pin`   | —   | Reset PIN using OTP                       |
 
 ## 4.2 Profile
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| GET | `/profile` | ✅ | Get authenticated user's profile |
-| PUT | `/profile` | ✅ | Update profile (name, address, etc.) |
-| POST | `/profile/upload-profile-picture` | ✅ | Upload profile photo (multipart/form-data) |
-| POST | `/profile/change-pin` | ✅ | Change 4-digit PIN |
+
+| Method | Endpoint                          | Auth | Description                                |
+| ------ | --------------------------------- | ---- | ------------------------------------------ |
+| GET    | `/profile`                        | ✅   | Get authenticated user's profile           |
+| PUT    | `/profile`                        | ✅   | Update profile (name, address, etc.)       |
+| POST   | `/profile/upload-profile-picture` | ✅   | Upload profile photo (multipart/form-data) |
+| POST   | `/profile/change-pin`             | ✅   | Change 4-digit PIN                         |
 
 ## 4.3 Agent Managers
 
-| Method | Endpoint | Auth | Middleware | Description |
-|---|---|---|---|---|
-| GET | `/agent-managers` | ✅ | — | List all agent managers |
-| POST | `/agent-managers` | ✅ | `ensure.admin` | Create agent manager |
-| GET | `/agent-managers/{id}` | ✅ | — | Get agent manager details |
-| PUT | `/agent-managers/{id}` | ✅ | `ensure.admin` | Update agent manager |
-| DELETE | `/agent-managers/{id}` | ✅ | `ensure.admin` | Delete agent manager |
-| POST | `/agent-managers/{id}/toggle-status` | ✅ | `ensure.admin` | Toggle active/inactive |
+
+| Method | Endpoint                             | Auth | Middleware     | Description               |
+| ------ | ------------------------------------ | ---- | -------------- | ------------------------- |
+| GET    | `/agent-managers`                    | ✅   | —             | List all agent managers   |
+| POST   | `/agent-managers`                    | ✅   | `ensure.admin` | Create agent manager      |
+| GET    | `/agent-managers/{id}`               | ✅   | —             | Get agent manager details |
+| PUT    | `/agent-managers/{id}`               | ✅   | `ensure.admin` | Update agent manager      |
+| DELETE | `/agent-managers/{id}`               | ✅   | `ensure.admin` | Delete agent manager      |
+| POST   | `/agent-managers/{id}/toggle-status` | ✅   | `ensure.admin` | Toggle active/inactive    |
 
 ## 4.4 Agents
 
-| Method | Endpoint | Auth | Middleware | Description |
-|---|---|---|---|---|
-| GET | `/agents` | ✅ | — | List all agents |
-| POST | `/agents` | ✅ | — | Create agent |
-| GET | `/agents/{id}` | ✅ | — | Get agent details |
-| PUT | `/agents/{id}` | ✅ | — | Update agent |
-| DELETE | `/agents/{id}` | ✅ | — | Delete agent |
-| POST | `/agents/{id}/toggle-status` | ✅ | `ensure.admin` | Toggle account status |
-| POST | `/agents/{id}/toggle-nrc-status` | ✅ | — | Toggle NRC verification status |
+
+| Method | Endpoint                         | Auth | Middleware     | Description                    |
+| ------ | -------------------------------- | ---- | -------------- | ------------------------------ |
+| GET    | `/agents`                        | ✅   | —             | List all agents                |
+| POST   | `/agents`                        | ✅   | —             | Create agent                   |
+| GET    | `/agents/{id}`                   | ✅   | —             | Get agent details              |
+| PUT    | `/agents/{id}`                   | ✅   | —             | Update agent                   |
+| DELETE | `/agents/{id}`                   | ✅   | —             | Delete agent                   |
+| POST   | `/agents/{id}/toggle-status`     | ✅   | `ensure.admin` | Toggle account status          |
+| POST   | `/agents/{id}/toggle-nrc-status` | ✅   | —             | Toggle NRC verification status |
 
 ## 4.5 Customers
 
-| Method | Endpoint | Auth | Middleware | Description |
-|---|---|---|---|---|
-| GET | `/customers` | — | — | List all customers |
-| GET | `/customers/{id}` | — | — | Get customer details |
-| DELETE | `/customers/{id}` | ✅ | — | Delete customer account |
-| POST | `/customers/{id}/toggle-status` | ✅ | `ensure.admin` | Toggle account status |
-| POST | `/customers/{id}/toggle-kyc-status` | ✅ | `ensure.admin` | Toggle KYC status |
+
+| Method | Endpoint                            | Auth | Middleware     | Description             |
+| ------ | ----------------------------------- | ---- | -------------- | ----------------------- |
+| GET    | `/customers`                        | —   | —             | List all customers      |
+| GET    | `/customers/{id}`                   | —   | —             | Get customer details    |
+| DELETE | `/customers/{id}`                   | ✅   | —             | Delete customer account |
+| POST   | `/customers/{id}/toggle-status`     | ✅   | `ensure.admin` | Toggle account status   |
+| POST   | `/customers/{id}/toggle-kyc-status` | ✅   | `ensure.admin` | Toggle KYC status       |
 
 ## 4.6 Money Transfers
 
-| Method | Endpoint | Auth | Middleware | Description |
-|---|---|---|---|---|
-| POST | `/transfers/admin` | ✅ | `ensure.admin` | Admin → Agent Manager |
-| POST | `/transfers/manager` | ✅ | `ensure.agent_manager` | Agent Manager ↔ Agent |
-| POST | `/transfers/agent` | ✅ | `ensure.agent` | Agent → Customer / Float Return |
-| POST | `/transfers/customer` | ✅ | — | Customer → Customer/Agent |
+
+| Method | Endpoint              | Auth | Middleware             | Description                      |
+| ------ | --------------------- | ---- | ---------------------- | -------------------------------- |
+| POST   | `/transfers/admin`    | ✅   | `ensure.admin`         | Admin → Agent Manager           |
+| POST   | `/transfers/manager`  | ✅   | `ensure.agent_manager` | Agent Manager ↔ Agent           |
+| POST   | `/transfers/agent`    | ✅   | `ensure.agent`         | Agent → Customer / Float Return |
+| POST   | `/transfers/customer` | ✅   | —                     | Customer → Customer/Agent       |
 
 ## 4.7 NRC Verifications
 
-| Method | Endpoint | Auth | Middleware | Description |
-|---|---|---|---|---|
-| POST | `/customer/nrc-verifications/submit` | ✅ | `ensure.customer` | Submit NRC images |
-| GET | `/admin/nrc-verifications` | ✅ | `ensure.admin` | List all pending KYC requests |
-| POST | `/admin/nrc-verifications/{id}/verify` | ✅ | `ensure.admin` | Approve KYC |
-| POST | `/admin/nrc-verifications/{id}/reject` | ✅ | `ensure.admin` | Reject KYC |
+
+| Method | Endpoint                               | Auth | Middleware        | Description                   |
+| ------ | -------------------------------------- | ---- | ----------------- | ----------------------------- |
+| POST   | `/customer/nrc-verifications/submit`   | ✅   | `ensure.customer` | Submit NRC images             |
+| GET    | `/admin/nrc-verifications`             | ✅   | `ensure.admin`    | List all pending KYC requests |
+| POST   | `/admin/nrc-verifications/{id}/verify` | ✅   | `ensure.admin`    | Approve KYC                   |
+| POST   | `/admin/nrc-verifications/{id}/reject` | ✅   | `ensure.admin`    | Reject KYC                    |
 
 ## 4.8 Wallets
 
-| Method | Endpoint | Auth | Middleware | Description |
-|---|---|---|---|---|
-| GET | `/wallets` | — | — | List all wallets |
-| GET | `/wallets/{id}` | — | — | Get wallet details |
-| POST | `/wallets/{id}/toggle-status` | ✅ | `ensure.admin` | Toggle wallet active/frozen |
+
+| Method | Endpoint                      | Auth | Middleware     | Description                 |
+| ------ | ----------------------------- | ---- | -------------- | --------------------------- |
+| GET    | `/wallets`                    | —   | —             | List all wallets            |
+| GET    | `/wallets/{id}`               | —   | —             | Get wallet details          |
+| POST   | `/wallets/{id}/toggle-status` | ✅   | `ensure.admin` | Toggle wallet active/frozen |
 
 ## 4.9 QR Codes
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| GET | `/qr-codes/me` | ✅ | Get authenticated user's QR code data |
-| GET | `/qr-codes/lookup` | ✅ | Look up a user by QR code value |
+
+| Method | Endpoint           | Auth | Description                           |
+| ------ | ------------------ | ---- | ------------------------------------- |
+| GET    | `/qr-codes/me`     | ✅   | Get authenticated user's QR code data |
+| GET    | `/qr-codes/lookup` | ✅   | Look up a user by QR code value       |
 
 ## 4.10 Transactions
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| GET | `/transactions` | ✅ | List transactions (paginated, supports `?per_page=N`) |
-| GET | `/transactions/{id}` | ✅ | Get single transaction with receipt details |
+
+| Method | Endpoint             | Auth | Description                                          |
+| ------ | -------------------- | ---- | ---------------------------------------------------- |
+| GET    | `/transactions`      | ✅   | List transactions (paginated, supports`?per_page=N`) |
+| GET    | `/transactions/{id}` | ✅   | Get single transaction with receipt details          |
 
 ## 4.11 Locations
 
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| GET | `/locations/state-regions` | — | List all state/regions |
-| POST | `/locations/state-regions` | ✅ Admin | Create state/region |
-| PUT | `/locations/state-regions/{id}` | ✅ Admin | Update state/region |
-| DELETE | `/locations/state-regions/{id}` | ✅ Admin | Delete state/region |
-| GET | `/locations/townships` | — | List all townships |
-| POST | `/locations/townships` | ✅ Admin | Create township |
-| PUT | `/locations/townships/{id}` | ✅ Admin | Update township |
-| DELETE | `/locations/townships/{id}` | ✅ Admin | Delete township |
+
+| Method | Endpoint                        | Auth     | Description            |
+| ------ | ------------------------------- | -------- | ---------------------- |
+| GET    | `/locations/state-regions`      | —       | List all state/regions |
+| POST   | `/locations/state-regions`      | ✅ Admin | Create state/region    |
+| PUT    | `/locations/state-regions/{id}` | ✅ Admin | Update state/region    |
+| DELETE | `/locations/state-regions/{id}` | ✅ Admin | Delete state/region    |
+| GET    | `/locations/townships`          | —       | List all townships     |
+| POST   | `/locations/townships`          | ✅ Admin | Create township        |
+| PUT    | `/locations/townships/{id}`     | ✅ Admin | Update township        |
+| DELETE | `/locations/townships/{id}`     | ✅ Admin | Delete township        |
 
 ---
 
@@ -824,53 +847,56 @@ Both mobile apps poll the `/api/profile` endpoint every **3 seconds** on the das
 
 ## 5.1 Migrations (chronological order)
 
-| Migration File | Table Created |
-|---|---|
-| `0001_01_01_000001` | `cache` |
-| `0001_01_01_000002` | `jobs` |
-| `0001_01_01_120000` | `roles` |
-| `0001_01_01_130000` | `users` |
-| `2026_07_10_122900` | `state_regions` |
-| `2026_07_10_122900` | `townships` |
+
+| Migration File      | Table Created            |
+| ------------------- | ------------------------ |
+| `0001_01_01_000001` | `cache`                  |
+| `0001_01_01_000002` | `jobs`                   |
+| `0001_01_01_120000` | `roles`                  |
+| `0001_01_01_130000` | `users`                  |
+| `2026_07_10_122900` | `state_regions`          |
+| `2026_07_10_122900` | `townships`              |
 | `2026_07_11_103822` | `personal_access_tokens` |
-| `2026_07_11_120002` | `otp_verifications` |
-| `2026_07_11_120003` | `pins` |
-| `2026_07_11_120006` | `customer_profiles` |
-| `2026_07_11_120007` | `agent_profiles` |
+| `2026_07_11_120002` | `otp_verifications`      |
+| `2026_07_11_120003` | `pins`                   |
+| `2026_07_11_120006` | `customer_profiles`      |
+| `2026_07_11_120007` | `agent_profiles`         |
 | `2026_07_11_120008` | `agent_manager_profiles` |
-| `2026_07_11_120009` | `wallets` |
-| `2026_07_11_120010` | `qr_codes` |
-| `2026_07_11_120011` | `transactions` |
-| `2026_07_11_120014` | `nrc_verifications` |
-| `2026_07_12_000001` | `images` |
+| `2026_07_11_120009` | `wallets`                |
+| `2026_07_11_120010` | `qr_codes`               |
+| `2026_07_11_120011` | `transactions`           |
+| `2026_07_11_120014` | `nrc_verifications`      |
+| `2026_07_12_000001` | `images`                 |
 
 ## 5.2 Core Models
 
-| Model | Table | Key Relationships |
-|---|---|---|
-| `User` | `users` | hasOne Wallet, hasOne QrCode, belongsTo Role |
-| `Wallet` | `wallets` | belongsTo User, hasManyTransactions |
-| `Transaction` | `transactions` | belongsTo sender Wallet, belongsTo receiver Wallet |
-| `QrCode` | `qr_codes` | belongsTo User |
-| `CustomerProfile` | `customer_profiles` | belongsTo User |
-| `AgentProfile` | `agent_profiles` | belongsTo User (agent_code, shop_name, shop_address) |
-| `AgentManagerProfile` | `agent_manager_profiles` | belongsTo User |
-| `NrcVerification` | `nrc_verifications` | belongsTo User (status: pending/verified/rejected) |
-| `StateRegion` | `state_regions` | hasMany Townships |
-| `Township` | `townships` | belongsTo StateRegion |
-| `Image` | `images` | Polymorphic (NRC, profile pictures) |
-| `Role` | `roles` | hasMany Users |
+
+| Model                 | Table                    | Key Relationships                                    |
+| --------------------- | ------------------------ | ---------------------------------------------------- |
+| `User`                | `users`                  | hasOne Wallet, hasOne QrCode, belongsTo Role         |
+| `Wallet`              | `wallets`                | belongsTo User, hasManyTransactions                  |
+| `Transaction`         | `transactions`           | belongsTo sender Wallet, belongsTo receiver Wallet   |
+| `QrCode`              | `qr_codes`               | belongsTo User                                       |
+| `CustomerProfile`     | `customer_profiles`      | belongsTo User                                       |
+| `AgentProfile`        | `agent_profiles`         | belongsTo User (agent_code, shop_name, shop_address) |
+| `AgentManagerProfile` | `agent_manager_profiles` | belongsTo User                                       |
+| `NrcVerification`     | `nrc_verifications`      | belongsTo User (status: pending/verified/rejected)   |
+| `StateRegion`         | `state_regions`          | hasMany Townships                                    |
+| `Township`            | `townships`              | belongsTo StateRegion                                |
+| `Image`               | `images`                 | Polymorphic (NRC, profile pictures)                  |
+| `Role`                | `roles`                  | hasMany Users                                        |
 
 ## 5.3 Transaction Types
 
-| Transaction Type | Description |
-|---|---|
-| `admin_to_agent_manager` | Admin sends float to Agent Manager |
+
+| Transaction Type         | Description                              |
+| ------------------------ | ---------------------------------------- |
+| `admin_to_agent_manager` | Admin sends float to Agent Manager       |
 | `agent_manager_to_agent` | Agent Manager distributes float to Agent |
-| `agent_to_agent_manager` | Agent returns float to Agent Manager |
-| `agent_to_customer` | Agent Cash In (sends money to Customer) |
-| `customer_to_agent` | Customer Cash Out / QR payment to Agent |
-| `customer_to_customer` | Customer P2P transfer |
+| `agent_to_agent_manager` | Agent returns float to Agent Manager     |
+| `agent_to_customer`      | Agent Cash In (sends money to Customer)  |
+| `customer_to_agent`      | Customer Cash Out / QR payment to Agent  |
+| `customer_to_customer`   | Customer P2P transfer                    |
 
 ## 5.4 SMS Gateway OTP Schema
 
@@ -913,6 +939,7 @@ src/app/
 ```
 
 **Customer App Features:**
+
 - **Bilingual UI**: English and Myanmar (မြန်မာ) with in-app language toggle.
 - **Dark / Light Theme**: Persisted theme selection.
 - **Real-time Balance**: Dashboard polls every 3 seconds; toast shown on incoming transfers.
@@ -947,6 +974,7 @@ src/app/
 ```
 
 **Agent App Features:**
+
 - **Role Guard**: On every dashboard poll, if the authenticated user is not an `agent`, the app immediately logs out and returns to the auth screen.
 - **Agent Code Display**: Dashboard shows agent code and shop name from profile.
 - **4-Action Quick Grid**: Cash In, Return Float, My QR, Scan QR arranged in a 2×2 grid.
@@ -972,6 +1000,7 @@ src/pages/
 ```
 
 **Admin Dashboard Features:**
+
 - Dark / light mode toggle (via `next-themes`).
 - System-level analytics with `Recharts` charts on the dashboard.
 - NRC document review with approve/reject actions.
@@ -1051,15 +1080,16 @@ src/pages/
 
 # 8. Money Transfer Rules
 
-| Sender | Receiver | Allowed | API Endpoint |
-|---|---|---|---|
-| Admin | Agent Manager | ✅ | `/transfers/admin` |
-| Agent Manager | Agent | ✅ | `/transfers/manager` |
-| Agent Manager | Admin | ✅ | `/transfers/manager` |
-| Agent | Customer | ✅ | `/transfers/agent` |
-| Agent | Agent Manager | ✅ | `/transfers/agent` |
-| Customer | Customer | ✅ | `/transfers/customer` |
-| Customer | Agent | ✅ | `/transfers/customer` |
+
+| Sender        | Receiver      | Allowed | API Endpoint          |
+| ------------- | ------------- | ------- | --------------------- |
+| Admin         | Agent Manager | ✅      | `/transfers/admin`    |
+| Agent Manager | Agent         | ✅      | `/transfers/manager`  |
+| Agent Manager | Admin         | ✅      | `/transfers/manager`  |
+| Agent         | Customer      | ✅      | `/transfers/agent`    |
+| Agent         | Agent Manager | ✅      | `/transfers/agent`    |
+| Customer      | Customer      | ✅      | `/transfers/customer` |
+| Customer      | Agent         | ✅      | `/transfers/customer` |
 
 ## Disallowed Transfers
 
@@ -1106,6 +1136,7 @@ Each transaction automatically generates:
 - A **history record** in the transaction table
 
 In the Customer mobile app, after a successful transfer, users can:
+
 - **View** the receipt in a modal
 - **Save** it as an image to the device gallery
 - **Share** it via the system share sheet
@@ -1117,40 +1148,44 @@ In the Customer mobile app, after a successful transfer, users can:
 
 ## Backend API
 
-| Item | Value |
-|---|---|
-| Platform | Render.com |
-| Build | Docker |
-| Health Check | `GET /` |
-| Database | Render PostgreSQL (free tier) |
-| Admin Wallet Seed | 1,000,000 MMK initial balance |
-| Admin Phone | Configured via `AUTH_ADMIN_PHONE` env var |
-| SMS Provider | Infinireach (`INFINIREACH_API_KEY` env var) |
+
+| Item              | Value                                       |
+| ----------------- | ------------------------------------------- |
+| Platform          | Render.com                                  |
+| Build             | Docker                                      |
+| Health Check      | `GET /`                                     |
+| Database          | Render PostgreSQL (free tier)               |
+| Admin Wallet Seed | 1,000,000 MMK initial balance               |
+| Admin Phone       | Configured via`AUTH_ADMIN_PHONE` env var    |
+| SMS Provider      | Infinireach (`INFINIREACH_API_KEY` env var) |
 
 ## Admin Web Dashboard
 
-| Item | Value |
-|---|---|
-| Platform | Vercel |
-| Build | `tsc -b && vite build` |
-| Config | `vercel.json` |
+
+| Item     | Value                  |
+| -------- | ---------------------- |
+| Platform | Vercel                 |
+| Build    | `tsc -b && vite build` |
+| Config   | `vercel.json`          |
 
 ## Mobile Apps
 
-| Item | Value |
-|---|---|
+
+| Item          | Value                           |
+| ------------- | ------------------------------- |
 | Build Service | EAS (Expo Application Services) |
-| OTA Updates | expo-updates (Agent app only) |
-| Target | Android (primary), iOS, Web |
+| OTA Updates   | expo-updates (Agent app only)   |
+| Target        | Android (primary), iOS, Web     |
 
 ## SMS Gateway OTP Engine
 
-| Item | Value |
-|---|---|
-| Runtime | Java 17 |
-| Build | `mvn spring-boot:run` |
-| Port | 8080 |
-| Config | `src/main/resources/application.properties` |
+
+| Item    | Value                                       |
+| ------- | ------------------------------------------- |
+| Runtime | Java 17                                     |
+| Build   | `mvn spring-boot:run`                       |
+| Port    | 8080                                        |
+| Config  | `src/main/resources/application.properties` |
 
 ---
 
