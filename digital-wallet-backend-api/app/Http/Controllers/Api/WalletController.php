@@ -21,6 +21,24 @@ class WalletController extends Controller
         $perPage = min(100, max(1, (int) $request->query('per_page', 15)));
         $query = Wallet::with('user.role');
 
+        if ($this->isAgentManager($request) && ! $this->isAdmin($request)) {
+            $agentManagerId = $request->user()->id;
+
+            $managedUserIds = DB::table('agent_profiles')
+                ->where('parent_agent_id', $agentManagerId)
+                ->pluck('user_id')
+                ->toArray();
+
+            $managedCustomerIds = DB::table('customer_profiles')
+                ->where('referred_by', $agentManagerId)
+                ->pluck('user_id')
+                ->toArray();
+
+            $allowedUserIds = array_merge($managedUserIds, $managedCustomerIds);
+
+            $query->whereIn('user_id', $allowedUserIds);
+        }
+
         $includeAdmin = filter_var($request->query('include_admin', false), FILTER_VALIDATE_BOOLEAN);
         $adminId = $request->query('admin_id');
 
@@ -57,11 +75,31 @@ class WalletController extends Controller
         return response()->json(['success' => true, 'data' => $list], 200);
     }
 
-    public function show($id): JsonResponse
+    public function show(Request $request, $id): JsonResponse
     {
         $wallet = Wallet::with('user.role')->find($id);
         if (! $wallet) {
             return response()->json(['success' => false, 'message' => 'Not found.'], 404);
+        }
+
+        if ($this->isAgentManager($request) && ! $this->isAdmin($request)) {
+            $agentManagerId = $request->user()->id;
+
+            $managedUserIds = DB::table('agent_profiles')
+                ->where('parent_agent_id', $agentManagerId)
+                ->pluck('user_id')
+                ->toArray();
+
+            $managedCustomerIds = DB::table('customer_profiles')
+                ->where('referred_by', $agentManagerId)
+                ->pluck('user_id')
+                ->toArray();
+
+            $allowedUserIds = array_merge($managedUserIds, $managedCustomerIds);
+
+            if (! in_array($wallet->user_id, $allowedUserIds)) {
+                return response()->json(['success' => false, 'message' => 'Forbidden. You can only view wallets of your managed agents and customers.'], 403);
+            }
         }
 
         return response()->json(['success' => true, 'data' => $wallet], 200);
@@ -235,5 +273,19 @@ class WalletController extends Controller
                 ],
             ], 200);
         });
+    }
+
+    protected function isAdmin(Request $request): bool
+    {
+        $roleName = $request->user()
+            ? DB::table('roles')->where('id', $request->user()->role_id)->value('name')
+            : null;
+
+        return $roleName === 'admin';
+    }
+
+    protected function isAgentManager(Request $request): bool
+    {
+        return $request->user() && DB::table('agent_manager_profiles')->where('user_id', $request->user()->id)->exists();
     }
 }
