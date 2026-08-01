@@ -21,7 +21,10 @@ class WalletController extends Controller
         $perPage = min(100, max(1, (int) $request->query('per_page', 15)));
         $query = Wallet::with('user.role');
 
-        if ($this->isAgentManager($request) && ! $this->isAdmin($request)) {
+        $isAgentManager = $this->isAgentManager($request);
+        $isAdmin = $this->isAdmin($request);
+
+        if ($isAgentManager && ! $isAdmin) {
             $agentManagerId = $request->user()->id;
 
             $managedUserIds = DB::table('agent_profiles')
@@ -40,6 +43,13 @@ class WalletController extends Controller
         }
 
         $includeAdmin = filter_var($request->query('include_admin', false), FILTER_VALIDATE_BOOLEAN);
+
+        // If the user is an agent manager but not an admin, they should never see admin wallets,
+        // regardless of the include_admin query parameter.
+        if ($isAgentManager && ! $isAdmin) {
+            $includeAdmin = false;
+        }
+
         $adminId = $request->query('admin_id');
 
         if (! $includeAdmin) {
