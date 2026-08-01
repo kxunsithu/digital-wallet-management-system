@@ -1,4 +1,4 @@
-import api from "../lib/axiox";
+import api from "../lib/axios";
 
 export const getCustomers = (params?: {
   page?: number;
@@ -12,7 +12,7 @@ export const getCustomers = (params?: {
 export const getCustomer = (id: number | string) => api.get(`customers/${id}`);
 
 export const verifyCustomerNrc = (verificationId: number | string) =>
-  api.post(`admin/nrc-verifications/${verificationId}/verify`, { status: 'approved' });
+  api.post(`admin/nrc-verifications/${verificationId}/verify`, { status: 'verified' });
 
 export const rejectCustomerNrc = (
   verificationId: number | string,

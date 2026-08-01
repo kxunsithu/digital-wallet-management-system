@@ -1,6 +1,4 @@
-import api from "../lib/axiox";
-
-export const getAgentManagers = () => api.get("agent-managers");
+import api from "../lib/axios";
 
 export const getAdminWallet = (adminId?: number | string) =>
   api.get("wallets", {

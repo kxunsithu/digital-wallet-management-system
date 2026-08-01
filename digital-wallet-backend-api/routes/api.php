@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\QrCodeController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\MerchantController;
+use App\Http\Controllers\Api\TransferSettingController;
 use Illuminate\Support\Facades\Route;
 
 /* Welcome Route */
@@ -19,12 +21,12 @@ Route::get('/', function () {
     return response()->json(['message' => 'Welcome to the Money Transfer API.'], 200);
 });
 
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware('throttle:10,1')->group(function () {
     Route::post('/request-otp', [AuthController::class, 'requestOtp']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/create-pin', [AuthController::class, 'createPin']);
     Route::post('/verify-pin', [AuthController::class, 'verifyPin']);
-    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum')->withoutMiddleware('throttle:10,1');
     Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
     Route::post('/forgot-pin', [AuthController::class, 'forgotPin']);
     Route::post('/reset-pin', [AuthController::class, 'resetPin']);
@@ -62,12 +64,12 @@ Route::prefix('agents')->middleware('auth:sanctum')->group(function () {
     Route::post('/{id}/toggle-nrc-status', [AgentController::class, 'toggleNrcStatus']);
 });
 
-Route::prefix('customers')->group(function () {
+Route::prefix('customers')->middleware(['auth:sanctum', 'ensure.admin'])->group(function () {
     Route::get('/', [CustomerController::class, 'index']);
     Route::get('/{id}', [CustomerController::class, 'show']);
-    Route::delete('/{id}', [CustomerController::class, 'destroy'])->middleware('auth:sanctum');
-    Route::post('/{id}/toggle-status', [CustomerController::class, 'toggleStatus'])->middleware(['auth:sanctum', 'ensure.admin']);
-    Route::post('/{id}/toggle-kyc-status', [CustomerController::class, 'toggleKycStatus'])->middleware(['auth:sanctum', 'ensure.admin']);
+    Route::delete('/{id}', [CustomerController::class, 'destroy']);
+    Route::post('/{id}/toggle-status', [CustomerController::class, 'toggleStatus']);
+    Route::post('/{id}/toggle-kyc-status', [CustomerController::class, 'toggleKycStatus']);
 });
 
 Route::prefix('profile')->middleware('auth:sanctum')->group(function () {
@@ -94,12 +96,18 @@ Route::prefix('transfers')->group(function () {
     Route::post('/manager', [MoneyTransferController::class, 'managerTransfer'])->middleware(['auth:sanctum', 'ensure.agent_manager']);
     Route::post('/agent', [MoneyTransferController::class, 'agentTransfer'])->middleware(['auth:sanctum', 'ensure.agent']);
     Route::post('/customer', [MoneyTransferController::class, 'customerTransfer'])->middleware('auth:sanctum');
+    Route::get('/customer/info', [MoneyTransferController::class, 'customerInfo'])->middleware('auth:sanctum');
 });
 
-Route::prefix('wallets')->group(function () {
-    Route::get('/', [WalletController::class, 'index']);
-    Route::get('/{id}', [WalletController::class, 'show']);
-    Route::post('/{id}/toggle-status', [WalletController::class, 'toggleStatus'])->middleware(['auth:sanctum', 'ensure.admin']);
+Route::prefix('wallets')->middleware('auth:sanctum')->group(function () {
+    Route::get('/me', [WalletController::class, 'me']);
+    Route::post('/topup', [WalletController::class, 'topup']);
+    Route::get('/topups', [WalletController::class, 'topups'])->middleware('ensure.admin');
+    Route::post('/topups/{id}/approve', [WalletController::class, 'approveTopup'])->middleware('ensure.admin');
+    Route::get('/', [WalletController::class, 'index'])->middleware('ensure.admin');
+    Route::get('/{id}', [WalletController::class, 'show'])->middleware('ensure.admin');
+    Route::post('/{id}/toggle-status', [WalletController::class, 'toggleStatus'])->middleware('ensure.admin');
+    Route::post('/{id}/credit', [WalletController::class, 'credit'])->middleware('ensure.admin');
 });
 
 Route::prefix('qr-codes')->middleware('auth:sanctum')->group(function () {
@@ -109,5 +117,28 @@ Route::prefix('qr-codes')->middleware('auth:sanctum')->group(function () {
 
 Route::prefix('transactions')->middleware('auth:sanctum')->group(function () {
     Route::get('/', [TransactionController::class, 'index']);
+    Route::get('/fee-summary', [TransactionController::class, 'feeSummary'])->middleware('ensure.admin');
     Route::get('/{id}', [TransactionController::class, 'show']);
+});
+
+Route::prefix('transfer-settings')->middleware(['auth:sanctum', 'ensure.admin'])->group(function () {
+    Route::get('/', [TransferSettingController::class, 'show']);
+    Route::put('/', [TransferSettingController::class, 'update']);
+});
+
+Route::prefix('merchants')->group(function () {
+    Route::middleware(['auth:sanctum', 'ensure.admin'])->group(function () {
+        Route::get('/', [MerchantController::class, 'index']);
+        Route::post('/', [MerchantController::class, 'store']);
+        Route::get('/{id}', [MerchantController::class, 'show']);
+        Route::put('/{id}', [MerchantController::class, 'update']);
+        Route::delete('/{id}', [MerchantController::class, 'destroy']);
+        Route::post('/{id}/toggle-status', [MerchantController::class, 'toggleStatus']);
+        Route::get('/{id}/payments', [MerchantController::class, 'payments']);
+    });
+
+    Route::middleware('merchant.api')->group(function () {
+        Route::post('/payment/initiate', [MerchantController::class, 'initiate']);
+        Route::post('/payment/confirm', [MerchantController::class, 'confirm']);
+    });
 });

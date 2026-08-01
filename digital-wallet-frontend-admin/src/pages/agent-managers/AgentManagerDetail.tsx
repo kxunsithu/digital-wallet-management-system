@@ -26,7 +26,7 @@ export default function AgentManagerDetail() {
       try {
         const response = await getAgentManager(id!);
         setManager(response.data.data);
-      } catch (err) {
+      } catch {
         toast.error("Failed to load agent manager details");
       } finally {
         setLoading(false);

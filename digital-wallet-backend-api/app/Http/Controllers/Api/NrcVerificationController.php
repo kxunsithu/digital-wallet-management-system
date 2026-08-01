@@ -125,8 +125,6 @@ class NrcVerificationController extends Controller
         if ($data['status'] === 'verified') {
             $verifiedUser = User::find($verification->user_id);
             if ($verifiedUser) {
-                $verifiedUser->update(['nrc_number' => $verifiedUser->nrc_number ?? null]);
-
                 CustomerProfile::firstOrCreate(
                     ['user_id' => $verifiedUser->id],
                     ['kyc_status' => 'verified']

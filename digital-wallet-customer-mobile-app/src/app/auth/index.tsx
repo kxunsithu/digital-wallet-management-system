@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Image
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
@@ -81,7 +82,7 @@ export default function RequestOtpScreen() {
   };
 
   return (
-    <View
+    <SafeAreaView
       edges={['top', 'bottom']}
       style={{ flex: 1, backgroundColor: colors.background }}
     >
@@ -260,6 +261,6 @@ export default function RequestOtpScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </View>
+    </SafeAreaView>
   );
 }

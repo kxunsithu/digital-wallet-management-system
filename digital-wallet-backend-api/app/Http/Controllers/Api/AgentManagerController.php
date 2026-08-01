@@ -19,8 +19,17 @@ class AgentManagerController extends Controller
     use NormalizesPhoneNumber;
     public function index(Request $request): JsonResponse
     {
-        $perPage = (int) $request->query('per_page', 15);
+        if (! $this->isAdmin($request) && ! $this->isAgentManager($request)) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
+        $perPage = min(100, max(1, (int) $request->query('per_page', 15)));
         $query = AgentManagerProfile::with(['user.images', 'parent', 'stateRegion', 'township']);
+
+        // Agent managers can only see their own profile
+        if ($this->isAgentManager($request) && ! $this->isAdmin($request)) {
+            $query->where('user_id', $request->user()->id);
+        }
 
         if ($request->filled('status')) {
             $query->whereHas('user', function ($q) use ($request) {
@@ -114,6 +123,20 @@ class AgentManagerController extends Controller
             ->setStatusCode(201);
     }
 
+    protected function isAdmin(Request $request): bool
+    {
+        $roleName = $request->user()
+            ? DB::table('roles')->where('id', $request->user()->role_id)->value('name')
+            : null;
+
+        return $roleName === 'admin';
+    }
+
+    protected function isAgentManager(Request $request): bool
+    {
+        return $request->user() && DB::table('agent_manager_profiles')->where('user_id', $request->user()->id)->exists();
+    }
+
     protected function storeImageRecord($file, int $userId, string $imageType): void
     {
         if ($file instanceof \Illuminate\Http\UploadedFile) {
@@ -139,12 +162,21 @@ class AgentManagerController extends Controller
         }
     }
 
-    public function show($id): JsonResponse
+    public function show(Request $request, $id): JsonResponse
     {
+        if (! $this->isAdmin($request) && ! $this->isAgentManager($request)) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
         $profile = AgentManagerProfile::with(['user.images', 'user.wallet', 'parent', 'stateRegion', 'township'])->find($id);
 
         if (! $profile) {
             return response()->json(['success' => false, 'message' => 'Not found.'], 404);
+        }
+
+        // Agent managers can only view their own profile
+        if ($this->isAgentManager($request) && ! $this->isAdmin($request) && (int) $profile->user_id !== (int) $request->user()->id) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
         }
 
         return (new AgentManagerResource($profile->load(['user', 'user.wallet', 'parent', 'stateRegion', 'township'])))

@@ -1,4 +1,4 @@
-import api from "../lib/axiox";
+import api from "../lib/axios";
 
 export const getUserWallet = (userId: number | string) =>
   api.get("wallets", {

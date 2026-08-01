@@ -1,4 +1,4 @@
-import api from "../lib/axiox";
+import api from "../lib/axios";
 
 
 
@@ -44,7 +44,6 @@ export const createPin = (userId: number, pin: string, confirmPin: string) =>
   api.post("auth/create-pin", {
     user_id: userId,
     pin,
-    pin_confirmation: confirmPin,
     confirm_pin: confirmPin,
   });
 

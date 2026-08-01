@@ -164,14 +164,14 @@ class AuthController extends Controller
             'message' => $message,
             'data' => [
                 'phone_number' => $data['phone_number'],
-                'otp_code' => $otpCode,
+                'otp_code' => app()->environment('local', 'testing') ? $otpCode : null,
                 'expires_at' => $expiresAt->toISOString(),
                 'sms_sent' => $smsResult['success'],
                 'sms_delivery_message' => $smsResult['message'],
                 'role_id' => $user->role_id,
                 'role' => $roleName,
             ],
-        ], $smsResult['success'] ? 200 : 200);
+        ], 200);
     }
 
     public function verifyOtp(VerifyOtpRequest $request): JsonResponse
@@ -194,9 +194,38 @@ class AuthController extends Controller
             ->first();
 
         if (! $otp) {
+            // Record the failed attempt on the user's latest pending OTP and
+            // invalidate it after too many attempts (brute-force protection).
+            $latest = DB::table('otp_verifications')
+                ->where('user_id', $user->id)
+                ->where('status', 'pending')
+                ->latest('created_at')
+                ->first();
+
+            if ($latest) {
+                $attempts = (int) $latest->attempt_count + 1;
+                $update = ['attempt_count' => $attempts, 'updated_at' => now()];
+                if ($attempts >= 5) {
+                    $update['status'] = 'expired';
+                }
+                DB::table('otp_verifications')->where('id', $latest->id)->update($update);
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid OTP.',
+            ], 422);
+        }
+
+        if ((int) $otp->attempt_count >= 5) {
+            DB::table('otp_verifications')->where('id', $otp->id)->update([
+                'status' => 'expired',
+                'updated_at' => now(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Too many attempts. Please request a new OTP.',
             ], 422);
         }
 
@@ -207,11 +236,11 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Update OTP status to verified and extend expiry to 7 days for PIN creation flow
+        // Update OTP status to verified and extend expiry for the PIN creation flow
         DB::table('otp_verifications')->where('id', $otp->id)->update([
             'status' => 'verified',
             'verified_at' => now(),
-            'expires_at' => Carbon::now()->addDays(7),
+            'expires_at' => Carbon::now()->addMinutes(30),
             'updated_at' => now(),
         ]);
 
@@ -239,7 +268,7 @@ class AuthController extends Controller
                 'next_step' => $nextStep,
                 'requires_profile' => $requiresProfile,
                 'otp_verified_at' => now()->toISOString(),
-                'expires_at' => Carbon::now()->addDays(7)->toISOString(),
+                'expires_at' => Carbon::now()->addMinutes(30)->toISOString(),
             ],
         ], 200);
     }
@@ -248,96 +277,98 @@ class AuthController extends Controller
     {
         $data = $request->validated();
 
-        $user = User::findOrFail($data['user_id']);
+        return DB::transaction(function () use ($data): JsonResponse {
+            $user = User::findOrFail($data['user_id']);
 
-        // 🔒 SECURITY: Verify that OTP was recently verified (within last 7 days)
-        $validOtp = DB::table('otp_verifications')
-            ->where('user_id', $user->id)
-            ->where('status', 'verified')
-            ->where('expires_at', '>', Carbon::now())
-            ->latest('created_at')
-            ->first();
+            // 🔒 SECURITY: Verify that OTP was recently verified (within last 30 minutes)
+            $validOtp = DB::table('otp_verifications')
+                ->where('user_id', $user->id)
+                ->where('status', 'verified')
+                ->where('expires_at', '>', Carbon::now())
+                ->latest('created_at')
+                ->first();
 
-        if (! $validOtp) {
-            return response()->json([
-                'success' => false,
-                'message' => 'OTP verification required. Please verify your OTP first.',
-            ], 401);
-        }
-
-        DB::table('pins')->updateOrInsert(
-            ['user_id' => $user->id],
-            [
-                'pin_hash' => Hash::make($data['pin']),
-                'failed_attempts' => 0,
-                'is_locked' => false,
-                'locked_until' => null,
-                'last_changed_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        );
-
-        $roleName = null;
-        if (! empty($user->role_id)) {
-            $roleName = DB::table('roles')->where('id', $user->role_id)->value('name');
-        }
-
-        $userData = [
-            'is_pin_created' => true,
-            'status' => 'active',
-        ];
-
-        if (strtolower((string) $roleName) === 'customer') {
-            $userData['full_name'] = $data['full_name'] ?? $user->full_name;
-            $userData['nrc_number'] = $data['nrc_number'] ?? $user->nrc_number;
-        }
-
-        $user->update($userData);
-
-        if (strtolower((string) $roleName) === 'customer') {
-            CustomerProfile::firstOrCreate(
-                ['user_id' => $user->id],
-                ['kyc_status' => 'pending']
-            );
-        }
-
-        // Auto-create wallet for the user when PIN is created
-        if (! Wallet::where('user_id', $user->id)->exists()) {
-            $initialBalance = 0;
-            if (strtolower((string) $roleName) === 'admin') {
-                $initialBalance = (float) env('ADMIN_INITIAL_WALLET_BALANCE', 0);
+            if (! $validOtp) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'OTP verification required. Please verify your OTP first.',
+                ], 401);
             }
 
-            $walletNumber = 'WAL-' . strtoupper(bin2hex(random_bytes(4)));
+            DB::table('pins')->updateOrInsert(
+                ['user_id' => $user->id],
+                [
+                    'pin_hash' => Hash::make($data['pin']),
+                    'failed_attempts' => 0,
+                    'is_locked' => false,
+                    'locked_until' => null,
+                    'last_changed_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
 
-            Wallet::create([
-                'user_id' => $user->id,
-                'wallet_number' => $walletNumber,
-                'balance' => $initialBalance,
+            $roleName = null;
+            if (! empty($user->role_id)) {
+                $roleName = DB::table('roles')->where('id', $user->role_id)->value('name');
+            }
+
+            $userData = [
+                'is_pin_created' => true,
                 'status' => 'active',
-            ]);
-        }
+            ];
 
-        $this->qrCodeService->ensureForUser($user->fresh());
+            if (strtolower((string) $roleName) === 'customer') {
+                $userData['full_name'] = $data['full_name'] ?? $user->full_name;
+                $userData['nrc_number'] = $data['nrc_number'] ?? $user->nrc_number;
+            }
 
-        // Invalidate the OTP after PIN creation (prevent reuse)
-        DB::table('otp_verifications')
-            ->where('user_id', $user->id)
-            ->where('status', 'verified')
-            ->update([
-                'status' => 'used',
-                'updated_at' => now(),
-            ]);
+            $user->update($userData);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'PIN created successfully.',
-            'data' => [
-                'user_id' => $user->id,
-                'next_step' => 'verify_pin',
-            ],
-        ], 201);
+            if (strtolower((string) $roleName) === 'customer') {
+                CustomerProfile::firstOrCreate(
+                    ['user_id' => $user->id],
+                    ['kyc_status' => 'pending']
+                );
+            }
+
+            // Auto-create wallet for the user when PIN is created
+            if (! Wallet::where('user_id', $user->id)->exists()) {
+                $initialBalance = 0;
+                if (strtolower((string) $roleName) === 'admin') {
+                    $initialBalance = (float) env('ADMIN_INITIAL_WALLET_BALANCE', 0);
+                }
+
+                $walletNumber = 'WAL-' . strtoupper(bin2hex(random_bytes(4)));
+
+                Wallet::create([
+                    'user_id' => $user->id,
+                    'wallet_number' => $walletNumber,
+                    'balance' => $initialBalance,
+                    'status' => 'active',
+                ]);
+            }
+
+            $this->qrCodeService->ensureForUser($user->fresh());
+
+            // Invalidate the OTP after PIN creation (prevent reuse)
+            DB::table('otp_verifications')
+                ->where('user_id', $user->id)
+                ->where('status', 'verified')
+                ->update([
+                    'status' => 'used',
+                    'updated_at' => now(),
+                ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'PIN created successfully.',
+                'data' => [
+                    'user_id' => $user->id,
+                    'next_step' => 'verify_pin',
+                ],
+            ], 201);
+        });
     }
 
     public function verifyPin(VerifyPinRequest $request): JsonResponse
@@ -347,12 +378,49 @@ class AuthController extends Controller
         $user = User::findOrFail($data['user_id']);
         $pinRecord = DB::table('pins')->where('user_id', $user->id)->first();
 
-        if (! $pinRecord || ! Hash::check($data['pin'], $pinRecord->pin_hash)) {
+        if (! $pinRecord) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid PIN.',
             ], 401);
         }
+
+        // Enforce PIN lockout after repeated failures
+        if ($pinRecord->is_locked) {
+            if ($pinRecord->locked_until && Carbon::parse($pinRecord->locked_until)->isFuture()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'PIN is temporarily locked due to too many failed attempts. Please try again later.',
+                    'locked_until' => $pinRecord->locked_until,
+                ], 423);
+            }
+
+            // Lock expired - reset the lockout state
+            DB::table('pins')->where('user_id', $user->id)->update([
+                'failed_attempts' => 0,
+                'is_locked' => false,
+                'locked_until' => null,
+                'updated_at' => now(),
+            ]);
+            $pinRecord = DB::table('pins')->where('user_id', $user->id)->first();
+        }
+
+        if (! Hash::check($data['pin'], $pinRecord->pin_hash)) {
+            $this->registerPinFailure($user->id, (int) $pinRecord->failed_attempts);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid PIN.',
+            ], 401);
+        }
+
+        // Reset failure counters on success
+        DB::table('pins')->where('user_id', $user->id)->update([
+            'failed_attempts' => 0,
+            'is_locked' => false,
+            'locked_until' => null,
+            'updated_at' => now(),
+        ]);
 
         // Check if OTP was verified recently (for first-time PIN verification)
         // For existing users, they can login with PIN without OTP
@@ -513,6 +581,24 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'PIN reset successfully.',
         ], 200);
+    }
+
+    protected function registerPinFailure(int $userId, int $currentFailedAttempts): void
+    {
+        $maxAttempts = 5;
+        $failedAttempts = $currentFailedAttempts + 1;
+
+        $update = [
+            'failed_attempts' => $failedAttempts,
+            'updated_at' => now(),
+        ];
+
+        if ($failedAttempts >= $maxAttempts) {
+            $update['is_locked'] = true;
+            $update['locked_until'] = Carbon::now()->addMinutes(15);
+        }
+
+        DB::table('pins')->where('user_id', $userId)->update($update);
     }
 
     protected function sendOtpCode(string $phoneNumber, string $otpCode): array

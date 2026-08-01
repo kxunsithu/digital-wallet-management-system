@@ -8,17 +8,26 @@ use App\Http\Resources\TransactionResource;
 use App\Models\AgentProfile;
 use App\Models\CustomerProfile;
 use App\Models\User;
+use App\Services\PinService;
+use App\Services\TransferSettingsService;
+use App\Services\WalletService;
 use App\Traits\NormalizesPhoneNumber;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class MoneyTransferController extends Controller
 {
     use NormalizesPhoneNumber;
+
+    public function __construct(
+        private readonly TransferSettingsService $settingsService,
+        private readonly PinService $pinService,
+        private readonly WalletService $walletService,
+    ) {
+    }
 
     /**
      * Money transfer role rules:
@@ -114,6 +123,32 @@ class MoneyTransferController extends Controller
         return $this->prepareAndExecute($senderUser->id, $data, 'customer');
     }
 
+    /**
+     * Customer-facing fee and limit info (shown in the customer app).
+     */
+    public function customerInfo(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (! $user) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+        }
+
+        $settings = $this->settingsService->get();
+        $profile = CustomerProfile::where('user_id', $user->id)->first();
+        $isVerified = $profile && $profile->kyc_status === 'verified';
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'customer_transfer_fee_percent' => (float) $settings->customer_transfer_fee_percent,
+                'unverified_customer_transfer_limit' => $settings->unverified_customer_transfer_limit !== null
+                    ? (float) $settings->unverified_customer_transfer_limit
+                    : null,
+                'is_nrc_verified' => $isVerified,
+            ],
+        ], 200);
+    }
+
     protected function prepareAndExecute(int $senderUserId, array $data, string $type): JsonResponse
     {
         $qrId = $data['qr_id'] ?? null;
@@ -151,6 +186,9 @@ class MoneyTransferController extends Controller
 
             // if QR defines a fixed amount, use it
             if ($qr->amount !== null) {
+                if ((float) $qr->amount <= 0) {
+                    return response()->json(['success' => false, 'message' => 'Invalid QR code amount.'], 422);
+                }
                 $amount = (float) $qr->amount;
             }
         }
@@ -174,6 +212,25 @@ class MoneyTransferController extends Controller
 
         if ($amount === null) {
             return response()->json(['success' => false, 'message' => 'Amount is required.'], 422);
+        }
+
+        $fee = (float) ($data['fee'] ?? 0);
+
+        if ($type === 'customer') {
+            $settings = $this->settingsService->get();
+            $senderProfile = CustomerProfile::where('user_id', $senderUserId)->first();
+            $isNrcVerified = $senderProfile && $senderProfile->kyc_status === 'verified';
+
+            $limit = $settings->unverified_customer_transfer_limit;
+            if (! $isNrcVerified && $limit !== null && (float) $amount > (float) $limit) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your account is not NRC-verified yet. Transfers are limited to '.number_format((float) $limit, 2).' MMK per transaction. Please verify your NRC to remove this limit.',
+                ], 422);
+            }
+
+            // Customer transfers always use the server-configured percentage fee.
+            $fee = round((float) $amount * (float) $settings->customer_transfer_fee_percent / 100, 2);
         }
 
         if ($receiverUserId === null) {
@@ -323,8 +380,7 @@ class MoneyTransferController extends Controller
 
     protected function verifyPin(int $userId, string $pin): bool
     {
-        $pinRecord = DB::table('pins')->where('user_id', $userId)->first();
-        return $pinRecord && Hash::check($pin, $pinRecord->pin_hash);
+        return $this->pinService->verify($userId, $pin);
     }
 
     protected function resolveReceiverUserIdByPhone(string $phone): ?int
@@ -353,7 +409,7 @@ class MoneyTransferController extends Controller
 
 
 
-    protected function executeTransfer(int $senderUserId, int $receiverUserId = null, ?int $qrId = null, float $amount, float $fee, ?string $description, string $type): JsonResponse
+    protected function executeTransfer(int $senderUserId, ?int $receiverUserId = null, ?int $qrId = null, float $amount, float $fee, ?string $description, string $type): JsonResponse
     {
         if ($receiverUserId === null) {
             return response()->json(['success' => false, 'message' => 'Receiver not specified.'], 422);
@@ -365,9 +421,25 @@ class MoneyTransferController extends Controller
 
         return DB::transaction(function () use ($senderUserId, $receiverUserId, $qrId, $amount, $fee, $description, $type) {
             $senderWallet = DB::table('wallets')->where('user_id', $senderUserId)->lockForUpdate()->first();
+
             if ($qrId) {
-                $qr = DB::table('qr_codes')->where('id', $qrId)->first();
+                // Re-validate the QR inside the transaction to prevent a
+                // deactivated/expired QR from being used (TOCTOU).
+                $qr = DB::table('qr_codes')->where('id', $qrId)->lockForUpdate()->first();
+                if (! $qr || ! $qr->is_active) {
+                    return response()->json(['success' => false, 'message' => 'QR code is inactive or no longer available.'], 422);
+                }
+
+                if ($qr->expires_at && Carbon::parse($qr->expires_at)->isPast()) {
+                    return response()->json(['success' => false, 'message' => 'QR code has expired.'], 422);
+                }
+
                 $receiverWallet = DB::table('wallets')->where('id', $qr->wallet_id)->lockForUpdate()->first();
+
+                // Ensure the QR belongs to the credited wallet owner
+                if (! $receiverWallet || (int) $receiverWallet->user_id !== (int) $qr->user_id) {
+                    return response()->json(['success' => false, 'message' => 'Invalid QR code.'], 422);
+                }
             } else {
                 $receiverWallet = DB::table('wallets')->where('user_id', $receiverUserId)->lockForUpdate()->first();
             }
@@ -385,20 +457,23 @@ class MoneyTransferController extends Controller
             }
 
             $total = round($amount + $fee, 2);
+            // Guard on the locked row so the check and update stay consistent
             if ((float) $senderWallet->balance < $total) {
                 return response()->json(['success' => false, 'message' => 'Insufficient balance.'], 422);
             }
 
-            // update balances
-            DB::table('wallets')->where('id', $senderWallet->id)->update([
-                'balance' => DB::raw('balance - '.(float)$total),
-                'updated_at' => now(),
-            ]);
+            // update balances (parameterized, avoids float precision issues)
+            DB::table('wallets')->where('id', $senderWallet->id)->decrement('balance', (string) $total);
+            DB::table('wallets')->where('id', $receiverWallet->id)->increment('balance', (string) $amount);
 
-            DB::table('wallets')->where('id', $receiverWallet->id)->update([
-                'balance' => DB::raw('balance + '.(float)$amount),
-                'updated_at' => now(),
-            ]);
+            // Credit the fee to the admin (system) wallet when one exists and is
+            // not itself part of this transfer.
+            if ($fee > 0) {
+                $adminWallet = $this->walletService->adminWallet();
+                if ($adminWallet && (int) $adminWallet->id !== (int) $senderWallet->id && (int) $adminWallet->id !== (int) $receiverWallet->id) {
+                    DB::table('wallets')->where('id', $adminWallet->id)->increment('balance', (string) $fee);
+                }
+            }
 
             $transactionRef = Str::upper('TX'.Str::random(12));
 

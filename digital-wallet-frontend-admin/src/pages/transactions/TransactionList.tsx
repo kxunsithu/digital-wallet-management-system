@@ -52,12 +52,12 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
   const [totalEntries, setTotalEntries] = useState(0);
   const [fromEntry, setFromEntry] = useState(0);
   const [toEntry, setToEntry] = useState(0);
+  const [filterNonce, setFilterNonce] = useState(0);
 
   // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
-      setPage(1);
     }, 400);
     return () => clearTimeout(handler);
   }, [search]);
@@ -106,16 +106,17 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
     }
   };
 
+  // When filters change, reset to page 1 and bump the nonce so the load effect always re-runs
   useEffect(() => {
     setPage(1);
-    void load(1, perPage);
+    setFilterNonce((n) => n + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(filterParams), debouncedSearch, transactionType, status]);
 
   useEffect(() => {
     void load(page, perPage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, perPage]);
+  }, [page, perPage, filterNonce]);
 
   const handleClearFilters = () => {
     setSearch("");

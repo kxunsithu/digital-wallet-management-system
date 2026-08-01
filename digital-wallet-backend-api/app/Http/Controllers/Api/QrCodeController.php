@@ -48,7 +48,7 @@ class QrCodeController extends Controller
             'value' => ['required', 'string', 'max:512'],
         ]);
 
-        $qrCode = $this->qrCodeService->findActiveByValue($request->query('value'));
+        $qrCode = $this->qrCodeService->findActiveByValue((string) $request->input('value'));
         if (! $qrCode) {
             return response()->json([
                 'success' => false,

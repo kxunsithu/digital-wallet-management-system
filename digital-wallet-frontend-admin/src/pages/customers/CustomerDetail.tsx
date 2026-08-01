@@ -47,7 +47,7 @@ export default function CustomerDetail() {
   const [actionLoading, setActionLoading] = useState(false);
 
   const [kycModalOpen, setKycModalOpen] = useState(false);
-  const [selectedKycStatus, setSelectedKycStatus] = useState<"verified" | "approved" | "pending" | "rejected" | "">("");
+  const [selectedKycStatus, setSelectedKycStatus] = useState<"verified" | "pending" | "rejected" | "">("");
   const [rejectionReason, setRejectionReason] = useState("");
 
   const fetchCustomer = async () => {
@@ -79,7 +79,9 @@ export default function CustomerDetail() {
   };
 
   const handleToggleKycStatus = () => {
-    setSelectedKycStatus(customer?.kyc_status === "approved" ? "verified" : customer?.kyc_status || "pending");
+    // Normalize legacy "approved" values to "verified"
+    const normalized = customer?.kyc_status === "approved" ? "verified" : customer?.kyc_status;
+    setSelectedKycStatus(normalized || "pending");
     setRejectionReason(customer?.user?.nrc_verification?.rejection_reason || "");
     setKycModalOpen(true);
   };
@@ -539,7 +541,7 @@ export default function CustomerDetail() {
                 { value: "pending", label: "Pending", activeColor: "border-[#BCF807] bg-[#BCF807]/10 text-[#10110E]" },
                 { value: "rejected", label: "Rejected", activeColor: "border-[#FF4D4F] bg-[#FF4D4F]/10 text-[#FF4D4F]" }
               ].map((opt) => {
-                const isActive = selectedKycStatus === opt.value || (opt.value === "verified" && selectedKycStatus === "approved");
+                const isActive = selectedKycStatus === opt.value;
                 return (
                   <button
                     key={opt.value}

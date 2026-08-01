@@ -72,6 +72,13 @@ export default function CashInScreen() {
   const [phoneLookupLoading, setPhoneLookupLoading] = useState(false);
   const [roleValidationError, setRoleValidationError] = useState<string | null>(null);
 
+  // Fee & limit info from backend (shown under the amount field)
+  const [transferInfo, setTransferInfo] = useState<{
+    customer_transfer_fee_percent?: number;
+    unverified_customer_transfer_limit?: number | null;
+    is_nrc_verified?: boolean;
+  } | null>(null);
+
   // Validate recipient by phone lookup
   const validateCustomerPhone = async (phone: string) => {
     const trimmed = phone.trim();
@@ -290,6 +297,23 @@ export default function CashInScreen() {
     })();
   }, [scannerVisible]);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiFetch("/transfers/customer/info");
+        if (!cancelled && res.status === 200 && res.body?.data) {
+          setTransferInfo(res.body.data);
+        }
+      } catch {
+        // ignore network errors; banner stays hidden
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
@@ -497,6 +521,52 @@ export default function CashInScreen() {
                 </View>
               </ScrollView>
             </View>
+
+            {/* Fee & limit info banner */}
+            {transferInfo && (
+              <View style={{
+                padding: 14, borderRadius: 16,
+                backgroundColor: `${colors.primary}14`,
+                borderWidth: 1, borderColor: `${colors.primary}3D`,
+                gap: 8,
+              }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Feather name="info" size={14} color={colors.primary} />
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                    {t('transfer.info_title')}
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ fontSize: 13, color: colors.text }}>{t('transfer.fee')}</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: colors.primary }}>
+                    {Number(transferInfo.customer_transfer_fee_percent) > 0
+                      ? t('transfer.fee_percent', { percent: String(transferInfo.customer_transfer_fee_percent) })
+                      : t('transfer.fee_free')}
+                  </Text>
+                </View>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ fontSize: 13, color: colors.text }}>{t('transfer.limit')}</Text>
+                  {transferInfo.is_nrc_verified ? (
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: colors.primary }}>
+                      {t('transfer.limit_unlimited')}
+                    </Text>
+                  ) : transferInfo.unverified_customer_transfer_limit != null ? (
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: colors.primary }}>
+                      {t('transfer.limit', { amount: Number(transferInfo.unverified_customer_transfer_limit).toLocaleString() })}
+                    </Text>
+                  ) : (
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: colors.primary }}>
+                      {t('transfer.limit_none')}
+                    </Text>
+                  )}
+                </View>
+                {!transferInfo.is_nrc_verified && (
+                  <Text style={{ fontSize: 11, color: colors.textSecondary }}>
+                    {t('transfer.limit_hint')}
+                  </Text>
+                )}
+              </View>
+            )}
 
             {/* Description */}
             <View>
