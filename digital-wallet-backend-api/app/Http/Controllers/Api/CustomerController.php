@@ -15,7 +15,7 @@ class CustomerController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $perPage = (int) $request->query('per_page', 15);
+        $perPage = min(100, max(1, (int) $request->query('per_page', 15)));
 
         // Auto-heal / backfill CustomerProfile for any customer user missing one
         $customerRoleId = DB::table('roles')->where('name', 'customer')->value('id');
@@ -139,10 +139,10 @@ class CustomerController extends Controller
         $newKyc = $request->input('status');
         $rejectionReason = $request->input('rejection_reason');
 
-        if (!in_array($newKyc, ['pending', 'verified', 'approved', 'rejected'], true)) {
+        if (!in_array($newKyc, ['pending', 'verified', 'rejected'], true)) {
             // fallback toggle between verified and pending
             $current = $profile->kyc_status ?? 'pending';
-            $newKyc = ($current === 'verified' || $current === 'approved') ? 'pending' : 'verified';
+            $newKyc = $current === 'verified' ? 'pending' : 'verified';
         }
 
         DB::beginTransaction();
@@ -150,10 +150,9 @@ class CustomerController extends Controller
             $profile->update(['kyc_status' => $newKyc]);
 
             // Update or create the associated user's NRC verification record so customer side shows the correct details
-            if (in_array($newKyc, ['rejected', 'verified', 'approved'], true)) {
+            if (in_array($newKyc, ['rejected', 'verified'], true)) {
                 $statusMap = [
-                    'verified' => 'approved',
-                    'approved' => 'approved',
+                    'verified' => 'verified',
                     'rejected' => 'rejected',
                 ];
                 $nrcStatus = $statusMap[$newKyc] ?? 'pending';

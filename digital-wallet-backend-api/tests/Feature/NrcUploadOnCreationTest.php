@@ -224,12 +224,15 @@ class NrcUploadOnCreationTest extends TestCase
             'created_by_manager_id' => $manager->id,
         ]);
 
-        // Attempt update as admin -> should be forbidden (403)
+        // Admin is allowed to update any agent
         $response = $this->actingAs($admin, 'sanctum')->putJson("/api/agents/{$agentProfile->id}", [
             'full_name' => 'Updated Agent Name',
         ]);
 
-        $response->assertStatus(403);
+        $response->assertStatus(200);
+
+        $agentUser->refresh();
+        $this->assertEquals('Updated Agent Name', $agentUser->full_name);
     }
 
     public function test_toggle_nrc_status(): void

@@ -24,7 +24,7 @@ class AgentController extends Controller
             return $authError;
         }
 
-        $perPage = (int) $request->query('per_page', 15);
+        $perPage = min(100, max(1, (int) $request->query('per_page', 15)));
         $query = AgentProfile::with(['user.images', 'parent', 'stateRegion', 'township']);
 
         if ($this->isAgentManager($request) && ! $this->isAdmin($request)) {
@@ -183,8 +183,9 @@ class AgentController extends Controller
 
     public function update(UpdateAgentRequest $request, $id): JsonResponse
     {
-        if (! $this->isAgentManager($request)) {
-            return response()->json(['success' => false, 'message' => 'Forbidden. Only agent managers can update agents.'], 403);
+        $authError = $this->ensureAdminOrAgentManager($request);
+        if ($authError) {
+            return $authError;
         }
 
         $agent = AgentProfile::find($id);
@@ -192,8 +193,11 @@ class AgentController extends Controller
             return response()->json(['success' => false, 'message' => 'Not found.'], 404);
         }
 
-        if ((int) $agent->created_by_manager_id !== (int) $request->user()->id) {
-            return response()->json(['success' => false, 'message' => 'You can only update agents you created.'], 403);
+        // Ownership enforcement applies only to agent managers; admins can update any agent
+        if ($this->isAgentManager($request) && ! $this->isAdmin($request)) {
+            if ((int) $agent->created_by_manager_id !== (int) $request->user()->id) {
+                return response()->json(['success' => false, 'message' => 'You can only update agents you created.'], 403);
+            }
         }
 
         $data = $request->validated();

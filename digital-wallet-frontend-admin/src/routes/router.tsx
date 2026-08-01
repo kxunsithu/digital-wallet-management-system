@@ -21,8 +21,12 @@ import CustomerDetail from "../pages/customers/CustomerDetail";
 import ManageLocations from "../pages/locations/ManageLocations";
 import SystemWalletPage from "../pages/system-wallet";
 import WalletsPage from "../pages/wallets";
+import TopupsPage from "../pages/wallets/topups";
 import ManagerTransferPage from "../pages/agent-manager-wallet";
 import ProfilePage from "../pages/profile";
+import FeeSettingsPage from "../pages/settings/FeeSettings";
+import FeeIncomePage from "../pages/transactions/FeeIncome";
+import MerchantsPage from "../pages/merchants";
 
 const ADMIN_ONLY = ["admin"];
 const ADMIN_AND_MANAGER = ["admin", "agent_manager"];
@@ -164,6 +168,32 @@ const router = createBrowserRouter([
     ),
   },
 
+  // ─── Fee & Limit Settings / Fee Income / Merchants: admin only ─────────────
+  {
+    path: "/fee-settings",
+    element: (
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
+        <FeeSettingsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/fee-income",
+    element: (
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
+        <FeeIncomePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/merchants",
+    element: (
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
+        <MerchantsPage />
+      </ProtectedRoute>
+    ),
+  },
+
   // ─── System Wallet: admin only ──────────────────────────────────────────────
   {
     path: "/system-wallet",
@@ -222,6 +252,14 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedRoles={ADMIN_ONLY}>
         <WalletsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/wallets/topups",
+    element: (
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
+        <TopupsPage />
       </ProtectedRoute>
     ),
   },

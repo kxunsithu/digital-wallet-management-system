@@ -18,8 +18,8 @@ class TransferRequest extends FormRequest
             'qr_id' => ['nullable', 'integer', 'exists:qr_codes,id', 'required_without_all:receiver_user_id,receiver_phone,receiver_wallet_number'],
             'receiver_phone' => ['nullable', 'string', 'max:32', 'required_without_all:qr_id,receiver_user_id,receiver_wallet_number'],
             'receiver_wallet_number' => ['nullable', 'string', 'max:64', 'exists:wallets,wallet_number', 'required_without_all:qr_id,receiver_user_id,receiver_phone'],
-            'amount' => ['nullable', 'numeric', 'min:0.01'],
-            'fee' => ['nullable', 'numeric', 'min:0'],
+            'amount' => ['nullable', 'numeric', 'min:0.01', 'max:100000000'],
+            'fee' => ['nullable', 'numeric', 'min:0', 'max:100000000'],
             'pin' => ['required', 'string', 'size:4'],
             'description' => ['nullable', 'string', 'max:255'],
         ];

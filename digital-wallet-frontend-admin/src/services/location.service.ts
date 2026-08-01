@@ -1,4 +1,4 @@
-import api from "../lib/axiox";
+import api from "../lib/axios";
 
 export const getStateRegions = () => api.get("locations/state-regions");
 export const createStateRegion = (data: { name: string }) => api.post("locations/state-regions", data);

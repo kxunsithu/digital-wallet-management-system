@@ -7,6 +7,7 @@ This document describes the allowed and forbidden transfer flows for the backend
 - `agent_manager`
 - `agent`
 - `customer`
+- `merchant`
 
 ## Allowed transfer flows
 | Sender | Receiver | Route | Transaction type |
@@ -18,6 +19,7 @@ This document describes the allowed and forbidden transfer flows for the backend
 | agent_manager | agent | `POST /api/transfers/manager` | `manager_to_agent` |
 | agent_manager | admin | `POST /api/transfers/manager` | `manager_to_admin` |
 | admin | agent_manager | `POST /api/transfers/admin` | `admin_to_agent_manager` |
+| customer | merchant | `POST /api/merchant-payments/{id}/confirm` | `merchant_payment` |
 
 ## Forbidden transfer flows
 | Sender | Receiver | Reason |
@@ -34,6 +36,13 @@ This document describes the allowed and forbidden transfer flows for the backend
 - `POST /api/transfers/manager` requires `auth:sanctum` and `ensure.agent_manager`
 - `POST /api/transfers/agent` requires `auth:sanctum` and `ensure.agent`
 - `POST /api/transfers/customer` requires `auth:sanctum`
+- `GET /api/transfers/customer/info` requires `auth:sanctum`
+- `GET|PUT /api/transfer-settings` requires `auth:sanctum` and `ensure.admin`
+- `GET /api/transactions/fee-summary` requires `auth:sanctum` and `ensure.admin`
+- Merchant admin CRUD (`/api/merchants`) requires `auth:sanctum` and `ensure.admin`
+- Merchant payment routes require the merchant `X-API-Key` header (`ensure.merchant.api` middleware):
+  - `POST /api/merchant-payments/initiate` (customer phone, amount)
+  - `POST /api/merchant-payments/{payment_id}/confirm` (OTP + customer PIN)
 
 ## Receiver resolution
 A transfer may resolve the receiver by one of:
@@ -53,6 +62,17 @@ All transfer routes require a valid PIN attached in `pin`:
 ## Transfer rules enforcement
 The API validates role combinations in `MoneyTransferController::determineTransferType()`.
 If a role combination is not allowed, the API returns a `422` response with a clear message.
+
+## Unverified customer limit
+`TransferSettingsService` holds a per-transaction limit for unverified customers (`unverified_customer_transfer_limit`, default `100000`).
+- If the sender is a `customer`, `kyc_status !== 'verified'`, and `amount > limit`, the transfer is rejected with a `422` NRC-verification message.
+- NRC-verified customers are always unlimited.
+
+## Transfer & merchant fees
+`TransferSettingsService` also holds two percentage fees (default `0.5%` customer transfer, `1.0%` merchant payment).
+- Customer transfers (`customer_to_customer`, `customer_to_agent`) debit `fee` from the sender; the fee is credited to the admin (system) wallet.
+- Merchant payments (`merchant_payment`) debit `amount + fee` from the customer wallet, credit `amount` to the merchant wallet, and credit `fee` to the admin wallet.
+- Fees are computed server-side inside `DB::transaction()`; a client-supplied `fee` is ignored on customer transfers.
 
 ## Special creation rules
 - `manager_to_agent`: receiver must be an agent created by the sending manager.

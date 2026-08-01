@@ -15,7 +15,8 @@ class TransactionController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $perPage = (int) $request->query('per_page', 15);
+        $perPage = min(100, max(1, (int) $request->query('per_page', 15)));
+        $roleName = optional($user->role)->name;
 
         $query = Transaction::with(['senderWallet.user', 'receiverWallet.user', 'agent']);
 
@@ -42,18 +43,33 @@ class TransactionController extends Controller
             $query->where('status', $status);
         }
 
-        // filter by user_id (matches sender or receiver wallet owner)
+        // fee income view: only transactions that carried a fee
+        if (filter_var($request->query('fee_income', false), FILTER_VALIDATE_BOOLEAN)) {
+            $query->where('fee', '>', 0);
+        }
+
+        // filter by user_id (matches sender or receiver wallet owner) - admin only,
+        // otherwise a user could read another user's transaction history (IDOR).
         if ($userId = $request->query('user_id')) {
-            $query->where(function ($q) use ($userId) {
-                $q->whereHas('senderWallet', function ($qq) use ($userId) {
-                    $qq->where('user_id', $userId);
-                })->orWhereHas('receiverWallet', function ($qq) use ($userId) {
-                    $qq->where('user_id', $userId);
+            if ($roleName === 'admin') {
+                $query->where(function ($q) use ($userId) {
+                    $q->whereHas('senderWallet', function ($qq) use ($userId) {
+                        $qq->where('user_id', $userId);
+                    })->orWhereHas('receiverWallet', function ($qq) use ($userId) {
+                        $qq->where('user_id', $userId);
+                    });
                 });
-            });
+            } else {
+                $query->where(function ($q) use ($user) {
+                    $q->whereHas('senderWallet', function ($qq) use ($user) {
+                        $qq->where('user_id', $user->id);
+                    })->orWhereHas('receiverWallet', function ($qq) use ($user) {
+                        $qq->where('user_id', $user->id);
+                    });
+                });
+            }
         } else {
             // if not admin and no user filter, restrict to own transactions
-            $roleName = optional($user->role)->name;
             if ($roleName !== 'admin') {
                 $query->where(function ($q) use ($user) {
                     $q->whereHas('senderWallet', function ($qq) use ($user) {
@@ -68,6 +84,33 @@ class TransactionController extends Controller
         $transactions = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return TransactionResource::collection($transactions);
+    }
+
+    /**
+     * Fee income summary (admin only).
+     */
+    public function feeSummary(Request $request)
+    {
+        $user = $request->user();
+        if (optional($user->role)->name !== 'admin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $total = (float) Transaction::where('fee', '>', 0)->sum('fee');
+        $count = Transaction::where('fee', '>', 0)->count();
+        $byType = Transaction::where('fee', '>', 0)
+            ->selectRaw('transaction_type, count(*) as count, sum(fee) as total')
+            ->groupBy('transaction_type')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_fee_income' => round($total, 2),
+                'total_fee_transactions' => $count,
+                'by_type' => $byType,
+            ],
+        ], 200);
     }
 
     /**

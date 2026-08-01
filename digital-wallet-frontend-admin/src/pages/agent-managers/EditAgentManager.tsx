@@ -96,7 +96,7 @@ export default function EditAgentManager() {
 
         if (frontImg) setNrcFrontUrl(baseUrl + frontImg.image_path);
         if (backImg) setNrcBackUrl(baseUrl + backImg.image_path);
-      } catch (err) {
+      } catch {
         toast.error("Failed to load agent manager details");
         navigate("/agent-managers");
       } finally {
