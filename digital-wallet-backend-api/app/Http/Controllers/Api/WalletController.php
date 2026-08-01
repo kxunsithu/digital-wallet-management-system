@@ -24,6 +24,8 @@ class WalletController extends Controller
         $isAgentManager = $this->isAgentManager($request);
         $isAdmin = $this->isAdmin($request);
 
+        $includeAdmin = filter_var($request->query('include_admin', false), FILTER_VALIDATE_BOOLEAN);
+
         if ($isAgentManager && ! $isAdmin) {
             $agentManagerId = $request->user()->id;
 
@@ -37,17 +39,21 @@ class WalletController extends Controller
                 ->pluck('user_id')
                 ->toArray();
 
-            $allowedUserIds = array_merge($managedUserIds, $managedCustomerIds);
+            // Agent managers can always see their own wallet plus wallets of their
+            // managed agents and customers.
+            $allowedUserIds = array_merge([$agentManagerId], $managedUserIds, $managedCustomerIds);
+
+            // When admin wallets are explicitly requested (e.g. for manager → admin
+            // transfers), include admin user IDs in the allowed list.
+            if ($includeAdmin) {
+                $adminRoleId = DB::table('roles')->where('name', 'admin')->value('id');
+                if (! is_null($adminRoleId)) {
+                    $adminUserIds = DB::table('users')->where('role_id', $adminRoleId)->pluck('id')->toArray();
+                    $allowedUserIds = array_merge($allowedUserIds, $adminUserIds);
+                }
+            }
 
             $query->whereIn('user_id', $allowedUserIds);
-        }
-
-        $includeAdmin = filter_var($request->query('include_admin', false), FILTER_VALIDATE_BOOLEAN);
-
-        // If the user is an agent manager but not an admin, they should never see admin wallets,
-        // regardless of the include_admin query parameter.
-        if ($isAgentManager && ! $isAdmin) {
-            $includeAdmin = false;
         }
 
         $adminId = $request->query('admin_id');
@@ -105,10 +111,12 @@ class WalletController extends Controller
                 ->pluck('user_id')
                 ->toArray();
 
-            $allowedUserIds = array_merge($managedUserIds, $managedCustomerIds);
+            // Agent managers can view their own wallet plus wallets of their
+            // managed agents and customers.
+            $allowedUserIds = array_merge([$agentManagerId], $managedUserIds, $managedCustomerIds);
 
             if (! in_array($wallet->user_id, $allowedUserIds)) {
-                return response()->json(['success' => false, 'message' => 'Forbidden. You can only view wallets of your managed agents and customers.'], 403);
+                return response()->json(['success' => false, 'message' => 'Forbidden. You can only view your own wallet and wallets of your managed agents and customers.'], 403);
             }
         }
 

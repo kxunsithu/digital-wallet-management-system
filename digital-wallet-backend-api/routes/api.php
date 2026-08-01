@@ -104,8 +104,8 @@ Route::prefix('wallets')->middleware('auth:sanctum')->group(function () {
     Route::post('/topup', [WalletController::class, 'topup']);
     Route::get('/topups', [WalletController::class, 'topups'])->middleware('ensure.admin');
     Route::post('/topups/{id}/approve', [WalletController::class, 'approveTopup'])->middleware('ensure.admin');
-    Route::get('/', [WalletController::class, 'index'])->middleware(['ensure.admin', 'ensure.agent_manager']);
-    Route::get('/{id}', [WalletController::class, 'show'])->middleware(['ensure.admin', 'ensure.agent_manager']);
+    Route::get('/', [WalletController::class, 'index']);
+    Route::get('/{id}', [WalletController::class, 'show']);
     Route::post('/{id}/toggle-status', [WalletController::class, 'toggleStatus'])->middleware('ensure.admin');
     Route::post('/{id}/credit', [WalletController::class, 'credit'])->middleware('ensure.admin');
 });
