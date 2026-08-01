@@ -133,6 +133,20 @@ class AuthController extends Controller
                 ['kyc_status' => 'pending']
             );
         }
+        
+        // Auto-create wallet if user doesn't have one yet
+        if (!Wallet::where('user_id', $user->id)->exists()) {
+            do {
+                $walletNumber = 'WAL-' . strtoupper(\Illuminate\Support\Str::random(8));
+            } while (Wallet::where('wallet_number', $walletNumber)->exists());
+            
+            Wallet::create([
+                'user_id' => $user->id,
+                'wallet_number' => $walletNumber,
+                'balance' => 0,
+                'status' => 'active',
+            ]);
+        }
 
         $otpCode = (string) random_int(100000, 999999);
         $expiresAt = Carbon::now()->addMinutes(5);

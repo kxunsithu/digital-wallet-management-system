@@ -119,6 +119,18 @@ class AgentController extends Controller
                 'verified_by' => $request->user()?->id ?? null,
                 'verified_at' => now(),
             ]);
+            
+            // Create wallet for the new agent
+            do {
+                $walletNumber = 'WAL-' . strtoupper(\Illuminate\Support\Str::random(8));
+            } while (\App\Models\Wallet::where('wallet_number', $walletNumber)->exists());
+            
+            \App\Models\Wallet::create([
+                'user_id' => $user->id,
+                'wallet_number' => $walletNumber,
+                'balance' => 0,
+                'status' => 'active',
+            ]);
 
             DB::commit();
         } catch (\Throwable $e) {
