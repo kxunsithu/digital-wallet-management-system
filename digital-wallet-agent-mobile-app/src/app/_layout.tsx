@@ -4,6 +4,7 @@ import "../../global.css";
 import { useEffect, useState, useRef } from "react";
 import * as SecureStore from "expo-secure-store";
 import { View, ActivityIndicator } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ThemeProvider, useTheme } from '../providers/ThemeProvider';
 import Toast from 'react-native-toast-message';
 import CustomToast from '../components/CustomToast';
@@ -93,18 +94,20 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider>
-      <View style={{ flex: 1 }}>
-        <Stack screenOptions={{ headerShown: false }} />
-        {loading && <LoadingOverlay />}
-        <Toast
-          config={{
-            success: (props: any) => <CustomToast {...props} />,
-            error: (props: any) => <CustomToast {...props} />,
-            info: (props: any) => <CustomToast {...props} />,
-          }}
-        />
-      </View>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider>
+        <View style={{ flex: 1 }}>
+          <Stack screenOptions={{ headerShown: false }} />
+          {loading && <LoadingOverlay />}
+          <Toast
+            config={{
+              success: (props: any) => <CustomToast {...props} />,
+              error: (props: any) => <CustomToast {...props} />,
+              info: (props: any) => <CustomToast {...props} />,
+            }}
+          />
+        </View>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

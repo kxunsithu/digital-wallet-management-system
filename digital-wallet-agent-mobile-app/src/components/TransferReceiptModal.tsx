@@ -128,7 +128,7 @@ export default function TransferReceiptModal({
 
   // Save to Gallery (for Expo Go users)
   const saveToGallery = useCallback(async (imageUri: string, tx: ReceiptTransaction): Promise<boolean> => {
-    if (!MediaLibrary?.requestPermissionsAsync || !MediaLibrary?.createAssetAsync || !MediaLibrary?.createAlbumAsync) {
+    if (!MediaLibrary?.requestPermissionsAsync || !MediaLibrary?.Asset || !MediaLibrary?.Album) {
       const localPath = await savePNGFile(imageUri, tx);
       return Boolean(localPath);
     }
@@ -145,9 +145,14 @@ export default function TransferReceiptModal({
         return false;
       }
 
-      // Save to gallery
-      const asset = await MediaLibrary.createAssetAsync(imageUri);
-      await MediaLibrary.createAlbumAsync('Digital Wallet Receipts', asset, false);
+      // Save to gallery (new class-based API)
+      const asset = await MediaLibrary.Asset.create(imageUri);
+      const existingAlbum = await MediaLibrary.Album.get('Digital Wallet Receipts');
+      if (existingAlbum) {
+        await existingAlbum.add(asset);
+      } else {
+        await MediaLibrary.Album.create('Digital Wallet Receipts', [asset], false);
+      }
       
       Toast.show({ 
         type: 'success', 

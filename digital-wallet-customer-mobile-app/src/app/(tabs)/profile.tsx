@@ -23,12 +23,15 @@ import { logout } from "../../services/auth";
 import { useRouter, useFocusEffect } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
 import { getAutoSaveReceipt, setAutoSaveReceipt } from "../../services/settingsStore";
+import NrcImagePreviewModal from "../../components/NrcImagePreviewModal";
 
 interface UserProfile {
   id: number;
   phone_number: string;
   full_name: string | null;
   nrc_number: string | null;
+  state_region?: string | null;
+  township?: string | null;
   status: string;
   role?: string;
   kyc_status?: string | null;
@@ -38,6 +41,13 @@ interface UserProfile {
     rejection_reason: string | null;
   } | null;
   images?: {
+    id: number;
+    image_type: string;
+    image_url: string | null;
+    original_name: string | null;
+    image_size: number | null;
+  }[];
+  nrc_images?: {
     id: number;
     image_type: string;
     image_url: string | null;
@@ -55,6 +65,57 @@ interface UserProfile {
     status?: string;
   } | null;
 }
+
+type ProfileColors = ReturnType<typeof useTheme>["colors"];
+
+const NrcDocumentCard = ({
+  label,
+  uri,
+  colors,
+  isDark,
+  onPress,
+}: {
+  label: string;
+  uri: string;
+  colors: ProfileColors;
+  isDark: boolean;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.85}
+    style={{
+      flex: 1,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: isDark ? colors.background : `${colors.border}14`,
+      overflow: 'hidden',
+    }}
+  >
+    <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10 }}>
+      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary, marginRight: 8 }} />
+      <Text style={{ fontSize: 10, fontWeight: '700', color: colors.text, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+        {label}
+      </Text>
+    </View>
+    <View>
+      <Image
+        source={{ uri }}
+        style={{ width: '100%', height: 150, backgroundColor: `${colors.border}22` }}
+        resizeMode="cover"
+      />
+      <View style={{
+        position: 'absolute', right: 8, bottom: 8,
+        width: 30, height: 30, borderRadius: 15,
+        backgroundColor: 'rgba(0,0,0,0.55)',
+        alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Feather name="maximize-2" size={14} color="#FFFFFF" />
+      </View>
+    </View>
+  </TouchableOpacity>
+);
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -75,8 +136,13 @@ export default function ProfileScreen() {
   const [editProfileModal, setEditProfileModal] = useState(false);
   const [editFullName, setEditFullName] = useState("");
   const [editNrcNumber, setEditNrcNumber] = useState("");
+  const [editStateRegion, setEditStateRegion] = useState("");
+  const [editTownship, setEditTownship] = useState("");
   const [editProfileImageUri, setEditProfileImageUri] = useState<string | null>(null);
   const [updatingProfile, setUpdatingProfile] = useState(false);
+
+  // NRC image preview state
+  const [previewImage, setPreviewImage] = useState<{ uri: string; label: string } | null>(null);
 
   // NRC Verification state
   const [nrcModalVisible, setNrcModalVisible] = useState(false);
@@ -119,10 +185,18 @@ export default function ProfileScreen() {
   const handleOpenEditProfile = () => {
     setEditFullName(profile?.full_name ?? "");
     setEditNrcNumber(profile?.nrc_number ?? "");
+    setEditStateRegion(profile?.state_region ?? "");
+    setEditTownship(profile?.township ?? "");
     setEditProfileImageUri(
       profile?.images?.find(img => img.image_type === 'profile_image')?.image_url ?? null
     );
     setEditProfileModal(true);
+  };
+
+  const handleOpenNrcModal = () => {
+    setNrcFrontUri(profile?.nrc_images?.find(img => img.image_type === 'nrc_front_image')?.image_url ?? null);
+    setNrcBackUri(profile?.nrc_images?.find(img => img.image_type === 'nrc_back_image')?.image_url ?? null);
+    setNrcModalVisible(true);
   };
 
   const pickImage = async () => {
@@ -215,6 +289,8 @@ export default function ProfileScreen() {
           body: JSON.stringify({
             full_name: editFullName.trim(),
             nrc_number: editNrcNumber.trim(),
+            state_region: editStateRegion.trim() || null,
+            township: editTownship.trim() || null,
           }),
         });
         if (res.status === 200 && res.body?.success) {
@@ -260,7 +336,8 @@ export default function ProfileScreen() {
       });
 
       if (res.status === 200 && res.body?.success) {
-        Toast.show({ type: "success", text1: t("common.submit"), text2: t("profile.nrc_submitted") });
+        const isEdit = (profile?.nrc_images?.length ?? 0) > 0;
+        Toast.show({ type: "success", text1: t("common.success"), text2: t(isEdit ? "profile.nrc_updated" : "profile.nrc_submitted") });
         setNrcModalVisible(false);
         setNrcFrontUri(null);
         setNrcBackUri(null);
@@ -335,6 +412,19 @@ export default function ProfileScreen() {
 
   const avatarImage = profile?.images?.find(img => img.image_type === 'profile_image')?.image_url;
   const avatarLetter = profile?.full_name?.charAt(0)?.toUpperCase() ?? 'U';
+
+  const nrcVerification = profile?.nrc_verification?.status ?? null;
+  const nrcStatusConfig: Record<string, { label: string; color: string }> = {
+    verified: { label: t('profile.kyc_identity_verified'), color: colors.success },
+    pending: { label: t('profile.kyc_pending_title'), color: '#F59E0B' },
+    rejected: { label: t('profile.kyc_rejected_title'), color: colors.error },
+  };
+  const nrcStatus = nrcVerification
+    ? nrcStatusConfig[nrcVerification] ?? { label: nrcVerification, color: colors.textSecondary }
+    : { label: t('profile.nrc_status_not_submitted'), color: colors.textSecondary };
+  const nrcRejectionReason = profile?.nrc_verification?.rejection_reason ?? null;
+  const nrcFrontImage = profile?.nrc_images?.find(img => img.image_type === 'nrc_front_image')?.image_url ?? null;
+  const nrcBackImage = profile?.nrc_images?.find(img => img.image_type === 'nrc_back_image')?.image_url ?? null;
 
   const InfoCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <View style={{
@@ -530,24 +620,39 @@ export default function ProfileScreen() {
               padding: 16, borderRadius: 20,
               backgroundColor: isDark ? 'rgba(250,173,20,0.08)' : '#FFFBE6',
               borderWidth: 1, borderColor: '#FFE58F',
-              flexDirection: 'row', alignItems: 'center',
             }}>
-              <View style={{
-                width: 38, height: 38, borderRadius: 12,
-                backgroundColor: '#FAAD14',
-                alignItems: 'center', justifyContent: 'center',
-                marginRight: 14,
-              }}>
-                <Feather name="clock" size={18} color="#FFFFFF" />
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{
+                  width: 38, height: 38, borderRadius: 12,
+                  backgroundColor: '#FAAD14',
+                  alignItems: 'center', justifyContent: 'center',
+                  marginRight: 14,
+                }}>
+                  <Feather name="clock" size={18} color="#FFFFFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, fontWeight: '800', color: isDark ? '#FAAD14' : '#D46B08' }}>
+                    {t('profile.kyc_pending_title')}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>
+                    {t('profile.kyc_pending_desc')}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 4 }}>
+                    {t('profile.nrc_pending_edit_hint')}
+                  </Text>
+                </View>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 13, fontWeight: '800', color: isDark ? '#FAAD14' : '#D46B08' }}>
-                  {t('profile.kyc_pending_title')}
-                </Text>
-                <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>
-                  {t('profile.kyc_pending_desc')}
-                </Text>
-              </View>
+              <TouchableOpacity onPress={handleOpenNrcModal} activeOpacity={0.85} style={{ marginTop: 14 }}>
+                <LinearGradient
+                  colors={[colors.primary, `${colors.primary}CC`]}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={{ paddingVertical: 12, borderRadius: 14, alignItems: 'center', justifyContent: 'center' }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: colors.background }}>
+                    {t('profile.edit_nrc_documents')}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
           ) : (
             <View style={{
@@ -584,7 +689,7 @@ export default function ProfileScreen() {
               </View>
 
               <TouchableOpacity
-                onPress={() => setNrcModalVisible(true)}
+                onPress={handleOpenNrcModal}
                 activeOpacity={0.85}
                 style={{ marginTop: 16 }}
               >
@@ -608,7 +713,79 @@ export default function ProfileScreen() {
             <InfoRow label={t('profile.full_name')} value={profile?.full_name ?? '—'} icon="user" />
             <InfoRow label={t('profile.phone')} value={profile?.phone_number ?? '—'} icon="phone" />
             <InfoRow label={t('profile.nrc')} value={profile?.nrc_number ?? '—'} icon="credit-card" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: `${colors.border}4D` }}>
+              <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: `${colors.primary}12`, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                <Feather name="shield" size={13} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 10, color: colors.textSecondary }}>{t('profile.nrc_status')}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                  <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: nrcStatus.color, marginRight: 6 }} />
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: nrcStatus.color }}>{nrcStatus.label}</Text>
+                </View>
+                {nrcStatus.label === t('profile.kyc_rejected_title') && nrcRejectionReason ? (
+                  <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 3 }}>
+                    {t('profile.kyc_rejection_reason', { reason: nrcRejectionReason })}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+            <InfoRow label={t('profile.state_region')} value={profile?.state_region ?? '—'} icon="map" />
+            <InfoRow label={t('profile.township')} value={profile?.township ?? '—'} icon="map-pin" />
             <InfoRow label={t('profile.account_status')} value={profile?.status ?? '—'} icon="check-circle" />
+          </InfoCard>
+        </View>
+
+        {/* NRC Documents */}
+        <View style={{ paddingHorizontal: 24 }}>
+          <InfoCard title={t('profile.nrc_documents')}>
+            {nrcFrontImage || nrcBackImage ? (
+              <View>
+                <View style={{ flexDirection: 'row', marginHorizontal: -5 }}>
+                  {nrcFrontImage ? (
+                    <View style={{ flex: 1, marginHorizontal: 5 }}>
+                      <NrcDocumentCard
+                        label={t('profile.front')}
+                        uri={nrcFrontImage}
+                        colors={colors}
+                        isDark={isDark}
+                        onPress={() => setPreviewImage({ uri: nrcFrontImage, label: t('profile.front_side') })}
+                      />
+                    </View>
+                  ) : null}
+                  {nrcBackImage ? (
+                    <View style={{ flex: 1, marginHorizontal: 5 }}>
+                      <NrcDocumentCard
+                        label={t('profile.back')}
+                        uri={nrcBackImage}
+                        colors={colors}
+                        isDark={isDark}
+                        onPress={() => setPreviewImage({ uri: nrcBackImage, label: t('profile.back_side') })}
+                      />
+                    </View>
+                  ) : null}
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 14 }}>
+                  <Feather name="maximize" size={12} color={colors.textSecondary} />
+                  <Text style={{ fontSize: 11, color: colors.textSecondary, marginLeft: 6 }}>
+                    {t('profile.tap_to_preview')}
+                  </Text>
+                </View>
+              </View>
+            ) : (
+              <View style={{ alignItems: 'center', paddingVertical: 18 }}>
+                <View style={{
+                  width: 52, height: 52, borderRadius: 26,
+                  backgroundColor: `${colors.border}33`,
+                  alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Feather name="file-text" size={24} color={colors.textSecondary} />
+                </View>
+                <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 12 }}>
+                  {t('profile.no_nrc_images')}
+                </Text>
+              </View>
+            )}
           </InfoCard>
         </View>
 
@@ -752,6 +929,34 @@ export default function ProfileScreen() {
                 />
               </View>
 
+              {/* State / Region */}
+              <View style={{ marginBottom: 16 }}>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                  {t('profile.state_region')}
+                </Text>
+                <TextInput
+                  placeholder={t('profile.placeholder_state_region')}
+                  placeholderTextColor={colors.textSecondary}
+                  style={{ padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, backgroundColor: isDark ? colors.background : `${colors.border}22`, fontSize: 15, fontWeight: '600', color: colors.text }}
+                  value={editStateRegion}
+                  onChangeText={setEditStateRegion}
+                />
+              </View>
+
+              {/* Township */}
+              <View style={{ marginBottom: 24 }}>
+                <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                  {t('profile.township')}
+                </Text>
+                <TextInput
+                  placeholder={t('profile.placeholder_township')}
+                  placeholderTextColor={colors.textSecondary}
+                  style={{ padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, backgroundColor: isDark ? colors.background : `${colors.border}22`, fontSize: 15, fontWeight: '600', color: colors.text }}
+                  value={editTownship}
+                  onChangeText={setEditTownship}
+                />
+              </View>
+
               <TouchableOpacity onPress={handleUpdateProfile} disabled={updatingProfile} activeOpacity={0.85} style={{ marginTop: 8, opacity: updatingProfile ? 0.7 : 1 }}>
                 <LinearGradient
                   colors={[colors.primary, `${colors.primary}CC`]}
@@ -783,7 +988,9 @@ export default function ProfileScreen() {
               </View>
 
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text }}>{t('profile.submit_nrc_title')}</Text>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: colors.text }}>
+                  {nrcFrontImage || nrcBackImage ? t('profile.edit_nrc_documents') : t('profile.submit_nrc_title')}
+                </Text>
                 <TouchableOpacity onPress={() => setNrcModalVisible(false)} activeOpacity={0.7}>
                   <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: isDark ? colors.background : `${colors.border}33`, alignItems: 'center', justifyContent: 'center' }}>
                     <Feather name="x" size={18} color={colors.text} />
@@ -1011,6 +1218,15 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* ── NRC Image Preview ── */}
+      <NrcImagePreviewModal
+        key={previewImage ? `${previewImage.uri}|${previewImage.label}` : 'closed'}
+        visible={!!previewImage}
+        uri={previewImage?.uri ?? null}
+        label={previewImage?.label ?? ''}
+        onClose={() => setPreviewImage(null)}
+      />
     </SafeAreaView>
   );
 }

@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-import apiFetch from "../../lib/api";
+import apiFetch, { getAuthToken } from "../../lib/api";
 import { useTheme } from "../../providers/ThemeProvider";
 import { logout } from "../../services/auth";
 import {
@@ -179,7 +179,10 @@ export default function DashboardScreen() {
         profileRef.current = newProfile;
         setProfile(newProfile);
       } else if (profileRes.status === 401) {
-        router.replace("/auth");
+        const token = await getAuthToken();
+        if (token) {
+          router.replace("/auth");
+        }
         return;
       }
 

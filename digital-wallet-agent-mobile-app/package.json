@@ -48,6 +48,8 @@
   "devDependencies": {
     "@types/react": "~19.2.2",
     "autoprefixer": "^10.5.4",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~57.0.1",
     "postcss": "^8.5.19",
     "typescript": "~6.0.3"
   },

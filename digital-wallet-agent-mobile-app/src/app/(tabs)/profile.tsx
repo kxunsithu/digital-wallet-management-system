@@ -22,6 +22,7 @@ import { logout } from "../../services/auth";
 import { useRouter, useFocusEffect } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
 import { getAutoSaveReceipt, setAutoSaveReceipt } from "../../services/settingsStore";
+import NrcImagePreviewModal from "../../components/NrcImagePreviewModal";
 
 interface UserProfile {
   id: number;
@@ -65,6 +66,57 @@ interface UserProfile {
   } | null;
 }
 
+type ProfileColors = ReturnType<typeof useTheme>["colors"];
+
+const NrcDocumentCard = ({
+  label,
+  uri,
+  colors,
+  isDark,
+  onPress,
+}: {
+  label: string;
+  uri: string;
+  colors: ProfileColors;
+  isDark: boolean;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity
+    onPress={onPress}
+    activeOpacity={0.85}
+    style={{
+      flex: 1,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: isDark ? colors.background : `${colors.border}14`,
+      overflow: 'hidden',
+    }}
+  >
+    <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10 }}>
+      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary, marginRight: 8 }} />
+      <Text style={{ fontSize: 10, fontWeight: '700', color: colors.text, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+        {label}
+      </Text>
+    </View>
+    <View>
+      <Image
+        source={{ uri }}
+        style={{ width: '100%', height: 150, backgroundColor: `${colors.border}22` }}
+        resizeMode="cover"
+      />
+      <View style={{
+        position: 'absolute', right: 8, bottom: 8,
+        width: 30, height: 30, borderRadius: 15,
+        backgroundColor: 'rgba(0,0,0,0.55)',
+        alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Feather name="maximize-2" size={14} color="#FFFFFF" />
+      </View>
+    </View>
+  </TouchableOpacity>
+);
+
 export default function ProfileScreen() {
   const router = useRouter();
   const { theme, colors, toggleTheme } = useTheme();
@@ -79,7 +131,7 @@ export default function ProfileScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   // NRC image preview state
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<{ uri: string; label: string } | null>(null);
 
   // Profile Edit state
   const [editProfileModal, setEditProfileModal] = useState(false);
@@ -510,40 +562,48 @@ export default function ProfileScreen() {
         <View style={{ paddingHorizontal: 24 }}>
           <InfoCard title="NRC Documents">
             {nrcFrontImage || nrcBackImage ? (
-              <View style={{ flexDirection: 'row' }}>
-                {nrcFrontImage ? (
-                  <View style={{ flex: 1, marginRight: nrcBackImage ? 10 : 0 }}>
-                    <Text style={{ fontSize: 10, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: '600', marginBottom: 8 }}>
-                      Front
-                    </Text>
-                    <TouchableOpacity onPress={() => setPreviewImage(nrcFrontImage)} activeOpacity={0.8}>
-                      <Image
-                        source={{ uri: nrcFrontImage }}
-                        style={{ width: '100%', height: 140, borderRadius: 14, backgroundColor: `${colors.border}33` }}
-                        resizeMode="cover"
+              <View>
+                <View style={{ flexDirection: 'row', marginHorizontal: -5 }}>
+                  {nrcFrontImage ? (
+                    <View style={{ flex: 1, marginHorizontal: 5 }}>
+                      <NrcDocumentCard
+                        label="Front"
+                        uri={nrcFrontImage}
+                        colors={colors}
+                        isDark={isDark}
+                        onPress={() => setPreviewImage({ uri: nrcFrontImage, label: 'Front' })}
                       />
-                    </TouchableOpacity>
-                  </View>
-                ) : null}
-                {nrcBackImage ? (
-                  <View style={{ flex: 1, marginLeft: nrcFrontImage ? 10 : 0 }}>
-                    <Text style={{ fontSize: 10, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: '600', marginBottom: 8 }}>
-                      Back
-                    </Text>
-                    <TouchableOpacity onPress={() => setPreviewImage(nrcBackImage)} activeOpacity={0.8}>
-                      <Image
-                        source={{ uri: nrcBackImage }}
-                        style={{ width: '100%', height: 140, borderRadius: 14, backgroundColor: `${colors.border}33` }}
-                        resizeMode="cover"
+                    </View>
+                  ) : null}
+                  {nrcBackImage ? (
+                    <View style={{ flex: 1, marginHorizontal: 5 }}>
+                      <NrcDocumentCard
+                        label="Back"
+                        uri={nrcBackImage}
+                        colors={colors}
+                        isDark={isDark}
+                        onPress={() => setPreviewImage({ uri: nrcBackImage, label: 'Back' })}
                       />
-                    </TouchableOpacity>
-                  </View>
-                ) : null}
+                    </View>
+                  ) : null}
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 14 }}>
+                  <Feather name="maximize" size={12} color={colors.textSecondary} />
+                  <Text style={{ fontSize: 11, color: colors.textSecondary, marginLeft: 6 }}>
+                    Tap an image to preview full screen
+                  </Text>
+                </View>
               </View>
             ) : (
               <View style={{ alignItems: 'center', paddingVertical: 18 }}>
-                <Feather name="file-text" size={26} color={colors.textSecondary} />
-                <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 10 }}>
+                <View style={{
+                  width: 52, height: 52, borderRadius: 26,
+                  backgroundColor: `${colors.border}33`,
+                  alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Feather name="file-text" size={24} color={colors.textSecondary} />
+                </View>
+                <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 12 }}>
                   No NRC images uploaded
                 </Text>
               </View>
@@ -874,6 +934,15 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* NRC Image Preview */}
+      <NrcImagePreviewModal
+        key={previewImage ? `${previewImage.uri}|${previewImage.label}` : 'closed'}
+        visible={!!previewImage}
+        uri={previewImage?.uri ?? null}
+        label={previewImage?.label ?? ''}
+        onClose={() => setPreviewImage(null)}
+      />
     </SafeAreaView>
   );
 }

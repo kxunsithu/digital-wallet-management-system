@@ -40,6 +40,8 @@ class UserProfileController extends Controller
             'profile_image_original_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'profile_image_size' => ['sometimes', 'nullable', 'integer'],
             'nrc_number' => ['sometimes', 'string', 'max:255', 'unique:users,nrc_number,'.$user->id],
+            'state_region' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'township' => ['sometimes', 'nullable', 'string', 'max:255'],
         ]);
 
         $roleName = DB::table('roles')->where('id', $user->role_id)->value('name');
