@@ -25,9 +25,6 @@ class UserResource extends JsonResource
         })->values();
 
         $agentProfile = $this->relationLoaded('agentProfile') ? $this->agentProfile : $this->loadMissing('agentProfile')->agentProfile;
-        if ($agentProfile) {
-            $agentProfile->loadMissing(['stateRegion', 'township']);
-        }
         $wallet = $this->relationLoaded('wallet') ? $this->wallet : $this->loadMissing('wallet')->wallet;
         $customerProfile = $this->relationLoaded('customerProfile') ? $this->customerProfile : $this->loadMissing('customerProfile')->customerProfile;
         $nrcVerification = $this->relationLoaded('nrcVerification') ? $this->nrcVerification : $this->loadMissing('nrcVerification')->nrcVerification;
@@ -37,6 +34,9 @@ class UserResource extends JsonResource
             'phone_number' => $this->phone_number,
             'full_name' => $this->full_name,
             'nrc_number' => $this->nrc_number,
+            'nrc_location' => $this->nrcParts(),
+            'state_region' => $this->state_region,
+            'township' => $this->township,
             'status' => $this->status,
             'is_phone_verified' => (bool) $this->is_phone_verified,
             'is_pin_created' => (bool) $this->is_pin_created,
@@ -55,14 +55,6 @@ class UserResource extends JsonResource
                 'agent_code' => $agentProfile->agent_code,
                 'shop_name' => $agentProfile->shop_name,
                 'shop_address' => $agentProfile->shop_address,
-                'state_region' => $agentProfile->stateRegion ? [
-                    'id' => $agentProfile->stateRegion->id,
-                    'name' => $agentProfile->stateRegion->name,
-                ] : null,
-                'township' => $agentProfile->township ? [
-                    'id' => $agentProfile->township->id,
-                    'name' => $agentProfile->township->name,
-                ] : null,
             ] : null,
             'wallet' => $wallet ? [
                 'id' => $wallet->id,

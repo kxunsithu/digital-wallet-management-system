@@ -17,8 +17,6 @@ class CustomerProfile extends Model
         'kyc_status',
         'referral_code',
         'referred_by',
-        'state_region_id',
-        'township_id',
     ];
 
     public function user()
@@ -29,15 +27,5 @@ class CustomerProfile extends Model
     public function referrer()
     {
         return $this->belongsTo(User::class, 'referred_by');
-    }
-
-    public function stateRegion()
-    {
-        return $this->belongsTo(StateRegion::class);
-    }
-
-    public function township()
-    {
-        return $this->belongsTo(Township::class);
     }
 }

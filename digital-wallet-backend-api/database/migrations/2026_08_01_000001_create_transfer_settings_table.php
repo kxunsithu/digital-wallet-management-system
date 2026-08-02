@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->decimal('unverified_customer_transfer_limit', 15, 2)->nullable();
             $table->decimal('customer_transfer_fee_percent', 5, 2)->default(0);
-            $table->decimal('merchant_payment_fee_percent', 5, 2)->default(0);
             $table->timestamps();
         });
     }

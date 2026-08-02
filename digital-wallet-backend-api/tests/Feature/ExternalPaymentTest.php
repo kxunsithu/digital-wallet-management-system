@@ -1,0 +1,590 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\CustomerProfile;
+use App\Models\ExternalSystem;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Tests\TestCase;
+
+class ExternalPaymentTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        DB::table('roles')->insert([
+            ['id' => 1, 'name' => 'admin', 'description' => 'Admin', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 3, 'name' => 'agent', 'description' => 'Agent', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 4, 'name' => 'customer', 'description' => 'Customer', 'created_at' => now(), 'updated_at' => now()],
+        ]);
+
+        DB::table('transfer_settings')->insert([
+            'id' => 1,
+            'unverified_customer_transfer_limit' => 100000,
+            'customer_transfer_fee_percent' => 0.5,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    protected function makeUser(string $phone, int $roleId, string $status = 'active'): User
+    {
+        return User::create([
+            'phone_number' => $phone,
+            'role_id' => $roleId,
+            'full_name' => 'User '.$phone,
+            'status' => $status,
+            'is_phone_verified' => true,
+        ]);
+    }
+
+    protected function makeWallet(User $user, float $balance): int
+    {
+        return DB::table('wallets')->insertGetId([
+            'user_id' => $user->id,
+            'wallet_number' => 'WAL-'.strtoupper(bin2hex(random_bytes(4))),
+            'balance' => $balance,
+            'status' => 'active',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    protected function makePin(User $user, string $pin = '1234'): void
+    {
+        DB::table('pins')->insert([
+            'user_id' => $user->id,
+            'pin_hash' => Hash::make($pin),
+            'failed_attempts' => 0,
+            'is_locked' => false,
+            'locked_until' => null,
+            'last_changed_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    protected function makeCustomer(string $phone, string $kycStatus, float $balance): array
+    {
+        $user = $this->makeUser($phone, 4);
+        CustomerProfile::create(['user_id' => $user->id, 'kyc_status' => $kycStatus]);
+        $this->makeWallet($user, $balance);
+        $this->makePin($user);
+
+        return [$user];
+    }
+
+    protected function makeAgent(string $phone, float $balance): array
+    {
+        $user = $this->makeUser($phone, 3);
+        DB::table('agent_profiles')->insert([
+            'user_id' => $user->id,
+            'agent_code' => 'AGT-'.strtoupper(bin2hex(random_bytes(3))),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $walletId = $this->makeWallet($user, $balance);
+        $this->makePin($user);
+
+        return [$user, $walletId];
+    }
+
+    protected function makeExternalSystem(string $apiKey, User $agent, string $status = 'active'): ExternalSystem
+    {
+        return ExternalSystem::create([
+            'name' => 'Test Shopping',
+            'user_id' => $agent->id,
+            'system_link' => 'https://shop.example.com',
+            'api_key_hash' => hash('sha256', $apiKey),
+            'api_key_prefix' => substr($apiKey, 0, 12),
+            'status' => $status,
+        ]);
+    }
+
+    protected function makeAdmin(): int
+    {
+        $admin = $this->makeUser('09111111111', 1);
+
+        return $this->makeWallet($admin, 1000000);
+    }
+
+    protected function initiate(string $apiKey, array $payload): \Illuminate\Testing\TestResponse
+    {
+        return $this->postJson('/api/external/payments/initiate', $payload, ['X-API-Key' => $apiKey]);
+    }
+
+    protected function otpForPayment(string $reference): string
+    {
+        $paymentId = DB::table('external_payments')->where('reference', $reference)->value('id');
+
+        return (string) DB::table('otp_verifications')
+            ->where('user_id', DB::table('external_payments')->where('id', $paymentId)->value('customer_user_id'))
+            ->where('purpose', 'external_payment:'.$paymentId)
+            ->latest('created_at')
+            ->value('otp_code');
+    }
+
+    public function test_initiate_requires_valid_api_key(): void
+    {
+        $this->initiate('wrong-key', [
+            'customer_phone' => '09123456789',
+            'amount' => 1000,
+        ])->assertStatus(401);
+
+        $this->postJson('/api/external/payments/initiate', [
+            'customer_phone' => '09123456789',
+            'amount' => 1000,
+        ])->assertStatus(401);
+    }
+
+    public function test_initiate_creates_pending_payment_and_issues_otp(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        $response = $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 20000,
+            'order_reference' => 'ORD-001',
+            'description' => 'Online shopping order',
+        ]);
+
+        $response->assertStatus(201);
+        $response->assertJsonPath('data.amount', 20000);
+        $response->assertJsonPath('data.fee', 100);
+        $response->assertJsonPath('data.total', 20100);
+
+        $this->assertDatabaseHas('external_payments', [
+            'reference' => $response->json('data.payment_reference'),
+            'customer_user_id' => $customer->id,
+            'agent_user_id' => $agent->id,
+            'amount' => 20000,
+            'fee' => 100,
+            'status' => 'pending',
+            'order_reference' => 'ORD-001',
+        ]);
+
+        $this->assertDatabaseHas('otp_verifications', [
+            'user_id' => $customer->id,
+            'purpose' => 'external_payment:'.DB::table('external_payments')->where('reference', $response->json('data.payment_reference'))->value('id'),
+            'status' => 'pending',
+        ]);
+    }
+
+    public function test_initiate_uses_the_agent_bound_to_the_system(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+        [$boundAgent] = $this->makeAgent('09122222222', 100000);
+        [$otherAgent] = $this->makeAgent('09133333333', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $boundAgent);
+
+        $response = $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 1000,
+        ])->assertStatus(201);
+
+        $this->assertDatabaseHas('external_payments', [
+            'reference' => $response->json('data.payment_reference'),
+            'agent_user_id' => $boundAgent->id,
+            'external_system_id' => ExternalSystem::where('api_key_hash', hash('sha256', $apiKey))->first()->id,
+        ]);
+
+        $this->assertNotSame($boundAgent->id, $otherAgent->id);
+    }
+
+    public function test_initiate_rejects_system_not_linked_to_agent(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+
+        ExternalSystem::create([
+            'name' => 'Orphan System',
+            'user_id' => null,
+            'api_key_hash' => hash('sha256', $apiKey = 'sk_live_orphan123'),
+            'api_key_prefix' => 'sk_live_orph',
+            'status' => 'active',
+        ]);
+
+        $response = $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 1000,
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('not linked to an agent', $response->json('message'));
+        $this->assertDatabaseCount('external_payments', 0);
+    }
+
+    public function test_initiate_rejects_non_customer_sender(): void
+    {
+        $this->makeAdmin();
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        $response = $this->initiate($apiKey, [
+            'customer_phone' => '09122222222',
+            'amount' => 1000,
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('Sender must be a customer', $response->json('message'));
+    }
+
+    public function test_initiate_unverified_customer_above_limit_rejected(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'pending', 500000);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        $response = $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 200000,
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('NRC-verified', $response->json('message'));
+        $this->assertDatabaseCount('external_payments', 0);
+    }
+
+    public function test_confirm_completes_payment_and_updates_balances(): void
+    {
+        $adminWalletId = $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+        [$agent, $agentWalletId] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+        $customerWalletId = $customer->wallet()->first()->id;
+
+        $init = $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 20000,
+        ])->assertStatus(201);
+
+        $reference = $init->json('data.payment_reference');
+        $otp = $this->otpForPayment($reference);
+
+        $response = $this->postJson('/api/external/payments/confirm', [
+            'payment_reference' => $reference,
+            'otp' => $otp,
+            'pin' => '1234',
+        ], ['X-API-Key' => $apiKey]);
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.transaction_type', 'external_payment');
+
+        // sender: 500000 - (20000 + 100)
+        $this->assertDatabaseHas('wallets', ['id' => $customerWalletId, 'balance' => 479900]);
+        // receiver (bound agent): 100000 + 20000
+        $this->assertDatabaseHas('wallets', ['id' => $agentWalletId, 'balance' => 120000]);
+        // fee to admin wallet (admin started with 1,000,000)
+        $this->assertDatabaseHas('wallets', ['id' => $adminWalletId, 'balance' => 1000100]);
+
+        $this->assertDatabaseHas('transactions', [
+            'transaction_type' => 'external_payment',
+            'sender_wallet_id' => $customerWalletId,
+            'receiver_wallet_id' => $agentWalletId,
+            'amount' => 20000,
+            'fee' => 100,
+            'status' => 'completed',
+            'external_payment_id' => DB::table('external_payments')->where('reference', $reference)->value('id'),
+        ]);
+
+        $this->assertDatabaseHas('external_payments', [
+            'reference' => $reference,
+            'status' => 'completed',
+        ]);
+
+        // OTP is single-use
+        $paymentId = DB::table('external_payments')->where('reference', $reference)->value('id');
+        $this->assertDatabaseHas('otp_verifications', [
+            'user_id' => $customer->id,
+            'purpose' => 'external_payment:'.$paymentId,
+            'status' => 'used',
+        ]);
+    }
+
+    public function test_confirm_with_invalid_otp_rejected(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        $init = $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 10000,
+        ])->assertStatus(201);
+
+        $response = $this->postJson('/api/external/payments/confirm', [
+            'payment_reference' => $init->json('data.payment_reference'),
+            'otp' => '000000',
+            'pin' => '1234',
+        ], ['X-API-Key' => $apiKey]);
+
+        $response->assertStatus(422);
+        $this->assertDatabaseCount('transactions', 0);
+        $this->assertDatabaseHas('external_payments', [
+            'reference' => $init->json('data.payment_reference'),
+            'status' => 'pending',
+        ]);
+    }
+
+    public function test_confirm_with_wrong_pin_rejected(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        $init = $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 10000,
+        ])->assertStatus(201);
+
+        $response = $this->postJson('/api/external/payments/confirm', [
+            'payment_reference' => $init->json('data.payment_reference'),
+            'otp' => $this->otpForPayment($init->json('data.payment_reference')),
+            'pin' => '9999',
+        ], ['X-API-Key' => $apiKey]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('PIN', $response->json('message'));
+        $this->assertDatabaseCount('transactions', 0);
+    }
+
+    public function test_confirm_insufficient_balance_rejected(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        $init = $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 10000,
+        ])->assertStatus(201);
+
+        $response = $this->postJson('/api/external/payments/confirm', [
+            'payment_reference' => $init->json('data.payment_reference'),
+            'otp' => $this->otpForPayment($init->json('data.payment_reference')),
+            'pin' => '1234',
+        ], ['X-API-Key' => $apiKey]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('Insufficient balance', $response->json('message'));
+        $this->assertDatabaseCount('transactions', 0);
+    }
+
+    public function test_confirm_expired_payment_rejected(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        $init = $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 10000,
+        ])->assertStatus(201);
+
+        DB::table('external_payments')
+            ->where('reference', $init->json('data.payment_reference'))
+            ->update(['expires_at' => now()->subMinute()]);
+
+        $response = $this->postJson('/api/external/payments/confirm', [
+            'payment_reference' => $init->json('data.payment_reference'),
+            'otp' => $this->otpForPayment($init->json('data.payment_reference')),
+            'pin' => '1234',
+        ], ['X-API-Key' => $apiKey]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('expired', $response->json('message'));
+        $this->assertDatabaseHas('external_payments', [
+            'reference' => $init->json('data.payment_reference'),
+            'status' => 'expired',
+        ]);
+    }
+
+    public function test_confirm_cannot_reuse_completed_payment(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        $init = $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 10000,
+        ])->assertStatus(201);
+
+        $reference = $init->json('data.payment_reference');
+
+        $this->postJson('/api/external/payments/confirm', [
+            'payment_reference' => $reference,
+            'otp' => $this->otpForPayment($reference),
+            'pin' => '1234',
+        ], ['X-API-Key' => $apiKey])->assertStatus(200);
+
+        $this->postJson('/api/external/payments/confirm', [
+            'payment_reference' => $reference,
+            'otp' => $this->otpForPayment($reference),
+            'pin' => '1234',
+        ], ['X-API-Key' => $apiKey])->assertStatus(400);
+
+        $this->assertDatabaseCount('transactions', 1);
+    }
+
+    public function test_agent_can_create_external_system_without_generating_key(): void
+    {
+        [$agent] = $this->makeAgent('09122222222', 100000);
+
+        $create = $this->actingAs($agent, 'sanctum')->postJson('/api/external-systems', [
+            'name' => 'My Shop',
+            'system_link' => 'https://myshop.example.com',
+        ]);
+        $create->assertStatus(201);
+        $this->assertNull($create->json('data.api_key'));
+        $systemId = $create->json('data.id');
+
+        $this->assertDatabaseHas('external_systems', [
+            'id' => $systemId,
+            'name' => 'My Shop',
+            'user_id' => $agent->id,
+            'system_link' => 'https://myshop.example.com',
+            'api_key_hash' => null,
+            'status' => 'active',
+        ]);
+
+        // the agent generates the API key themselves
+        $generate = $this->actingAs($agent, 'sanctum')->postJson("/api/external-systems/{$systemId}/generate-key");
+        $generate->assertStatus(200);
+        $apiKey = $generate->json('data.api_key');
+        $this->assertNotNull($apiKey);
+
+        $this->assertDatabaseHas('external_systems', [
+            'id' => $systemId,
+            'api_key_hash' => hash('sha256', $apiKey),
+        ]);
+    }
+
+    public function test_agent_cannot_generate_key_for_another_agents_system(): void
+    {
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        [$otherAgent] = $this->makeAgent('09133333333', 100000);
+
+        $create = $this->actingAs($agent, 'sanctum')->postJson('/api/external-systems', [
+            'name' => 'My Shop',
+        ])->assertStatus(201);
+        $systemId = $create->json('data.id');
+
+        $this->actingAs($otherAgent, 'sanctum')
+            ->postJson("/api/external-systems/{$systemId}/generate-key")
+            ->assertStatus(404);
+
+        $this->assertDatabaseHas('external_systems', ['id' => $systemId, 'api_key_hash' => null]);
+    }
+
+    public function test_admin_cannot_create_external_system(): void
+    {
+        $admin = $this->makeUser('09111111111', 1);
+        $this->makeWallet($admin, 1000000);
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/external-systems', [
+            'name' => 'Admin Shop',
+        ])->assertStatus(403);
+
+        $this->assertDatabaseCount('external_systems', 0);
+    }
+
+    public function test_agent_create_external_system_requires_name(): void
+    {
+        [$agent] = $this->makeAgent('09122222222', 100000);
+
+        $this->actingAs($agent, 'sanctum')->postJson('/api/external-systems', [
+            'name' => '',
+        ])->assertStatus(422);
+
+        $this->assertDatabaseCount('external_systems', 0);
+    }
+
+    public function test_agent_owns_key_round_trip(): void
+    {
+        $admin = $this->makeUser('09111111111', 1);
+        $this->makeWallet($admin, 1000000);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+
+        // the agent creates the system (no API key is generated)
+        $create = $this->actingAs($agent, 'sanctum')->postJson('/api/external-systems', [
+            'name' => 'My Shop',
+            'system_link' => 'https://myshop.example.com',
+        ]);
+        $create->assertStatus(201);
+        $this->assertNull($create->json('data.api_key'));
+        $systemId = $create->json('data.id');
+
+        // the agent sees only their own systems
+        $this->actingAs($agent, 'sanctum')->getJson('/api/external-systems/mine')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $systemId);
+
+        // the agent generates the key
+        $generate = $this->actingAs($agent, 'sanctum')->postJson("/api/external-systems/{$systemId}/generate-key")
+            ->assertStatus(200);
+        $apiKey = $generate->json('data.api_key');
+        $this->assertNotNull($apiKey);
+
+        // the API key is usable for a real payment to the bound agent
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+
+        $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 5000,
+        ])->assertStatus(201);
+
+        // list as admin includes the bound agent
+        $this->actingAs($admin, 'sanctum')->getJson('/api/external-systems')
+            ->assertStatus(200)
+            ->assertJsonPath('data.data.0.name', 'My Shop')
+            ->assertJsonPath('data.data.0.user.phone_number', '09122222222');
+
+        // toggle status inactive -> key stops working
+        $this->actingAs($admin, 'sanctum')->postJson("/api/external-systems/{$systemId}/toggle-status")
+            ->assertStatus(200);
+
+        $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 5000,
+        ])->assertStatus(401);
+
+        // reactivate
+        $this->actingAs($admin, 'sanctum')->postJson("/api/external-systems/{$systemId}/toggle-status")
+            ->assertStatus(200);
+
+        // agent regenerates the key -> old key stops working, new key works
+        $regen = $this->actingAs($agent, 'sanctum')->postJson("/api/external-systems/{$systemId}/generate-key")
+            ->assertStatus(200);
+        $newKey = $regen->json('data.api_key');
+        $this->assertNotNull($newKey);
+        $this->assertNotSame($apiKey, $newKey);
+
+        $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 5000,
+        ])->assertStatus(401);
+
+        $this->initiate($newKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 5000,
+        ])->assertStatus(201);
+    }
+}

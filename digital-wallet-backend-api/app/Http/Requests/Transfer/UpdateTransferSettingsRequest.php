@@ -16,7 +16,6 @@ class UpdateTransferSettingsRequest extends FormRequest
         return [
             'unverified_customer_transfer_limit' => ['nullable', 'numeric', 'min:0', 'max:100000000'],
             'customer_transfer_fee_percent' => ['required', 'numeric', 'min:0', 'max:100'],
-            'merchant_payment_fee_percent' => ['required', 'numeric', 'min:0', 'max:100'],
         ];
     }
 }

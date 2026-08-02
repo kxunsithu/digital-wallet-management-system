@@ -43,7 +43,7 @@ import {
   toggleAgentManagerStatus,
   deleteAgentManager,
 } from "@/services/agentManager.service";
-import { getStateRegions, getTownships } from "@/services/location.service";
+import { LocationFilter } from "@/components/LocationFilter";
 
 export default function AgentManagersPage() {
   const navigate = useNavigate();
@@ -54,11 +54,8 @@ export default function AgentManagersPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [status, setStatus] = useState("all");
-  const [regionId, setRegionId] = useState("");
-  const [townshipId, setTownshipId] = useState("");
-
-  const [regionsList, setRegionsList] = useState<any[]>([]);
-  const [townshipsList, setTownshipsList] = useState<any[]>([]);
+  const [stateRegion, setStateRegion] = useState("");
+  const [township, setTownship] = useState("");
 
   // Debounce search state
   useEffect(() => {
@@ -77,18 +74,6 @@ export default function AgentManagersPage() {
   const [fromEntry, setFromEntry] = useState(0);
   const [toEntry, setToEntry] = useState(0);
 
-  useEffect(() => {
-    getStateRegions().then(res => setRegionsList(res.data.data)).catch(() => { });
-  }, []);
-
-  useEffect(() => {
-    if (regionId) {
-      getTownships({ state_region_id: regionId }).then(res => setTownshipsList(res.data.data)).catch(() => { });
-    } else {
-      setTownshipsList([]);
-    }
-  }, [regionId]);
-
   // Delete modal state
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
@@ -100,8 +85,8 @@ export default function AgentManagersPage() {
         per_page: perPage,
         search: debouncedSearch || undefined,
         status: status !== "all" ? status : undefined,
-        state_region_id: regionId || undefined,
-        township_id: townshipId || undefined,
+        state_region: stateRegion || undefined,
+        township: township || undefined,
       });
       setManagers(response.data.data);
 
@@ -122,18 +107,18 @@ export default function AgentManagersPage() {
 
   useEffect(() => {
     fetchManagers();
-  }, [page, perPage, debouncedSearch, status, regionId, townshipId]);
+  }, [page, perPage, debouncedSearch, status, stateRegion, township]);
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [status, regionId, townshipId]);
+  }, [status, stateRegion, township]);
 
   const handleClearFilters = () => {
     setSearch("");
     setStatus("all");
-    setRegionId("");
-    setTownshipId("");
+    setStateRegion("");
+    setTownship("");
     setPage(1);
     setTimeout(() => fetchManagers(), 0);
   };
@@ -213,23 +198,15 @@ export default function AgentManagersPage() {
                   <SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem><SelectItem value="pending">Pending</SelectItem></SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">State / Region</label>
-                <Select value={regionId} onValueChange={(val) => { setRegionId(val === "all" || val === null ? "" : val); setTownshipId(""); }}>
-                  <SelectTrigger className="h-12 w-full"><SelectValue placeholder="State/Region">{(val: string | null) => { if (!val) return "All states"; if (val === "all") return "All states"; return regionsList.find(r => r.id.toString() === val)?.name || val; }}</SelectValue></SelectTrigger>
-                  <SelectContent><SelectItem value="all">All States/Regions</SelectItem>{regionsList.map(r => <SelectItem key={r.id} value={r.id.toString()}>{r.name}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Township</label>
-                <Select value={townshipId} onValueChange={(val) => setTownshipId(val === "all" || val === null ? "" : val)} disabled={!regionId}>
-                  <SelectTrigger className="h-12 w-full"><SelectValue placeholder="Township">{(val: string | null) => { if (!val) return "All townships"; if (val === "all") return "All townships"; return townshipsList.find(t => t.id.toString() === val)?.name || val; }}</SelectValue></SelectTrigger>
-                  <SelectContent><SelectItem value="all">All Townships</SelectItem>{townshipsList.map(t => <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
+              <LocationFilter
+                stateRegion={stateRegion}
+                onStateRegionChange={setStateRegion}
+                township={township}
+                onTownshipChange={setTownship}
+              />
             </div>
           </div>
-          </div>
+        </div>
       </Card>
 
       <div className="overflow-hidden rounded-2xl border border-border bg-white">
@@ -283,10 +260,11 @@ export default function AgentManagersPage() {
                   <TableCell className="px-4 py-3 text-slate-600 text-sm">{manager.user?.nrc_number || "-"}</TableCell>
                   <TableCell className="px-4 py-3">
                     <div className="text-sm">
-                      <p className="font-medium text-slate-800">{manager.state_region?.name || "-"}</p>
-                      {manager.township?.name && (
-                        <p className="text-slate-500 text-xs">{manager.township.name}</p>
-                      )}
+                      <p className="font-medium text-slate-800">
+                        {manager.user?.state_region
+                          ? `${manager.user.state_region} / ${manager.user.township ?? "-"}`
+                          : "-"}
+                      </p>
                     </div>
                   </TableCell>
                   <TableCell className="px-4 py-3">

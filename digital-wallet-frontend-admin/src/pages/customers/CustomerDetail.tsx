@@ -365,11 +365,12 @@ export default function CustomerDetail() {
                 <MapPin className="w-4 h-4 text-slate-400 mt-0.5" />
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    State/Region &amp; Township
+                    State / Township
                   </p>
                   <p className="text-sm font-semibold text-slate-700">
-                    {customer.state_region?.name || "-"}
-                    {customer.township?.name ? ` / ${customer.township.name}` : ""}
+                    {customer.user?.state_region
+                      ? `${customer.user.state_region} / ${customer.user.township ?? "-"}`
+                      : "-"}
                   </p>
                 </div>
               </div>

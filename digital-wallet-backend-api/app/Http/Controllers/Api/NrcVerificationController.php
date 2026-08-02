@@ -46,8 +46,8 @@ class NrcVerificationController extends Controller
         }
 
         $data = $request->validate([
-            'nrc_front_image' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
-            'nrc_back_image' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
+            'nrc_front_image' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],
+            'nrc_back_image' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],
         ]);
 
         $frontPath = $data['nrc_front_image']->store('nrc-images', 'public');

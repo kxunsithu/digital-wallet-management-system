@@ -160,9 +160,11 @@ export default function AgentManagerDetail() {
             <div className="flex items-start gap-3 rounded-xl border border-border bg-white p-3 sm:col-span-2">
               <MapPin className="w-4 h-4 text-slate-400 mt-0.5" />
               <div>
-                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">State/Region &amp; Township</p>
+                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">State / Township</p>
                 <p className="text-sm font-semibold text-slate-700">
-                  {manager.state_region?.name || "-"}{manager.township?.name ? ` / ${manager.township.name}` : ""}
+                  {manager.user?.state_region
+                    ? `${manager.user.state_region} / ${manager.user.township ?? "-"}`
+                    : "-"}
                 </p>
               </div>
             </div>

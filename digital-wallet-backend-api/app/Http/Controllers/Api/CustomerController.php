@@ -31,18 +31,22 @@ class CustomerController extends Controller
             }
         }
 
-        $query = CustomerProfile::with(['user.images', 'user.nrcVerification', 'referrer', 'stateRegion', 'township']);
+        $query = CustomerProfile::with(['user.images', 'user.nrcVerification', 'referrer']);
 
         if ($request->filled('kyc_status')) {
             $query->where('kyc_status', $request->query('kyc_status'));
         }
 
-        if ($request->filled('state_region_id')) {
-            $query->where('state_region_id', $request->query('state_region_id'));
+        if ($request->filled('state_region')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('state_region', $request->query('state_region'));
+            });
         }
 
-        if ($request->filled('township_id')) {
-            $query->where('township_id', $request->query('township_id'));
+        if ($request->filled('township')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('township', $request->query('township'));
+            });
         }
 
         if ($request->filled('search')) {
@@ -67,7 +71,7 @@ class CustomerController extends Controller
 
     public function show($id): JsonResponse
     {
-        $profile = CustomerProfile::with(['user.images', 'user.wallet', 'user.nrcVerification', 'referrer', 'stateRegion', 'township'])->find($id);
+        $profile = CustomerProfile::with(['user.images', 'user.wallet', 'user.nrcVerification', 'referrer'])->find($id);
         if (! $profile) {
             return response()->json(['success' => false, 'message' => 'Not found.'], 404);
         }
@@ -123,7 +127,7 @@ class CustomerController extends Controller
 
         $profile->user->update(['status' => $newStatus]);
 
-        return (new CustomerResource($profile->fresh()->load(['user.images', 'user.nrcVerification', 'referrer', 'stateRegion', 'township'])))
+        return (new CustomerResource($profile->fresh()->load(['user.images', 'user.nrcVerification', 'referrer'])))
             ->additional(['success' => true, 'message' => 'Status toggled.', 'status' => $newStatus])
             ->response()
             ->setStatusCode(200);
@@ -173,7 +177,7 @@ class CustomerController extends Controller
             return response()->json(['success' => false, 'message' => 'Failed to update KYC status: ' . $e->getMessage()], 500);
         }
 
-        return (new CustomerResource($profile->fresh()->load(['user.images', 'user.nrcVerification', 'referrer', 'stateRegion', 'township'])))
+        return (new CustomerResource($profile->fresh()->load(['user.images', 'user.nrcVerification', 'referrer'])))
             ->additional(['success' => true, 'message' => 'KYC status updated to ' . $newKyc, 'kyc_status' => $newKyc])
             ->response()
             ->setStatusCode(200);

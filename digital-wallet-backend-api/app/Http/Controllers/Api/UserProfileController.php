@@ -21,7 +21,7 @@ class UserProfileController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
         }
 
-        return (new UserResource($user->load(['role', 'images', 'agentProfile', 'agentProfile.stateRegion', 'agentProfile.township'])))
+        return (new UserResource($user->load(['role', 'images', 'agentProfile'])))
             ->additional(['success' => true])
             ->response()
             ->setStatusCode(200);
@@ -61,7 +61,7 @@ class UserProfileController extends Controller
             );
         }
 
-        return (new UserResource($user->load(['role', 'images', 'agentProfile', 'agentProfile.stateRegion', 'agentProfile.township'])))
+        return (new UserResource($user->load(['role', 'images', 'agentProfile'])))
             ->additional(['success' => true, 'message' => 'Profile updated.'])
             ->response()
             ->setStatusCode(200);
@@ -75,7 +75,7 @@ class UserProfileController extends Controller
         }
 
         $data = $request->validate([
-            'profile_image' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
+            'profile_image' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],
         ]);
 
         $file = $data['profile_image'];

@@ -12,8 +12,9 @@ use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\QrCodeController;
 use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\TransactionController;
-use App\Http\Controllers\Api\MerchantController;
 use App\Http\Controllers\Api\TransferSettingController;
+use App\Http\Controllers\Api\ExternalSystemController;
+use App\Http\Controllers\Api\ExternalPaymentController;
 use Illuminate\Support\Facades\Route;
 
 /* Welcome Route */
@@ -30,18 +31,6 @@ Route::prefix('auth')->middleware('throttle:10,1')->group(function () {
     Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
     Route::post('/forgot-pin', [AuthController::class, 'forgotPin']);
     Route::post('/reset-pin', [AuthController::class, 'resetPin']);
-});
-
-Route::prefix('locations')->group(function () {
-    Route::get('/state-regions', [LocationController::class, 'getStateRegions']);
-    Route::post('/state-regions', [LocationController::class, 'storeStateRegion'])->middleware(['auth:sanctum', 'ensure.admin']);
-    Route::put('/state-regions/{id}', [LocationController::class, 'updateStateRegion'])->middleware(['auth:sanctum', 'ensure.admin']);
-    Route::delete('/state-regions/{id}', [LocationController::class, 'deleteStateRegion'])->middleware(['auth:sanctum', 'ensure.admin']);
-
-    Route::get('/townships', [LocationController::class, 'getTownships']);
-    Route::post('/townships', [LocationController::class, 'storeTownship'])->middleware(['auth:sanctum', 'ensure.admin']);
-    Route::put('/townships/{id}', [LocationController::class, 'updateTownship'])->middleware(['auth:sanctum', 'ensure.admin']);
-    Route::delete('/townships/{id}', [LocationController::class, 'deleteTownship'])->middleware(['auth:sanctum', 'ensure.admin']);
 });
 
 Route::prefix('agent-managers')->middleware('auth:sanctum')->group(function () {
@@ -101,9 +90,6 @@ Route::prefix('transfers')->group(function () {
 
 Route::prefix('wallets')->middleware('auth:sanctum')->group(function () {
     Route::get('/me', [WalletController::class, 'me']);
-    Route::post('/topup', [WalletController::class, 'topup']);
-    Route::get('/topups', [WalletController::class, 'topups'])->middleware('ensure.admin');
-    Route::post('/topups/{id}/approve', [WalletController::class, 'approveTopup'])->middleware('ensure.admin');
     Route::get('/', [WalletController::class, 'index']);
     Route::get('/{id}', [WalletController::class, 'show']);
     Route::post('/{id}/toggle-status', [WalletController::class, 'toggleStatus'])->middleware('ensure.admin');
@@ -126,19 +112,28 @@ Route::prefix('transfer-settings')->middleware(['auth:sanctum', 'ensure.admin'])
     Route::put('/', [TransferSettingController::class, 'update']);
 });
 
-Route::prefix('merchants')->group(function () {
-    Route::middleware(['auth:sanctum', 'ensure.admin'])->group(function () {
-        Route::get('/', [MerchantController::class, 'index']);
-        Route::post('/', [MerchantController::class, 'store']);
-        Route::get('/{id}', [MerchantController::class, 'show']);
-        Route::put('/{id}', [MerchantController::class, 'update']);
-        Route::delete('/{id}', [MerchantController::class, 'destroy']);
-        Route::post('/{id}/toggle-status', [MerchantController::class, 'toggleStatus']);
-        Route::get('/{id}/payments', [MerchantController::class, 'payments']);
-    });
+// ─── External system payments (online shopping etc.) ────────────────────────
+// These endpoints are authenticated via the X-API-Key header, not Sanctum.
+Route::prefix('external/payments')->middleware('external.api')->group(function () {
+    Route::post('/initiate', [ExternalPaymentController::class, 'initiate'])->middleware('throttle:10,1');
+    Route::post('/confirm', [ExternalPaymentController::class, 'confirm'])->middleware('throttle:30,1');
+});
 
-    Route::middleware('merchant.api')->group(function () {
-        Route::post('/payment/initiate', [MerchantController::class, 'initiate']);
-        Route::post('/payment/confirm', [MerchantController::class, 'confirm']);
-    });
+Route::prefix('external-payments')->middleware(['auth:sanctum', 'ensure.admin'])->group(function () {
+    Route::get('/', [ExternalPaymentController::class, 'index']);
+    Route::get('/{id}', [ExternalPaymentController::class, 'show']);
+});
+
+Route::prefix('external-systems')->middleware(['auth:sanctum', 'ensure.agent'])->group(function () {
+    Route::get('/mine', [ExternalSystemController::class, 'mySystems']);
+    Route::post('/', [ExternalSystemController::class, 'store']);
+    Route::post('/{id}/generate-key', [ExternalSystemController::class, 'generateKey']);
+});
+
+Route::prefix('external-systems')->middleware(['auth:sanctum', 'ensure.admin'])->group(function () {
+    Route::get('/', [ExternalSystemController::class, 'index']);
+    Route::get('/{id}', [ExternalSystemController::class, 'show']);
+    Route::put('/{id}', [ExternalSystemController::class, 'update']);
+    Route::delete('/{id}', [ExternalSystemController::class, 'destroy']);
+    Route::post('/{id}/toggle-status', [ExternalSystemController::class, 'toggleStatus']);
 });

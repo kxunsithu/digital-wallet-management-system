@@ -5,8 +5,8 @@ export const getCustomers = (params?: {
   per_page?: number;
   search?: string;
   kyc_status?: string;
-  state_region_id?: string;
-  township_id?: string;
+  state_region?: string;
+  township?: string;
 }) => api.get("customers", { params });
 
 export const getCustomer = (id: number | string) => api.get(`customers/${id}`);

@@ -28,6 +28,12 @@ interface UserProfile {
   phone_number: string;
   full_name: string | null;
   nrc_number: string | null;
+  nrc_location?: {
+    state_code: string;
+    township_code: string;
+    type: string | null;
+    number: string | null;
+  } | null;
   status: string;
   role?: string;
   images?: {
@@ -42,14 +48,6 @@ interface UserProfile {
     agent_code: string;
     shop_name: string | null;
     shop_address: string | null;
-    state_region?: {
-      id: number;
-      name: string | null;
-    } | null;
-    township?: {
-      id: number;
-      name: string | null;
-    } | null;
   } | null;
   wallet: {
     id: number;
@@ -467,8 +465,11 @@ export default function ProfileScreen() {
               <InfoRow label="Shop Name" value={profile.agent_profile.shop_name ?? '—'} icon="shopping-bag" />
               <InfoRow label="Shop Address" value={profile.agent_profile.shop_address ?? '—'} icon="map-pin" />
               <InfoRow label="Agent Code" value={profile.agent_profile.agent_code ?? '—'} icon="hash" />
-              <InfoRow label="State / Region" value={profile.agent_profile.state_region?.name ?? '—'} icon="map" />
-              <InfoRow label="Township" value={profile.agent_profile.township?.name ?? '—'} icon="navigation" />
+              <InfoRow
+                label="State / Township"
+                value={profile.nrc_location ? `${profile.nrc_location.state_code} / ${profile.nrc_location.township_code}` : '—'}
+                icon="map"
+              />
             </InfoCard>
           </View>
         )}
@@ -494,6 +495,11 @@ export default function ProfileScreen() {
             icon="edit-3"
             label="Edit Profile"
             onPress={handleOpenEditProfile}
+          />
+          <SettingRow
+            icon="link-2"
+            label="External Systems"
+            onPress={() => router.push("/external-systems")}
           />
           <SettingRow
             icon="lock"

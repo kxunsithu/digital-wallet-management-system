@@ -26,7 +26,6 @@ class CustomerTransferLimitsAndFeesTest extends TestCase
             'id' => 1,
             'unverified_customer_transfer_limit' => 100000,
             'customer_transfer_fee_percent' => 0.5,
-            'merchant_payment_fee_percent' => 1.0,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

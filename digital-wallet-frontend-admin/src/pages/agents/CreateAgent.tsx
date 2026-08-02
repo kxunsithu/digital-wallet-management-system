@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { User, Image as ImageIcon, Store } from "lucide-react";
 import RoleAwareLayout from "@/components/layouts/RoleAwareLayout";
@@ -8,13 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { NRCInput, validateNrc } from "@/components/NRCInput";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { LocationFields } from "@/components/LocationFields";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -25,7 +19,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import { toast } from "sonner";
 import { createAgent } from "@/services/agent.service";
-import { getStateRegions, getTownships } from "@/services/location.service";
 
 export default function CreateAgent() {
   const navigate = useNavigate();
@@ -35,33 +28,17 @@ export default function CreateAgent() {
     phone_number: "",
     full_name: "",
     nrc_number: "",
+    state_region: "",
+    township: "",
   });
 
   const [profileForm, setProfileForm] = useState({
     shop_name: "",
     shop_address: "",
-    state_region_id: "",
-    township_id: "",
   });
 
-  const [regions, setRegions] = useState<any[]>([]);
-  const [townships, setTownships] = useState<any[]>([]);
   const [nrcFront, setNrcFront] = useState<File | null>(null);
   const [nrcBack, setNrcBack] = useState<File | null>(null);
-
-  useEffect(() => {
-    getStateRegions().then((res) => setRegions(res.data.data)).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (profileForm.state_region_id) {
-      getTownships({ state_region_id: profileForm.state_region_id })
-        .then((res) => setTownships(res.data.data))
-        .catch(() => {});
-    } else {
-      setTownships([]);
-    }
-  }, [profileForm.state_region_id]);
 
   const handleUserChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -77,6 +54,10 @@ export default function CreateAgent() {
     e.preventDefault();
     if (!nrcFront || !nrcBack) {
       toast.error("Both NRC front and back images are required.");
+      return;
+    }
+    if (!userForm.state_region || !userForm.township) {
+      toast.error("State/Region and Township are required.");
       return;
     }
     const nrcError = validateNrc(userForm.nrc_number);
@@ -238,57 +219,13 @@ export default function CreateAgent() {
                     className="h-11 rounded-lg border-border text-sm"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    State/Region <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={profileForm.state_region_id}
-                    onValueChange={(val) => {
-                      setProfileForm((prev) => ({ ...prev, state_region_id: val || "", township_id: "" }));
-                    }}
-                  >
-                    <SelectTrigger className="h-11 rounded-lg text-sm">
-                      <SelectValue placeholder="Select state/region">
-                        {(val: string | null) =>
-                          val ? regions.find((r) => r.id.toString() === val)?.name || val : "Select state/region"
-                        }
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {regions.map((r) => (
-                        <SelectItem key={r.id} value={r.id.toString()}>
-                          {r.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Township <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={profileForm.township_id}
-                    onValueChange={(val) => setProfileForm((prev) => ({ ...prev, township_id: val || "" }))}
-                    disabled={!profileForm.state_region_id}
-                  >
-                    <SelectTrigger className="h-11 rounded-lg text-sm">
-                      <SelectValue placeholder="Select township">
-                        {(val: string | null) =>
-                          val ? townships.find((t) => t.id.toString() === val)?.name || val : "Select township"
-                        }
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {townships.map((t) => (
-                        <SelectItem key={t.id} value={t.id.toString()}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <LocationFields
+                  stateRegion={userForm.state_region}
+                  township={userForm.township}
+                  onChange={(field, value) =>
+                    setUserForm((prev) => ({ ...prev, [field]: value }))
+                  }
+                />
               </div>
             </CardContent>
           </Card>

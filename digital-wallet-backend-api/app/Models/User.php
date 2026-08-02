@@ -14,7 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['phone_number', 'role_id', 'full_name', 'nrc_number', 'status', 'is_phone_verified', 'is_pin_created', 'last_login_at'])]
+#[Fillable(['phone_number', 'role_id', 'full_name', 'nrc_number', 'state_region', 'township', 'status', 'is_phone_verified', 'is_pin_created', 'last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -63,8 +63,27 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class);
     }
 
-    public function merchantProfile()
+    /**
+     * Parse the NRC number into its components (state code, township code, type, number).
+     * Supports both Myanmar (၁၂/လမန(နိုင်)၁၂၃၄၅၆) and Latin (12/ABCDE(N)123456) formats.
+     *
+     * @return array{state_code: string, township_code: string, type: string, number: string}|null
+     */
+    public function nrcParts(): ?array
     {
-        return $this->hasOne(Merchant::class);
+        if (empty($this->nrc_number)) {
+            return null;
+        }
+
+        if (preg_match('/^\s*([^\s\/]+)\s*\/\s*([^()]+)\s*\(\s*([^()]+)\s*\)\s*([0-9\x{1040}-\x{1049}]+)\s*$/u', $this->nrc_number, $match)) {
+            return [
+                'state_code' => trim($match[1]),
+                'township_code' => trim($match[2]),
+                'type' => trim($match[3]),
+                'number' => trim($match[4]),
+            ];
+        }
+
+        return null;
     }
 }

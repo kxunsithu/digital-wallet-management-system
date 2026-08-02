@@ -16,8 +16,6 @@ class AgentProfile extends Model
         'agent_code',
         'shop_name',
         'shop_address',
-        'state_region_id',
-        'township_id',
         'parent_agent_id',
         'created_by_manager_id',
     ];
@@ -30,15 +28,5 @@ class AgentProfile extends Model
     public function parent()
     {
         return $this->belongsTo(self::class, 'parent_agent_id');
-    }
-
-    public function stateRegion()
-    {
-        return $this->belongsTo(StateRegion::class);
-    }
-
-    public function township()
-    {
-        return $this->belongsTo(Township::class);
     }
 }

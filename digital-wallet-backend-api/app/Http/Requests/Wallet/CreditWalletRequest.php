@@ -16,7 +16,6 @@ class CreditWalletRequest extends FormRequest
         return [
             'amount' => ['required', 'numeric', 'min:0.01', 'max:100000000'],
             'note' => ['nullable', 'string', 'max:255'],
-            'topup_id' => ['nullable', 'integer', 'exists:wallet_topups,id'],
         ];
     }
 }

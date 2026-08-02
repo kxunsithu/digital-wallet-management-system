@@ -22,17 +22,17 @@ class UpdateAgentManagerRequest extends FormRequest
             // User fields
             'full_name'         => ['nullable', 'string', 'max:255'],
             'nrc_number'        => ['nullable', 'string', 'max:100', "unique:users,nrc_number,{$userId}", 'regex:/^[0-9\x{1040}-\x{1049}]{1,2}\s*\/\s*[\p{L}\p{M}]+\s*\(\s*[\p{L}\p{M}]+\s*\)\s*[0-9\x{1040}-\x{1049}]{6}$/u'],
+            'state_region'      => ['nullable', 'string', 'max:255'],
+            'township'          => ['nullable', 'string', 'max:255'],
 
             // Profile fields
             'manager_code'      => ['sometimes', 'string', 'max:100', "unique:agent_manager_profiles,manager_code,{$id}"],
-            'state_region_id'   => ['nullable', 'integer', 'exists:state_regions,id'],
-            'township_id'       => ['nullable', 'integer', 'exists:townships,id'],
             'status'            => ['nullable', 'string', 'in:pending,active,inactive'],
             'parent_manager_id' => ['nullable', 'integer', 'exists:agent_manager_profiles,id'],
 
             // NRC images
-            'nrc_front_image'   => ['nullable', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
-            'nrc_back_image'    => ['nullable', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
+            'nrc_front_image'   => ['nullable', 'file', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],
+            'nrc_back_image'    => ['nullable', 'file', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],
         ];
     }
 

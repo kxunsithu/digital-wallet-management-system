@@ -9,9 +9,9 @@ export type NrcState = {
 };
 
 export const nrcTypes = [
-  { value: "နိုင်", label: "နိုင် (Citizenship)" },
-  { value: "ဧည့်", label: "ဧည့် (Associate)" },
-  { value: "ပြု", label: "ပြု (Naturalized)" },
+  { value: "နိုင်", label: "နိုင်ငံသား" },
+  { value: "ဧည့်", label: "ဧည့်ဝင်" },
+  { value: "ပြု", label: "နိုင်ငံသားပြု" },
 ] as const;
 
 export const nrcData: NrcState[] = [

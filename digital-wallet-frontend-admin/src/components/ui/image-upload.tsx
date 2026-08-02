@@ -1,6 +1,9 @@
 import React, { useRef, useState } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Image as ImageIcon, UploadCloud } from "lucide-react";
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png"];
 
 interface ImageUploadProps {
   label?: string;
@@ -21,14 +24,17 @@ export function ImageUpload({ label, onChange, required, initialPreview }: Image
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (file: File) => {
-    if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-      onChange(file);
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Only JPG, JPEG, and PNG image files are allowed.");
+      onChange(null);
+      return;
     }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+    onChange(file);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -75,7 +81,7 @@ export function ImageUpload({ label, onChange, required, initialPreview }: Image
         <input
           ref={inputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/png"
           className="hidden"
           onChange={handleChange}
         />
@@ -97,7 +103,7 @@ export function ImageUpload({ label, onChange, required, initialPreview }: Image
             <p className="text-sm font-medium text-slate-700 mb-1">
               Drop your image here, or <span className="text-blue-600">browse</span>
             </p>
-            <p className="text-xs text-slate-400">Supports: JPG, JPEG, PNG, WEBP</p>
+            <p className="text-xs text-slate-400">Supports: JPG, JPEG, PNG</p>
           </div>
         )}
       </div>

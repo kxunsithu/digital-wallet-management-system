@@ -27,7 +27,7 @@ const SystemTransactionsPage = () => {
             <div>
               <h2 className="text-xl font-bold tracking-tight text-foreground">System Transactions</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                View all transactions made by the system admin account — top-ups, fee collections, and admin transfers.
+                View all transactions made by the system admin account — fee collections and admin transfers.
               </p>
             </div>
           </div>

@@ -11,10 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('state_regions', function (Blueprint $table) {
-            $table->id();
-            $table->string('name')->unique();
-            $table->timestamps();
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('state_region')->nullable()->after('nrc_number');
+            $table->string('township')->nullable()->after('state_region');
         });
     }
 
@@ -23,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('state_regions');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['state_region', 'township']);
+        });
     }
 };

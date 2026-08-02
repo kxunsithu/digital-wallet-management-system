@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { getAgents, deleteAgent } from "@/services/agent.service";
-import { getStateRegions, getTownships } from "@/services/location.service";
+import { LocationFilter } from "@/components/LocationFilter";
 
 export default function AgentsPage() {
   const navigate = useNavigate();
@@ -51,11 +51,8 @@ export default function AgentsPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [status, setStatus] = useState("all");
-  const [regionId, setRegionId] = useState("");
-  const [townshipId, setTownshipId] = useState("");
-
-  const [regionsList, setRegionsList] = useState<any[]>([]);
-  const [townshipsList, setTownshipsList] = useState<any[]>([]);
+  const [stateRegion, setStateRegion] = useState("");
+  const [township, setTownship] = useState("");
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -74,20 +71,6 @@ export default function AgentsPage() {
 
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  useEffect(() => {
-    getStateRegions().then((res) => setRegionsList(res.data.data)).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (regionId) {
-      getTownships({ state_region_id: regionId })
-        .then((res) => setTownshipsList(res.data.data))
-        .catch(() => {});
-    } else {
-      setTownshipsList([]);
-    }
-  }, [regionId]);
-
   const fetchAgents = async () => {
     try {
       setLoading(true);
@@ -96,8 +79,8 @@ export default function AgentsPage() {
         per_page: perPage,
         search: debouncedSearch || undefined,
         status: status !== "all" ? status : undefined,
-        state_region_id: regionId || undefined,
-        township_id: townshipId || undefined,
+        state_region: stateRegion || undefined,
+        township: township || undefined,
       });
       setAgents(response.data.data);
 
@@ -118,17 +101,17 @@ export default function AgentsPage() {
 
   useEffect(() => {
     fetchAgents();
-  }, [page, perPage, debouncedSearch, status, regionId, townshipId]);
+  }, [page, perPage, debouncedSearch, status, stateRegion, township]);
 
   useEffect(() => {
     setPage(1);
-  }, [status, regionId, townshipId]);
+  }, [status, stateRegion, township]);
 
   const handleClearFilters = () => {
     setSearch("");
     setStatus("all");
-    setRegionId("");
-    setTownshipId("");
+    setStateRegion("");
+    setTownship("");
     setPage(1);
     setTimeout(() => fetchAgents(), 0);
   };
@@ -236,60 +219,12 @@ export default function AgentsPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">State / Region</label>
-                <Select
-                  value={regionId}
-                  onValueChange={(val) => {
-                    setRegionId(val === "all" || val === null ? "" : val);
-                    setTownshipId("");
-                  }}
-                >
-                  <SelectTrigger className="h-12 w-full">
-                    <SelectValue placeholder="State/Region">
-                      {(val: string | null) => {
-                        if (!val) return "All states";
-                        if (val === "all") return "All states";
-                        return regionsList.find((r) => r.id.toString() === val)?.name || val;
-                      }}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All States/Regions</SelectItem>
-                    {regionsList.map((r) => (
-                      <SelectItem key={r.id} value={r.id.toString()}>
-                        {r.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Township</label>
-                <Select
-                  value={townshipId}
-                  onValueChange={(val) => setTownshipId(val === "all" || val === null ? "" : val)}
-                  disabled={!regionId}
-                >
-                  <SelectTrigger className="h-12 w-full">
-                    <SelectValue placeholder="Township">
-                      {(val: string | null) => {
-                        if (!val) return "All townships";
-                        if (val === "all") return "All townships";
-                        return townshipsList.find((t) => t.id.toString() === val)?.name || val;
-                      }}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Townships</SelectItem>
-                    {townshipsList.map((t) => (
-                      <SelectItem key={t.id} value={t.id.toString()}>
-                        {t.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <LocationFilter
+                stateRegion={stateRegion}
+                onStateRegionChange={setStateRegion}
+                township={township}
+                onTownshipChange={setTownship}
+              />
             </div>
           </div>
         </div>
@@ -379,11 +314,10 @@ export default function AgentsPage() {
                   <TableCell className="px-4 py-3">
                     <div className="text-sm">
                       <p className="font-medium text-slate-800">
-                        {agent.state_region?.name || "-"}
+                        {agent.user?.state_region
+                          ? `${agent.user.state_region} / ${agent.user.township ?? "-"}`
+                          : "-"}
                       </p>
-                      {agent.township?.name && (
-                        <p className="text-slate-500 text-xs">{agent.township.name}</p>
-                      )}
                     </div>
                   </TableCell>
                   <TableCell className="px-4 py-3">

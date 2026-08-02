@@ -13,17 +13,16 @@ import {
   LayoutDashboard,
   Wallet,
   LogOut,
-  MapPin,
   Banknote,
   Users,
   UserCog,
   UserRound,
   ReceiptText,
   CircleUserRound,
-  Store,
   SlidersHorizontal,
   Coins,
-  ArrowUpRight,
+  PlugZap,
+  ShoppingCart,
 } from "lucide-react";
 import { clearAdminSession } from "@/lib/cookies";
 import { logout as logoutService } from "@/services/auth.service";
@@ -31,17 +30,16 @@ import { logout as logoutService } from "@/services/auth.service";
 const adminNavItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/wallets", label: "Wallets", icon: Wallet },
-  { to: "/wallets/topups", label: "Top-ups", icon: ArrowUpRight },
   { to: "/system-wallet", label: "System Wallet", icon: Banknote },
   { to: "/agent-managers", label: "Agent Managers", icon: UserCog },
   { to: "/agents", label: "Agents", icon: Users },
   { to: "/customers", label: "Customers", icon: UserRound },
   { to: "/transactions", label: "All Transactions", icon: ReceiptText, exact: true },
   { to: "/transactions/system", label: "System Transactions", icon: Banknote },
-  { to: "/merchants", label: "Merchants", icon: Store },
   { to: "/fee-income", label: "Fee Income", icon: Coins },
   { to: "/fee-settings", label: "Fee & Limit Settings", icon: SlidersHorizontal },
-  { to: "/locations", label: "Locations", icon: MapPin },
+  { to: "/external-systems", label: "External Systems", icon: PlugZap },
+  { to: "/external-payments", label: "External Payments", icon: ShoppingCart },
   { to: "/profile", label: "Profile", icon: CircleUserRound },
 ];
 

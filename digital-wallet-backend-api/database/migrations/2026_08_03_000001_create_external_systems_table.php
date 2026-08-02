@@ -6,24 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('townships', function (Blueprint $table) {
+        Schema::create('external_systems', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('state_region_id')->constrained()->cascadeOnDelete();
             $table->string('name');
+            $table->string('api_key_hash');
+            $table->string('api_key_prefix', 12)->nullable();
+            $table->string('status')->default('active');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('townships');
+        Schema::dropIfExists('external_systems');
     }
 };

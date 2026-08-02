@@ -26,10 +26,5 @@ return [
             'label' => 'Customer',
             'description' => 'End customer user',
         ],
-        'merchant' => [
-            'name' => 'merchant',
-            'label' => 'Merchant',
-            'description' => 'Third-party merchant for wallet payments',
-        ],
     ],
 ];

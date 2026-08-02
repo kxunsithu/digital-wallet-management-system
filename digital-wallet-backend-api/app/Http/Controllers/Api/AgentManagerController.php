@@ -24,7 +24,7 @@ class AgentManagerController extends Controller
         }
 
         $perPage = min(100, max(1, (int) $request->query('per_page', 15)));
-        $query = AgentManagerProfile::with(['user.images', 'parent', 'stateRegion', 'township']);
+        $query = AgentManagerProfile::with(['user.images', 'parent']);
 
         // Agent managers can only see their own profile
         if ($this->isAgentManager($request) && ! $this->isAdmin($request)) {
@@ -37,12 +37,16 @@ class AgentManagerController extends Controller
             });
         }
 
-        if ($request->filled('state_region_id')) {
-            $query->where('state_region_id', $request->query('state_region_id'));
+        if ($request->filled('state_region')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('state_region', $request->query('state_region'));
+            });
         }
 
-        if ($request->filled('township_id')) {
-            $query->where('township_id', $request->query('township_id'));
+        if ($request->filled('township')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('township', $request->query('township'));
+            });
         }
 
         if ($request->filled('search')) {
@@ -79,6 +83,8 @@ class AgentManagerController extends Controller
                 'phone_number' => $this->normalizePhone($data['phone_number']),
                 'full_name'    => $data['full_name'] ?? null,
                 'nrc_number'   => $data['nrc_number'] ?? null,
+                'state_region' => $data['state_region'] ?? null,
+                'township'     => $data['township'] ?? null,
                 'role_id'      => $agentManagerRoleId,
                 'status'       => $data['status'] ?? 'pending',
             ]);
@@ -92,8 +98,6 @@ class AgentManagerController extends Controller
             $profile = AgentManagerProfile::create([
                 'user_id'           => $user->id,
                 'manager_code'      => $managerCode,
-                'state_region_id'   => $data['state_region_id'] ?? null,
-                'township_id'       => $data['township_id'] ?? null,
                 'parent_manager_id' => $data['parent_manager_id'] ?? null,
             ]);
 
@@ -129,7 +133,7 @@ class AgentManagerController extends Controller
             return response()->json(['success' => false, 'message' => 'Failed to create agent manager: ' . $e->getMessage()], 500);
         }
 
-        return (new AgentManagerResource($profile->load(['user.images', 'parent', 'stateRegion', 'township'])))
+        return (new AgentManagerResource($profile->load(['user.images', 'parent'])))
             ->additional(['success' => true, 'message' => 'Agent manager created.'])
             ->response()
             ->setStatusCode(201);
@@ -180,7 +184,7 @@ class AgentManagerController extends Controller
             return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
         }
 
-        $profile = AgentManagerProfile::with(['user.images', 'user.wallet', 'parent', 'stateRegion', 'township'])->find($id);
+        $profile = AgentManagerProfile::with(['user.images', 'user.wallet', 'parent'])->find($id);
 
         if (! $profile) {
             return response()->json(['success' => false, 'message' => 'Not found.'], 404);
@@ -191,7 +195,7 @@ class AgentManagerController extends Controller
             return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
         }
 
-        return (new AgentManagerResource($profile->load(['user', 'user.wallet', 'parent', 'stateRegion', 'township'])))
+        return (new AgentManagerResource($profile->load(['user', 'user.wallet', 'parent'])))
             ->additional(['success' => true])
             ->response()
             ->setStatusCode(200);
@@ -213,6 +217,8 @@ class AgentManagerController extends Controller
                 'full_name'  => $data['full_name'] ?? null,
                 'nrc_number' => $data['nrc_number'] ?? null,
                 'status'     => $data['status'] ?? null,
+                'state_region' => $data['state_region'] ?? null,
+                'township'     => $data['township'] ?? null,
             ], fn($v) => $v !== null);
 
             if (! empty($userFields)) {
@@ -222,8 +228,6 @@ class AgentManagerController extends Controller
             // Update profile fields
             $profileFields = array_filter([
                 'manager_code'      => $data['manager_code'] ?? null,
-                'state_region_id'   => $data['state_region_id'] ?? null,
-                'township_id'       => $data['township_id'] ?? null,
                 'parent_manager_id' => $data['parent_manager_id'] ?? null,
             ], fn($v) => $v !== null);
 
@@ -243,7 +247,7 @@ class AgentManagerController extends Controller
             return response()->json(['success' => false, 'message' => 'Failed to update: ' . $e->getMessage()], 500);
         }
 
-        return (new AgentManagerResource($profile->fresh()->load(['user.images', 'parent', 'stateRegion', 'township'])))
+        return (new AgentManagerResource($profile->fresh()->load(['user.images', 'parent'])))
             ->additional(['success' => true, 'message' => 'Updated.'])
             ->response()
             ->setStatusCode(200);
@@ -297,7 +301,7 @@ class AgentManagerController extends Controller
 
         $profile->user->update(['status' => $newStatus]);
 
-        return (new AgentManagerResource($profile->fresh()->load(['user', 'parent', 'stateRegion', 'township'])))
+        return (new AgentManagerResource($profile->fresh()->load(['user', 'parent'])))
             ->additional(['success' => true, 'message' => 'Status toggled.', 'status' => $newStatus])
             ->response()
             ->setStatusCode(200);

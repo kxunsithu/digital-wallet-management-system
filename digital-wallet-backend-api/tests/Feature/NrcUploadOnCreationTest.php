@@ -22,19 +22,6 @@ class NrcUploadOnCreationTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        $stateRegionId = DB::table('state_regions')->insertGetId([
-            'name' => 'Yangon',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $townshipId = DB::table('townships')->insertGetId([
-            'state_region_id' => $stateRegionId,
-            'name' => 'Mayangone',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
         $admin = User::create([
             'phone_number' => '09111111111',
             'role_id' => 1,
@@ -45,8 +32,8 @@ class NrcUploadOnCreationTest extends TestCase
             'phone_number' => '09200000001',
             'full_name' => 'Agent Manager User',
             'nrc_number' => '12/ABCDE(N)123456',
-            'state_region_id' => $stateRegionId,
-            'township_id' => $townshipId,
+            'state_region' => 'Yangon Region',
+            'township' => 'Kamayut',
             'status' => 'pending',
             'nrc_front_image' => UploadedFile::fake()->create('front.jpg', 100, 'image/jpeg'),
             'nrc_back_image' => UploadedFile::fake()->create('back.jpg', 100, 'image/jpeg'),
@@ -81,19 +68,6 @@ class NrcUploadOnCreationTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        $stateRegionId = DB::table('state_regions')->insertGetId([
-            'name' => 'Yangon',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $townshipId = DB::table('townships')->insertGetId([
-            'state_region_id' => $stateRegionId,
-            'name' => 'Mayangone',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
         $manager = User::create([
             'phone_number' => '09122222222',
             'role_id' => 2,
@@ -103,8 +77,6 @@ class NrcUploadOnCreationTest extends TestCase
         DB::table('agent_manager_profiles')->insert([
             'user_id' => $manager->id,
             'manager_code' => 'MGR-002',
-            'state_region_id' => $stateRegionId,
-            'township_id' => $townshipId,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -113,10 +85,10 @@ class NrcUploadOnCreationTest extends TestCase
             'phone_number' => '09200000002',
             'full_name' => 'Agent User',
             'nrc_number' => '13/ABCDE(N)123457',
+            'state_region' => 'Shan State',
+            'township' => 'Taunggyi',
             'shop_name' => 'Test Shop',
             'shop_address' => 'Main Street',
-            'state_region_id' => $stateRegionId,
-            'township_id' => $townshipId,
             'status' => 'pending',
             'nrc_front_image' => UploadedFile::fake()->create('front-agent.jpg', 100, 'image/jpeg'),
             'nrc_back_image' => UploadedFile::fake()->create('back-agent.jpg', 100, 'image/jpeg'),

@@ -22,7 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'ensure.customer' => \App\Http\Middleware\EnsureCustomer::class,
             'ensure.agent_manager' => \App\Http\Middleware\EnsureAgentManager::class,
             'ensure.agent' => \App\Http\Middleware\EnsureAgent::class,
-            'merchant.api' => \App\Http\Middleware\EnsureMerchantApi::class,
+            'external.api' => \App\Http\Middleware\EnsureExternalApi::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

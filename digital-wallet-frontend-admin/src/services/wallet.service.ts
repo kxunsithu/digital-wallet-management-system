@@ -13,12 +13,3 @@ export const getWallets = (params?: {
 export const getWallet = (id: number | string) => api.get(`wallets/${id}`);
 
 export const toggleWalletStatus = (id: number | string) => api.post(`wallets/${id}/toggle-status`);
-
-export const getTopups = (params?: {
-  page?: number;
-  per_page?: number;
-  status?: string;
-  user_id?: number | string;
-}) => api.get("wallets/topups", { params });
-
-export const approveTopup = (id: number | string) => api.post(`wallets/topups/${id}/approve`);

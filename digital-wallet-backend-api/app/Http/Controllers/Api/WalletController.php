@@ -4,15 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Wallet\CreditWalletRequest;
-use App\Http\Requests\Wallet\TopupRequest;
 use App\Models\Wallet;
-use App\Models\User;
-use App\Models\WalletTopup;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class WalletController extends Controller
 {
@@ -162,101 +157,7 @@ class WalletController extends Controller
         ], 200);
     }
 
-    public function topup(TopupRequest $request): JsonResponse
-    {
-        $user = $request->user();
-        $data = $request->validated();
-
-        $reference = 'TP-'.Str::upper(Str::random(12));
-
-        $topup = WalletTopup::create([
-            'user_id' => $user->id,
-            'amount' => $data['amount'],
-            'reference' => $reference,
-            'status' => 'pending',
-            'note' => $data['note'] ?? null,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Top-up request created. Please transfer the amount and await admin approval.',
-            'data' => [
-                'id' => $topup->id,
-                'amount' => (float) $topup->amount,
-                'reference' => $topup->reference,
-                'status' => $topup->status,
-                'qr_payload' => json_encode([
-                    'type' => 'wallet_topup',
-                    'reference' => $topup->reference,
-                    'amount' => (float) $topup->amount,
-                ]),
-                'note' => $topup->note,
-                'created_at' => $topup->created_at?->toISOString(),
-            ],
-        ], 201);
-    }
-
     // ─────────────────────── Admin wallet management ────────────────────────
-
-    public function topups(Request $request): JsonResponse
-    {
-        $perPage = min(100, max(1, (int) $request->query('per_page', 15)));
-
-        $query = WalletTopup::with(['user', 'approver']);
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->query('status'));
-        }
-
-        if ($request->filled('user_id')) {
-            $query->where('user_id', (int) $request->query('user_id'));
-        }
-
-        $list = $query->orderByDesc('id')->paginate($perPage);
-
-        return response()->json(['success' => true, 'data' => $list], 200);
-    }
-
-    public function approveTopup(Request $request, int $id): JsonResponse
-    {
-        $topup = WalletTopup::with(['user.wallet', 'approver'])->find($id);
-        if (! $topup) {
-            return response()->json(['success' => false, 'message' => 'Top-up request not found.'], 404);
-        }
-
-        if ($topup->status !== 'pending') {
-            return response()->json([
-                'success' => false,
-                'message' => 'This top-up request is already '.$topup->status.'.',
-            ], 400);
-        }
-
-        $wallet = $topup->user?->wallet;
-        if (! $wallet) {
-            return response()->json(['success' => false, 'message' => 'The user has no wallet to credit.'], 422);
-        }
-
-        return DB::transaction(function () use ($topup, $wallet, $request): JsonResponse {
-            $wallet->increment('balance', (string) $topup->amount);
-            $topup->update([
-                'status' => 'completed',
-                'approved_by' => $request->user()->id,
-                'paid_at' => Carbon::now(),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Top-up approved and wallet credited successfully.',
-                'data' => [
-                    'topup' => $topup->fresh(['user', 'approver']),
-                    'wallet' => [
-                        'id' => $wallet->id,
-                        'balance' => (float) $wallet->fresh()->balance,
-                    ],
-                ],
-            ], 200);
-        });
-    }
 
     public function credit(CreditWalletRequest $request, int $id): JsonResponse
     {
@@ -267,19 +168,8 @@ class WalletController extends Controller
 
         $data = $request->validated();
 
-        return DB::transaction(function () use ($wallet, $data, $request): JsonResponse {
+        return DB::transaction(function () use ($wallet, $data): JsonResponse {
             $wallet->increment('balance', (string) $data['amount']);
-
-            if (! empty($data['topup_id'])) {
-                $topup = WalletTopup::find($data['topup_id']);
-                if ($topup && $topup->status === 'pending') {
-                    $topup->update([
-                        'status' => 'completed',
-                        'approved_by' => $request->user()->id,
-                        'paid_at' => Carbon::now(),
-                    ]);
-                }
-            }
 
             return response()->json([
                 'success' => true,

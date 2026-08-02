@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   Percent,
-  ShieldCheck,
   SlidersHorizontal,
   Save,
   Loader2,
@@ -19,7 +18,6 @@ import { getTransferSettings, updateTransferSettings } from "@/services/settings
 type SettingsForm = {
   unverified_customer_transfer_limit: string;
   customer_transfer_fee_percent: string;
-  merchant_payment_fee_percent: string;
 };
 
 const FeeSettingsPage = () => {
@@ -28,7 +26,6 @@ const FeeSettingsPage = () => {
   const [form, setForm] = useState<SettingsForm>({
     unverified_customer_transfer_limit: "",
     customer_transfer_fee_percent: "",
-    merchant_payment_fee_percent: "",
   });
 
   const load = useCallback(async () => {
@@ -44,8 +41,6 @@ const FeeSettingsPage = () => {
             : "",
         customer_transfer_fee_percent:
           data.customer_transfer_fee_percent ?? "",
-        merchant_payment_fee_percent:
-          data.merchant_payment_fee_percent ?? "",
       });
     } catch {
       toast.error("Unable to load transfer settings.");
@@ -62,9 +57,8 @@ const FeeSettingsPage = () => {
     e.preventDefault();
 
     const feePercent = Number(form.customer_transfer_fee_percent);
-    const merchantFeePercent = Number(form.merchant_payment_fee_percent);
-    if (Number.isNaN(feePercent) || Number.isNaN(merchantFeePercent)) {
-      toast.error("Please enter valid fee percentages.");
+    if (Number.isNaN(feePercent)) {
+      toast.error("Please enter a valid fee percentage.");
       return;
     }
 
@@ -80,7 +74,6 @@ const FeeSettingsPage = () => {
       await updateTransferSettings({
         unverified_customer_transfer_limit: limit,
         customer_transfer_fee_percent: feePercent,
-        merchant_payment_fee_percent: merchantFeePercent,
       });
       toast.success("Transfer settings updated.");
       await load();
@@ -109,9 +102,8 @@ const FeeSettingsPage = () => {
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Configure per-transaction limits for unverified customers and
-                  the percentage fees charged on customer transfers and
-                  merchant payments. All fees are credited to the admin (system)
-                  wallet.
+                  the percentage fee charged on customer transfers. All fees are
+                  credited to the admin (system) wallet.
                 </p>
               </div>
             </div>
@@ -171,95 +163,49 @@ const FeeSettingsPage = () => {
                   </CardContent>
                 </Card>
 
-                <div className="grid gap-6 lg:grid-cols-2">
-                  <Card className="rounded-2xl border border-border shadow-none">
-                    <CardHeader className="border-b border-border px-6 py-5">
-                      <CardTitle className="flex items-center gap-2.5 text-lg font-semibold text-foreground">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#BCF807] text-[#10110E]">
-                          <ArrowLeftRight className="h-4 w-4" />
-                        </div>
-                        Customer Transfer Fee
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="customerFee"
-                          className="text-sm font-medium text-slate-700"
-                        >
-                          Fee (% of transfer amount)
-                        </Label>
-                        <div className="relative">
-                          <Input
-                            id="customerFee"
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            placeholder="0.5"
-                            value={form.customer_transfer_fee_percent}
-                            onChange={(e) =>
-                              setForm((f) => ({
-                                ...f,
-                                customer_transfer_fee_percent: e.target.value,
-                              }))
-                            }
-                            className="h-11 pr-9"
-                          />
-                          <Percent className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        </div>
-                        <p className="text-xs text-slate-500">
-                          Charged on every customer → customer / customer →
-                          agent transfer.
-                        </p>
+                <Card className="rounded-2xl border border-border shadow-none">
+                  <CardHeader className="border-b border-border px-6 py-5">
+                    <CardTitle className="flex items-center gap-2.5 text-lg font-semibold text-foreground">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#BCF807] text-[#10110E]">
+                        <ArrowLeftRight className="h-4 w-4" />
                       </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="rounded-2xl border border-border shadow-none">
-                    <CardHeader className="border-b border-border px-6 py-5">
-                      <CardTitle className="flex items-center gap-2.5 text-lg font-semibold text-foreground">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#BCF807] text-[#10110E]">
-                          <ShieldCheck className="h-4 w-4" />
-                        </div>
-                        Merchant Payment Fee
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="merchantFee"
-                          className="text-sm font-medium text-slate-700"
-                        >
-                          Fee (% of payment amount)
-                        </Label>
-                        <div className="relative">
-                          <Input
-                            id="merchantFee"
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.01"
-                            placeholder="1.0"
-                            value={form.merchant_payment_fee_percent}
-                            onChange={(e) =>
-                              setForm((f) => ({
-                                ...f,
-                                merchant_payment_fee_percent: e.target.value,
-                              }))
-                            }
-                            className="h-11 pr-9"
-                          />
-                          <Percent className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        </div>
-                        <p className="text-xs text-slate-500">
-                          Charged on third-party wallet payments
-                          (phone + OTP + PIN flow).
-                        </p>
+                      Customer Transfer Fee
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="customerFee"
+                        className="text-sm font-medium text-slate-700"
+                      >
+                        Fee (% of transfer amount)
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="customerFee"
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.01"
+                          placeholder="0.5"
+                          value={form.customer_transfer_fee_percent}
+                          onChange={(e) =>
+                            setForm((f) => ({
+                              ...f,
+                              customer_transfer_fee_percent: e.target.value,
+                            }))
+                          }
+                          className="h-11 pr-9"
+                        />
+                        <Percent className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                      <p className="text-xs text-slate-500">
+                        Charged on every customer → customer / customer →
+                        agent transfer.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
 
                 <div className="flex justify-end">
                   <Button

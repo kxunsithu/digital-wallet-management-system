@@ -5,8 +5,8 @@ export const getAgents = (params?: {
   per_page?: number;
   status?: string;
   search?: string;
-  state_region_id?: string;
-  township_id?: string;
+  state_region?: string;
+  township?: string;
 }) => api.get("agents", { params });
 
 export const getAgent = (id: number | string) => api.get(`agents/${id}`);

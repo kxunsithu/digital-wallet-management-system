@@ -31,8 +31,7 @@ class CustomerResource extends JsonResource
             'kyc_status' => $this->kyc_status,
             'referral_code' => $this->referral_code,
             'referred_by' => $this->referred_by,
-            'state_region_id' => $this->state_region_id,
-            'township_id' => $this->township_id,
+            'nrc_location' => $user ? $user->nrcParts() : null,
             'created_at' => optional($this->created_at)?->toISOString(),
             'updated_at' => optional($this->updated_at)?->toISOString(),
             'user' => $this->whenLoaded('user', function () use ($formattedImages) {
@@ -42,6 +41,8 @@ class CustomerResource extends JsonResource
                     'phone_number' => $this->user->phone_number,
                     'full_name' => $this->user->full_name,
                     'nrc_number' => $this->user->nrc_number,
+                    'state_region' => $this->user->state_region,
+                    'township' => $this->user->township,
                     'status' => $this->user->status,
                     'images' => $formattedImages,
                     'nrc_images' => $formattedImages->filter(fn ($image) => in_array($image['image_type'], ['nrc_front_image', 'nrc_back_image'], true))->values(),
@@ -63,18 +64,6 @@ class CustomerResource extends JsonResource
                     'id' => $this->referrer->id,
                     'phone_number' => $this->referrer->phone_number,
                     'full_name' => $this->referrer->full_name,
-                ];
-            }),
-            'state_region' => $this->whenLoaded('stateRegion', function () {
-                return [
-                    'id' => $this->stateRegion->id,
-                    'name' => $this->stateRegion->name,
-                ];
-            }),
-            'township' => $this->whenLoaded('township', function () {
-                return [
-                    'id' => $this->township->id,
-                    'name' => $this->township->name,
                 ];
             }),
         ];

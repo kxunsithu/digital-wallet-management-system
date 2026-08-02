@@ -65,13 +65,13 @@ function SearchableSelect({
       <Label className="text-xs font-semibold text-slate-600 dark:text-slate-300">{label}</Label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger render={<Button type="button" variant="outline" />} disabled={disabled} className="h-12 w-full justify-between rounded-md border-slate-200 bg-white px-3 text-sm font-medium shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50/40 focus-visible:border-blue-500 focus-visible:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-blue-500/70 dark:hover:bg-slate-800">
-          <span className={cn("truncate", !value && "text-slate-400")}>{value || placeholder}</span>
+          <span className={cn("truncate", !value && "text-slate-400")}>{options.find((option) => option.value === value)?.label || value || placeholder}</span>
           <ChevronDown className="size-4 shrink-0 opacity-60" />
         </PopoverTrigger>
         <PopoverContent align="start" className="w-[var(--anchor-width)] min-w-72 rounded-lg border-slate-200 p-2 shadow-xl dark:border-slate-700 dark:bg-slate-900">
           <div className="relative mb-2 border-b border-slate-100 pb-2 dark:border-slate-800">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-            <Input value={query} onChange={(event) => setQuery(event.target.value.replace(/[^\u1000-\u109F]/g, ""))} placeholder="ရှာဖွေရန်" className="h-10 pl-9" lang="my" />
+            <Input value={query} onChange={(event) => setQuery(event.target.value.replace(/[^A-Za-z0-9 \u1000-\u109F]/g, ""))} placeholder="Search" className="h-10 pl-9" />
           </div>
           <div className="max-h-60 overflow-y-auto px-0.5">
             {filteredOptions.map((option) => (
@@ -80,7 +80,7 @@ function SearchableSelect({
                 {value === option.value && <Check className="size-4" />}
               </Button>
             ))}
-            {filteredOptions.length === 0 && <p className="py-5 text-center text-sm text-slate-500">မတွေ့ပါ</p>}
+            {filteredOptions.length === 0 && <p className="py-5 text-center text-sm text-slate-500">No results found</p>}
           </div>
         </PopoverContent>
       </Popover>
@@ -106,21 +106,21 @@ export function NRCInput({ value, onChange, onValidityChange }: { value?: string
   const update = (updates: Partial<NrcParts>) => setParts((current) => ({ ...current, ...updates }));
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/40" lang="my">
+    <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900/40">
       <div className="mb-3 flex items-center justify-between gap-3">
         <Label className="text-sm font-semibold text-slate-800 dark:text-slate-100">NRC Information <span className="text-red-500">*</span></Label>
         <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">{parts.stateCode || "…"}/{parts.townshipCode || "…"}({parts.type || "…"}){parts.number || "……"}</span>
       </div>
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,.8fr)_auto_minmax(0,1fr)_auto_minmax(0,.9fr)_auto_minmax(0,1fr)] lg:items-end">
-        <SearchableSelect label="State Code" value={parts.stateCode} placeholder="ရွေးချယ်ပါ" options={nrcData.map((state) => ({ value: state.stateCode, label: state.stateCode }))} onChange={(stateCode) => update({ stateCode, townshipCode: "" })} />
+        <SearchableSelect label="State Code" value={parts.stateCode} placeholder="Select" options={nrcData.map((state) => ({ value: state.stateCode, label: state.stateCode }))} onChange={(stateCode) => update({ stateCode, townshipCode: "" })} />
         <span className="hidden pb-3 text-xl font-semibold text-slate-400 lg:block">/</span>
-        <SearchableSelect label="Township Code" value={parts.townshipCode} placeholder="ရွေးချယ်ပါ" options={townships.map((township) => ({ value: township.code, label: township.code }))} onChange={(townshipCode) => update({ townshipCode })} disabled={!parts.stateCode} />
+        <SearchableSelect label="Township Code" value={parts.townshipCode} placeholder="Select" options={townships.map((township) => ({ value: township.code, label: township.code }))} onChange={(townshipCode) => update({ townshipCode })} disabled={!parts.stateCode} />
         <span className="hidden pb-3 text-xl font-semibold text-slate-400 lg:block">(</span>
-        <SearchableSelect label="NRC Type" value={parts.type} placeholder="ရွေးချယ်ပါ" options={[...nrcTypes].map((type) => ({ value: type.value, label: type.label }))} onChange={(type) => update({ type })} />
+        <SearchableSelect label="NRC Type" value={parts.type} placeholder="Select" options={[...nrcTypes].map((type) => ({ value: type.value, label: type.label }))} onChange={(type) => update({ type })} />
         <span className="hidden pb-3 text-xl font-semibold text-slate-400 lg:block">)</span>
         <div className="space-y-1.5">
           <Label htmlFor="nrc-number" className="text-xs font-semibold text-slate-600 dark:text-slate-300">NRC Number (6 digits)</Label>
-          <Input id="nrc-number" value={parts.number} onChange={(event) => update({ number: keepMyanmarDigits(event.target.value) })} inputMode="numeric" maxLength={6} placeholder="၁၂၃၄၅၆" className="h-12 rounded-md border-slate-200 bg-white text-base font-medium shadow-sm transition-colors focus-visible:border-blue-500 focus-visible:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900" lang="my" />
+          <Input id="nrc-number" value={parts.number} onChange={(event) => update({ number: keepMyanmarDigits(event.target.value) })} inputMode="numeric" maxLength={6} placeholder="123456" className="h-12 rounded-md border-slate-200 bg-white text-base font-medium shadow-sm transition-colors focus-visible:border-blue-500 focus-visible:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900" />
         </div>
       </div>
     </div>

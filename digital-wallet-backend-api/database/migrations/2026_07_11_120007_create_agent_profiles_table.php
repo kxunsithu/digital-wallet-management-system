@@ -14,8 +14,6 @@ return new class extends Migration
             $table->string('agent_code')->unique();
             $table->string('shop_name')->nullable();
             $table->string('shop_address')->nullable();
-            $table->foreignId('state_region_id')->nullable()->constrained('state_regions')->nullOnDelete();
-            $table->foreignId('township_id')->nullable()->constrained('townships')->nullOnDelete();
             $table->foreignId('parent_agent_id')->nullable()->constrained('agent_profiles')->nullOnDelete();
             $table->foreignId('created_by_manager_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();

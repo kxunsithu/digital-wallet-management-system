@@ -25,7 +25,7 @@ class AgentController extends Controller
         }
 
         $perPage = min(100, max(1, (int) $request->query('per_page', 15)));
-        $query = AgentProfile::with(['user.images', 'parent', 'stateRegion', 'township']);
+        $query = AgentProfile::with(['user.images', 'parent']);
 
         if ($this->isAgentManager($request) && ! $this->isAdmin($request)) {
             $query->where('created_by_manager_id', $request->user()->id);
@@ -37,12 +37,16 @@ class AgentController extends Controller
             });
         }
 
-        if ($request->filled('state_region_id')) {
-            $query->where('state_region_id', $request->query('state_region_id'));
+        if ($request->filled('state_region')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('state_region', $request->query('state_region'));
+            });
         }
 
-        if ($request->filled('township_id')) {
-            $query->where('township_id', $request->query('township_id'));
+        if ($request->filled('township')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('township', $request->query('township'));
+            });
         }
 
         if ($request->filled('search')) {
@@ -83,6 +87,8 @@ class AgentController extends Controller
                 'phone_number' => $this->normalizePhone($data['phone_number']),
                 'full_name' => $data['full_name'] ?? null,
                 'nrc_number' => $data['nrc_number'] ?? null,
+                'state_region' => $data['state_region'] ?? null,
+                'township' => $data['township'] ?? null,
                 'role_id' => $agentRoleId,
                 'status' => $data['status'] ?? 'active',
             ]);
@@ -101,8 +107,6 @@ class AgentController extends Controller
                 'agent_code' => $agentCode,
                 'shop_name' => $data['shop_name'] ?? null,
                 'shop_address' => $data['shop_address'] ?? null,
-                'state_region_id' => $data['state_region_id'] ?? null,
-                'township_id' => $data['township_id'] ?? null,
                 'parent_agent_id' => $data['parent_agent_id'] ?? null,
                 'created_by_manager_id' => $createdByManagerId,
             ]);
@@ -139,7 +143,7 @@ class AgentController extends Controller
             return response()->json(['success' => false, 'message' => 'Failed to create agent: '.$e->getMessage()], 500);
         }
 
-        return (new AgentResource($profile->load(['user.images', 'parent', 'stateRegion', 'township'])))
+        return (new AgentResource($profile->load(['user.images', 'parent'])))
             ->additional(['success' => true, 'message' => 'Agent created.'])
             ->response()
             ->setStatusCode(201);
@@ -177,7 +181,7 @@ class AgentController extends Controller
             return $authError;
         }
 
-        $agent = AgentProfile::with(['user.images', 'user.wallet', 'parent', 'stateRegion', 'township'])->find($id);
+        $agent = AgentProfile::with(['user.images', 'user.wallet', 'parent'])->find($id);
         if (! $agent) {
             return response()->json(['success' => false, 'message' => 'Not found.'], 404);
         }
@@ -221,6 +225,8 @@ class AgentController extends Controller
             $userFields = array_filter([
                 'full_name' => $data['full_name'] ?? null,
                 'status' => $data['status'] ?? null,
+                'state_region' => $data['state_region'] ?? null,
+                'township' => $data['township'] ?? null,
             ], fn ($v) => $v !== null);
 
             if (! empty($userFields)) {
@@ -231,8 +237,6 @@ class AgentController extends Controller
                 'agent_code' => $data['agent_code'] ?? null,
                 'shop_name' => $data['shop_name'] ?? null,
                 'shop_address' => $data['shop_address'] ?? null,
-                'state_region_id' => $data['state_region_id'] ?? null,
-                'township_id' => $data['township_id'] ?? null,
                 'parent_agent_id' => $data['parent_agent_id'] ?? null,
             ], fn ($v) => $v !== null);
 
@@ -252,7 +256,7 @@ class AgentController extends Controller
             return response()->json(['success' => false, 'message' => 'Failed to update: '.$e->getMessage()], 500);
         }
 
-        return (new AgentResource($agent->fresh()->load(['user.images', 'parent', 'stateRegion', 'township'])))
+        return (new AgentResource($agent->fresh()->load(['user.images', 'parent'])))
             ->additional(['success' => true, 'message' => 'Updated.'])
             ->response()
             ->setStatusCode(200);
@@ -313,7 +317,7 @@ class AgentController extends Controller
 
         $agent->user->update(['status' => $newStatus]);
 
-        return (new AgentResource($agent->fresh()->load(['user.images', 'parent', 'stateRegion', 'township'])))
+        return (new AgentResource($agent->fresh()->load(['user.images', 'parent'])))
             ->additional(['success' => true, 'message' => 'Status toggled.', 'status' => $newStatus])
             ->response()
             ->setStatusCode(200);

@@ -19,6 +19,7 @@ class Transaction extends Model
         'amount',
         'fee',
         'qr_id',
+        'external_payment_id',
         'agent_id',
         'status',
         'pin_verified',

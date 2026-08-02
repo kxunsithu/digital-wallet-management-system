@@ -229,11 +229,12 @@ export default function AgentDetail() {
                 <MapPin className="mt-0.5 h-4 w-4 text-slate-400" />
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    State/Region &amp; Township
+                    State / Township
                   </p>
                   <p className="text-sm font-semibold text-slate-700">
-                    {agent.state_region?.name || "-"}
-                    {agent.township?.name ? ` / ${agent.township.name}` : ""}
+                    {agent.user?.state_region
+                      ? `${agent.user.state_region} / ${agent.user.township ?? "-"}`
+                      : "-"}
                   </p>
                 </div>
               </div>

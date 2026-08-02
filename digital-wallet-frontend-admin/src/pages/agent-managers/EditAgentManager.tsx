@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { User, Image as ImageIcon } from "lucide-react";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { NRCInput, validateNrc } from "@/components/NRCInput";
+import { LocationFields } from "@/components/LocationFields";
 import MainLayout from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +26,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import { toast } from "sonner";
 import { getAgentManager, updateAgentManager } from "@/services/agentManager.service";
-import { getStateRegions, getTownships } from "@/services/location.service";
 
 export default function EditAgentManager() {
   const { id } = useParams();
@@ -38,32 +38,15 @@ export default function EditAgentManager() {
     full_name: "",
     nrc_number: "",
     phone_number: "",
+    state_region: "",
+    township: "",
   });
 
   // Profile fields
   const [profileForm, setProfileForm] = useState({
     manager_code: "",
-    state_region_id: "",
-    township_id: "",
     status: "pending",
   });
-
-  const [regions, setRegions] = useState<any[]>([]);
-  const [townships, setTownships] = useState<any[]>([]);
-
-  useEffect(() => {
-    getStateRegions().then((res) => setRegions(res.data.data)).catch(() => { });
-  }, []);
-
-  useEffect(() => {
-    if (profileForm.state_region_id) {
-      getTownships({ state_region_id: profileForm.state_region_id })
-        .then((res) => setTownships(res.data.data))
-        .catch(() => { });
-    } else {
-      setTownships([]);
-    }
-  }, [profileForm.state_region_id]);
 
   const [nrcFront, setNrcFront] = useState<File | null>(null);
   const [nrcBack, setNrcBack] = useState<File | null>(null);
@@ -81,12 +64,12 @@ export default function EditAgentManager() {
           full_name: user.full_name || "",
           nrc_number: user.nrc_number || "",
           phone_number: user.phone_number || "",
+          state_region: user.state_region || "",
+          township: user.township || "",
         });
 
         setProfileForm({
           manager_code: data.manager_code || "",
-          state_region_id: data.state_region_id?.toString() || "",
-          township_id: data.township_id?.toString() || "",
           status: data.status || "pending",
         });
 
@@ -238,6 +221,13 @@ export default function EditAgentManager() {
                   <div className="md:col-span-2 lg:col-span-3">
                     <NRCInput value={userForm.nrc_number} onChange={(nrc_number) => setUserForm((prev) => ({ ...prev, nrc_number }))} />
                   </div>
+                  <LocationFields
+                    stateRegion={userForm.state_region}
+                    township={userForm.township}
+                    onChange={(field, value) =>
+                      setUserForm((prev) => ({ ...prev, [field]: value }))
+                    }
+                  />
                   <div className="space-y-1.5">
                     <Label htmlFor="status" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</Label>
                     <Select
@@ -251,45 +241,6 @@ export default function EditAgentManager() {
                         <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="active">Active</SelectItem>
                         <SelectItem value="inactive">Inactive</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="state_region_id" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">State/Region</Label>
-                    <Select
-                      value={profileForm.state_region_id}
-                      onValueChange={(val) => {
-                        setProfileForm((prev) => ({ ...prev, state_region_id: val || "", township_id: "" }));
-                      }}
-                    >
-                    <SelectTrigger className="h-11 rounded text-sm">
-                        <SelectValue placeholder="Select state/region">
-                          {(val: string | null) => val ? regions.find(r => r.id.toString() === val)?.name || val : "Select state/region"}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {regions.map((r) => (
-                          <SelectItem key={r.id} value={r.id.toString()}>{r.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="township_id" className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Township</Label>
-                    <Select
-                      value={profileForm.township_id}
-                      onValueChange={(val) => handleSelectChange(val as string, "township_id")}
-                      disabled={!profileForm.state_region_id}
-                    >
-                    <SelectTrigger className="h-11 rounded text-sm">
-                        <SelectValue placeholder="Select township">
-                          {(val: string | null) => val ? townships.find(t => t.id.toString() === val)?.name || val : "Select township"}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {townships.map((t) => (
-                          <SelectItem key={t.id} value={t.id.toString()}>{t.name}</SelectItem>
-                        ))}
                       </SelectContent>
                     </Select>
                   </div>

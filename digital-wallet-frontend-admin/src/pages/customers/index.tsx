@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { getCustomers, deleteCustomer, toggleCustomerStatus } from "@/services/customer.service";
-import { getStateRegions, getTownships } from "@/services/location.service";
+import { LocationFilter } from "@/components/LocationFilter";
 
 export default function CustomersPage() {
   const navigate = useNavigate();
@@ -49,11 +49,8 @@ export default function CustomersPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [kycStatus, setKycStatus] = useState("all");
-  const [regionId, setRegionId] = useState("");
-  const [townshipId, setTownshipId] = useState("");
-
-  const [regionsList, setRegionsList] = useState<any[]>([]);
-  const [townshipsList, setTownshipsList] = useState<any[]>([]);
+  const [stateRegion, setStateRegion] = useState("");
+  const [township, setTownship] = useState("");
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -82,20 +79,6 @@ export default function CustomersPage() {
     }
   };
 
-  useEffect(() => {
-    getStateRegions().then((res) => setRegionsList(res.data.data)).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (regionId) {
-      getTownships({ state_region_id: regionId })
-        .then((res) => setTownshipsList(res.data.data))
-        .catch(() => {});
-    } else {
-      setTownshipsList([]);
-    }
-  }, [regionId]);
-
   const fetchCustomers = async () => {
     try {
       setLoading(true);
@@ -104,8 +87,8 @@ export default function CustomersPage() {
         per_page: perPage,
         search: debouncedSearch || undefined,
         kyc_status: kycStatus !== "all" ? kycStatus : undefined,
-        state_region_id: regionId || undefined,
-        township_id: townshipId || undefined,
+        state_region: stateRegion || undefined,
+        township: township || undefined,
       });
       setCustomers(response.data.data);
 
@@ -126,17 +109,17 @@ export default function CustomersPage() {
 
   useEffect(() => {
     fetchCustomers();
-  }, [page, perPage, debouncedSearch, kycStatus, regionId, townshipId]);
+  }, [page, perPage, debouncedSearch, kycStatus, stateRegion, township]);
 
   useEffect(() => {
     setPage(1);
-  }, [kycStatus, regionId, townshipId]);
+  }, [kycStatus, stateRegion, township]);
 
   const handleClearFilters = () => {
     setSearch("");
     setKycStatus("all");
-    setRegionId("");
-    setTownshipId("");
+    setStateRegion("");
+    setTownship("");
     setPage(1);
     setTimeout(() => fetchCustomers(), 0);
   };
@@ -246,60 +229,12 @@ export default function CustomersPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">State / Region</label>
-                <Select
-                  value={regionId}
-                  onValueChange={(val) => {
-                    setRegionId(val === "all" || val === null ? "" : val);
-                    setTownshipId("");
-                  }}
-                >
-                  <SelectTrigger className="h-12 w-full">
-                    <SelectValue placeholder="State/Region">
-                      {(val: string | null) => {
-                        if (!val) return "All states";
-                        if (val === "all") return "All states";
-                        return regionsList.find((r) => r.id.toString() === val)?.name || val;
-                      }}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All States/Regions</SelectItem>
-                    {regionsList.map((r) => (
-                      <SelectItem key={r.id} value={r.id.toString()}>
-                        {r.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Township</label>
-                <Select
-                  value={townshipId}
-                  onValueChange={(val) => setTownshipId(val === "all" || val === null ? "" : val)}
-                  disabled={!regionId}
-                >
-                  <SelectTrigger className="h-12 w-full">
-                    <SelectValue placeholder="Township">
-                      {(val: string | null) => {
-                        if (!val) return "All townships";
-                        if (val === "all") return "All townships";
-                        return townshipsList.find((t) => t.id.toString() === val)?.name || val;
-                      }}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Townships</SelectItem>
-                    {townshipsList.map((t) => (
-                      <SelectItem key={t.id} value={t.id.toString()}>
-                        {t.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <LocationFilter
+                stateRegion={stateRegion}
+                onStateRegionChange={setStateRegion}
+                township={township}
+                onTownshipChange={setTownship}
+              />
             </div>
           </div>
         </div>
@@ -414,11 +349,10 @@ export default function CustomersPage() {
                   <TableCell className="px-4 py-3">
                     <div className="text-sm">
                       <p className="font-medium text-slate-800">
-                        {customer.state_region?.name || "-"}
+                        {customer.user?.state_region
+                          ? `${customer.user.state_region} / ${customer.user.township ?? "-"}`
+                          : "-"}
                       </p>
-                      {customer.township?.name && (
-                        <p className="text-slate-500 text-xs">{customer.township.name}</p>
-                      )}
                     </div>
                   </TableCell>
                   <TableCell className="px-6 py-3 text-right">

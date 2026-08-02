@@ -117,12 +117,9 @@ export default function ProfilePage() {
     event.preventDefault();
     try {
       setSaving(true);
-      const payload: { full_name?: string; nrc_number?: string } = {
+      const payload: { full_name?: string } = {
         full_name: form.full_name || undefined,
       };
-      if (userRole !== "agent_manager") {
-        payload.nrc_number = form.nrc_number || undefined;
-      }
       const response = await updateProfile(payload);
       const data = (response.data?.data ?? response.data) as ProfileData;
       setProfile((prev) => ({ ...prev, ...data }));
@@ -242,7 +239,7 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-foreground">Profile Photo</p>
-                    <p className="text-xs text-muted-foreground">JPEG, PNG or WebP up to 2MB</p>
+                    <p className="text-xs text-muted-foreground">JPG, JPEG or PNG up to 2MB</p>
                   </div>
                 </div>
               </div>
@@ -321,19 +318,21 @@ export default function ProfilePage() {
                         className="focus-visible:ring-[#BCF807]/30"
                       />
                     </div>
-                    <div className="space-y-1.5 md:col-span-2">
-                      <Label htmlFor="nrc_number">NRC Number</Label>
-                      <Input
-                        id="nrc_number"
-                        value={form.nrc_number}
-                        onChange={(e) =>
-                          setForm((prev) => ({ ...prev, nrc_number: e.target.value }))
-                        }
-                        disabled={userRole === "agent_manager"}
-                        placeholder="12/ABCDE(N)123456"
-                        className="focus-visible:ring-[#BCF807]/30 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
-                      />
-                    </div>
+                    {userRole !== "admin" && (
+                      <div className="space-y-1.5 md:col-span-2">
+                        <Label htmlFor="nrc_number">NRC Number</Label>
+                        <Input
+                          id="nrc_number"
+                          value={form.nrc_number}
+                          onChange={(e) =>
+                            setForm((prev) => ({ ...prev, nrc_number: e.target.value }))
+                          }
+                          disabled={userRole === "agent_manager"}
+                          placeholder="12/ABCDE(N)123456"
+                          className="focus-visible:ring-[#BCF807]/30 disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+                        />
+                      </div>
+                    )}
                   </div>
                   <div className="flex justify-end">
                     <Button

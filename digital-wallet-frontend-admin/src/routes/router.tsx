@@ -18,15 +18,14 @@ import CreateAgent from "../pages/agents/CreateAgent";
 import EditAgent from "../pages/agents/EditAgent";
 import CustomersPage from "../pages/customers";
 import CustomerDetail from "../pages/customers/CustomerDetail";
-import ManageLocations from "../pages/locations/ManageLocations";
 import SystemWalletPage from "../pages/system-wallet";
 import WalletsPage from "../pages/wallets";
-import TopupsPage from "../pages/wallets/topups";
 import ManagerTransferPage from "../pages/agent-manager-wallet";
 import ProfilePage from "../pages/profile";
 import FeeSettingsPage from "../pages/settings/FeeSettings";
 import FeeIncomePage from "../pages/transactions/FeeIncome";
-import MerchantsPage from "../pages/merchants";
+import ExternalSystemsPage from "../pages/external-systems";
+import ExternalPaymentsPage from "../pages/external-payments";
 
 const ADMIN_ONLY = ["admin"];
 const ADMIN_AND_MANAGER = ["admin", "agent_manager"];
@@ -158,17 +157,7 @@ const router = createBrowserRouter([
     ),
   },
 
-  // ─── Locations: admin only ──────────────────────────────────────────────────
-  {
-    path: "/locations",
-    element: (
-      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
-        <ManageLocations />
-      </ProtectedRoute>
-    ),
-  },
-
-  // ─── Fee & Limit Settings / Fee Income / Merchants: admin only ─────────────
+  // ─── Fee & Limit Settings / Fee Income: admin only ────────────────────────
   {
     path: "/fee-settings",
     element: (
@@ -185,11 +174,21 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+
+  // ─── External payments & systems: admin only ───────────────────────────────
   {
-    path: "/merchants",
+    path: "/external-systems",
     element: (
       <ProtectedRoute allowedRoles={ADMIN_ONLY}>
-        <MerchantsPage />
+        <ExternalSystemsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/external-payments",
+    element: (
+      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
+        <ExternalPaymentsPage />
       </ProtectedRoute>
     ),
   },
@@ -252,14 +251,6 @@ const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedRoles={ADMIN_ONLY}>
         <WalletsPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/wallets/topups",
-    element: (
-      <ProtectedRoute allowedRoles={ADMIN_ONLY}>
-        <TopupsPage />
       </ProtectedRoute>
     ),
   },

@@ -219,6 +219,7 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
                     <SelectItem value="agent_to_agent_manager">Agent to Agent Manager</SelectItem>
                     <SelectItem value="customer_to_customer">Customer to Customer</SelectItem>
                     <SelectItem value="customer_to_agent">Customer to Agent</SelectItem>
+                    <SelectItem value="external_payment">External Payment</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Merchant;
+namespace App\Http\Requests\External;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -14,8 +14,8 @@ class ConfirmPaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'payment_id' => ['required', 'integer'],
-            'otp_code' => ['required', 'string', 'size:6'],
+            'payment_reference' => ['required', 'string', 'max:32'],
+            'otp' => ['required', 'string'],
             'pin' => ['required', 'string', 'size:4'],
         ];
     }

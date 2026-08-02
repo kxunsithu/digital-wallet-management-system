@@ -8,6 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::dropIfExists('wallet_topups');
+    }
+
+    public function down(): void
+    {
+        if (Schema::hasTable('wallet_topups')) {
+            return;
+        }
+
         Schema::create('wallet_topups', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
@@ -19,10 +28,5 @@ return new class extends Migration
             $table->timestamp('paid_at')->nullable();
             $table->timestamps();
         });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('wallet_topups');
     }
 };

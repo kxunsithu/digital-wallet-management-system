@@ -112,6 +112,10 @@ echo "LOG_CHANNEL=stderr" >> .env\n\
 chmod -R 775 storage bootstrap/cache\n\
 chown -R www-data:www-data storage bootstrap/cache\n\
 \n\
+# Link storage so uploaded files are served under /storage\n\
+rm -rf public/storage\n\
+php artisan storage:link\n\
+\n\
 echo "Clearing Laravel cache..."\n\
 php artisan config:clear\n\
 php artisan cache:clear || true\n\
