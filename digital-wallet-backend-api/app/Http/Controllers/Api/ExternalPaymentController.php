@@ -292,6 +292,47 @@ class ExternalPaymentController extends Controller
         return response()->json(['success' => true, 'data' => $payment], 200);
     }
 
+    /**
+     * Listing of external payments belonging to the authenticated user
+     * (agents receive them, customers pay them).
+     */
+    public function myHistory(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $roleName = optional($user->role)->name;
+        $perPage = min(100, max(1, (int) $request->query('per_page', 50)));
+
+        $query = ExternalPayment::with(['customer', 'externalSystem']);
+
+        if ($roleName === 'agent') {
+            $query->where('agent_user_id', $user->id);
+        } elseif ($roleName === 'customer') {
+            $query->where('customer_user_id', $user->id);
+        } else {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->query('status'));
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->query('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('reference', 'like', "%{$search}%")
+                    ->orWhere('order_reference', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($uq) use ($search) {
+                        $uq->where('phone_number', 'like', "%{$search}%")
+                            ->orWhere('full_name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $list = $query->orderByDesc('id')->paginate($perPage);
+
+        return response()->json(['success' => true, 'data' => $list], 200);
+    }
+
     protected function resolveUserRole(int $userId): ?string
     {
         $roleId = DB::table('users')->where('id', $userId)->value('role_id');

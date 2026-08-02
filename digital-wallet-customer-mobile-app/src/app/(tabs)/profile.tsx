@@ -142,7 +142,16 @@ export default function ProfileScreen() {
       quality: 0.8,
     });
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      setEditProfileImageUri(result.assets[0].uri);
+      const asset = result.assets[0];
+      if (asset.fileSize && asset.fileSize > 4.5 * 1024 * 1024) {
+        Toast.show({
+          type: 'error',
+          text1: t('profile.image_too_large_title'),
+          text2: t('profile.image_too_large_desc'),
+        });
+        return;
+      }
+      setEditProfileImageUri(asset.uri);
     }
   };
 

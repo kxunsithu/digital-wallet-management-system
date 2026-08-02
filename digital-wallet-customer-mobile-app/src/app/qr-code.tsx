@@ -94,12 +94,8 @@ export default function QrCodeScreen() {
           </View>
         ) : (
           <View style={{
-            width: '100%', maxWidth: 360, padding: 24, borderRadius: 28,
-            borderWidth: 1, borderColor: colors.border,
-            backgroundColor: colors.surface,
+            width: '100%', maxWidth: 360, 
             alignItems: 'center',
-            shadowColor: colors.primary, shadowOpacity: 0.08,
-            shadowRadius: 20, shadowOffset: { width: 0, height: 8 },
             elevation: 6,
           }}>
             <View style={{

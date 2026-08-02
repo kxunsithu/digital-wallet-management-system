@@ -208,21 +208,29 @@ export default function CreatePinScreen() {
           end={{ x: 1, y: 1 }}
           style={{ paddingTop: 20, paddingBottom: 32, paddingHorizontal: 24 }}
         >
+          {/* Back Button */}
           <TouchableOpacity
             onPress={() => router.back()}
             style={{
-              width: 40, height: 40, borderRadius: 20,
-              backgroundColor: `${colors.secondary}26`,
-              alignItems: 'center', justifyContent: 'center',
-              marginBottom: 20,
+              marginBottom: 30,
+              marginTop: 30,
             }}
-            activeOpacity={0.7}
+            activeOpacity={0.5}
           >
             <Feather name="arrow-left" size={20} color={colors.secondary} />
           </TouchableOpacity>
 
+          <Text style={{ fontSize: 22, fontWeight: '800', color: colors.secondary, letterSpacing: -0.5 }}>
+            {step === 'pin' ? 'Create Your PIN' : 'Confirm Your PIN'}
+          </Text>
+          <Text style={{ fontSize: 13, color: `${colors.secondary}99`, marginTop: 4 }}>
+            {step === 'pin'
+              ? 'Enter a 4-digit PIN to secure your wallet'
+              : 'Re-enter your PIN to confirm'}
+          </Text>
+
           {/* Step Indicator */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16 }}>
             {STEPS.map((s, i) => (
               <View key={s} style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View style={{
@@ -252,15 +260,6 @@ export default function CreatePinScreen() {
               </View>
             ))}
           </View>
-
-          <Text style={{ fontSize: 22, fontWeight: '800', color: colors.secondary, letterSpacing: -0.5 }}>
-            {step === 'pin' ? 'Create Your PIN' : 'Confirm Your PIN'}
-          </Text>
-          <Text style={{ fontSize: 13, color: `${colors.secondary}99`, marginTop: 4 }}>
-            {step === 'pin'
-              ? 'Enter a 4-digit PIN to secure your wallet'
-              : 'Re-enter your PIN to confirm'}
-          </Text>
         </LinearGradient>
 
         <ScrollView

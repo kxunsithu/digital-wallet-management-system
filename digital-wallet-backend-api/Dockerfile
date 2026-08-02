@@ -29,6 +29,9 @@ RUN docker-php-ext-configure gd \
         pcntl \
         opcache
 
+# Configure PHP upload limits for profile pictures
+COPY docker/php.ini $PHP_INI_DIR/conf.d/zz-uploads.ini
+
 # Install Composer
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 

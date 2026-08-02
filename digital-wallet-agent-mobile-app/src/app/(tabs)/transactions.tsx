@@ -15,6 +15,7 @@ import { Feather } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import apiFetch from "../../lib/api";
 import TransferReceiptModal, { ReceiptTransaction } from "../../components/TransferReceiptModal";
+import { AgentExternalPayment } from "../../services/externalSystems";
 
 interface Transaction {
   id: number;
@@ -30,6 +31,20 @@ interface Transaction {
   fee: number;
   status: string;
   created_at: string;
+}
+
+interface HistoryEntry {
+  key: string;
+  kind: 'transaction' | 'external';
+  type: string;
+  status: string;
+  amount: number;
+  fee: number;
+  reference: string;
+  counterparty: string;
+  created_at: string;
+  tx?: Transaction;
+  payment?: AgentExternalPayment;
 }
 
 const FILTER_OPTIONS = [
@@ -51,6 +66,8 @@ const getTxMeta = (type: string, colors: any) => {
       return { label: 'Cash Out', icon: 'arrow-down-left' as const, color: colors.primary, bg: `${colors.primary}1F`, sign: '+' };
     case 'customer_to_customer':
       return { label: 'P2P Transfer', icon: 'repeat' as const, color: colors.success, bg: `${colors.success}1F`, sign: '±' };
+    case 'external_payment':
+      return { label: 'External Payment', icon: 'globe' as const, color: '#F59E0B', bg: '#F59E0B1F', sign: '+' };
     default:
       return { label: type.replace(/_/g, ' '), icon: 'activity' as const, color: colors.textSecondary, bg: `${colors.textSecondary}1F`, sign: '' };
   }
@@ -72,6 +89,7 @@ export default function TransactionsScreen() {
   const isDark = theme === 'dark';
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [externalPayments, setExternalPayments] = useState<AgentExternalPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -81,17 +99,26 @@ export default function TransactionsScreen() {
   // Receipt Modal state
   const [selectedTxForReceipt, setSelectedTxForReceipt] = useState<ReceiptTransaction | null>(null);
 
-  const fetchTransactions = useCallback(async (isRefresh = false) => {
+  const fetchHistory = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     try {
       let url = "/transactions?per_page=50";
       if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
       if (filter !== "all") url += `&transaction_type=${filter}`;
-      const res = await apiFetch(url);
-      if (res.status === 200) {
-        setTransactions(res.body.data || []);
+
+      const [txRes, extRes] = await Promise.all([
+        apiFetch(url),
+        filter === "all" ? apiFetch("/external-payments/mine") : Promise.resolve(null),
+      ]);
+
+      if (txRes.status === 200) {
+        setTransactions(txRes.body.data || []);
       } else {
         Toast.show({ type: "error", text1: "Error", text2: "Failed to load transactions" });
+      }
+
+      if (extRes && extRes.status === 200 && extRes.body?.success) {
+        setExternalPayments(extRes.body.data?.data ?? []);
       }
     } catch (e) {
       Toast.show({ type: "error", text1: "Error", text2: "Could not connect" });
@@ -101,28 +128,84 @@ export default function TransactionsScreen() {
     }
   }, [searchQuery, filter]);
 
-  useEffect(() => { fetchTransactions(); }, [fetchTransactions]);
+  useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
-  const onRefresh = () => { setRefreshing(true); fetchTransactions(true); };
+  const onRefresh = () => { setRefreshing(true); fetchHistory(true); };
 
-  // Group transactions by date
+  const openExternalReceipt = (p: AgentExternalPayment) => {
+    setSelectedTxForReceipt({
+      transaction_number: p.reference,
+      transaction_type: 'external_payment',
+      amount: Number(p.amount),
+      fee: Number(p.fee),
+      sender_name: p.customer?.full_name ?? null,
+      sender_phone: p.customer?.phone_number ?? null,
+      receiver_name: p.external_system?.name ?? null,
+      description: p.description,
+      status: p.status,
+      created_at: p.created_at,
+    });
+  };
+
+  // Merge transactions and external payments, then group by date
   const groupedData = (() => {
-    const groups: { title: string; data: Transaction[] }[] = [];
-    const seen = new Map<string, number>();
+    const entries: HistoryEntry[] = [];
+
     transactions.forEach((tx) => {
-      const key = formatDate(tx.created_at);
+      if (tx.transaction_type === 'external_payment') return;
+      entries.push({
+        key: `tx-${tx.id}`,
+        kind: 'transaction',
+        type: tx.transaction_type,
+        status: tx.status,
+        amount: tx.amount,
+        fee: tx.fee,
+        reference: tx.transaction_number,
+        counterparty: tx.transaction_type.startsWith('agent_to')
+          ? (tx.receiver_name || tx.receiver_phone)
+          : (tx.sender_name || tx.sender_phone),
+        created_at: tx.created_at,
+        tx,
+      });
+    });
+
+    if (filter === 'all') {
+      externalPayments.forEach((p) => {
+        const system = p.external_system?.name || 'External System';
+        const customer = p.customer ? (p.customer.full_name || p.customer.phone_number) : '';
+        entries.push({
+          key: `ext-${p.id}`,
+          kind: 'external',
+          type: 'external_payment',
+          status: p.status,
+          amount: Number(p.amount),
+          fee: Number(p.fee),
+          reference: p.reference,
+          counterparty: customer ? `${system} • ${customer}` : system,
+          created_at: p.created_at,
+          payment: p,
+        });
+      });
+    }
+
+    entries.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    const groups: { title: string; data: HistoryEntry[] }[] = [];
+    const seen = new Map<string, number>();
+    entries.forEach((entry) => {
+      const key = formatDate(entry.created_at);
       if (!seen.has(key)) {
         seen.set(key, groups.length);
-        groups.push({ title: key, data: [tx] });
+        groups.push({ title: key, data: [entry] });
       } else {
-        groups[seen.get(key)!].data.push(tx);
+        groups[seen.get(key)!].data.push(entry);
       }
     });
     // Flatten for FlatList: headers + items
-    const flat: (Transaction | { type: 'header'; title: string; count: number })[] = [];
+    const flat: (HistoryEntry | { type: 'header'; title: string; count: number })[] = [];
     groups.forEach((g) => {
       flat.push({ type: 'header', title: g.title, count: g.data.length });
-      g.data.forEach((tx) => flat.push(tx));
+      g.data.forEach((entry) => flat.push(entry));
     });
     return flat;
   })();
@@ -143,18 +226,21 @@ export default function TransactionsScreen() {
       );
     }
 
-    const tx = item as Transaction;
-    const meta = getTxMeta(tx.transaction_type, colors);
-    const date = new Date(tx.created_at);
+    const entry = item as HistoryEntry;
+    const meta = getTxMeta(entry.type, colors);
+    const date = new Date(entry.created_at);
     const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    const counterparty = tx.transaction_type.startsWith('agent_to')
-      ? (tx.receiver_name || tx.receiver_phone)
-      : (tx.sender_name || tx.sender_phone);
 
     return (
       <TouchableOpacity
         activeOpacity={0.8}
-        onPress={() => setSelectedTxForReceipt(tx)}
+        onPress={() => {
+          if (entry.kind === 'transaction' && entry.tx) {
+            setSelectedTxForReceipt(entry.tx);
+          } else if (entry.kind === 'external' && entry.payment) {
+            openExternalReceipt(entry.payment);
+          }
+        }}
         style={{
           marginBottom: 10,
           borderRadius: 20,
@@ -190,28 +276,15 @@ export default function TransactionsScreen() {
                   <Text style={{ fontSize: 13, fontWeight: '800', color: colors.text }}>
                     {meta.label}
                   </Text>
-                  <View style={{
-                    marginLeft: 8, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6,
-                    backgroundColor: tx.status === 'completed'
-                      ? `${colors.success}1F`
-                      : `${colors.primary}1F`,
-                  }}>
-                    <Text style={{
-                      fontSize: 8, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase',
-                      color: tx.status === 'completed' ? colors.success : colors.primary,
-                    }}>
-                      {tx.status}
-                    </Text>
-                  </View>
                 </View>
                 <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>
-                  {counterparty}
+                  {entry.counterparty}
                 </Text>
               </View>
 
               {/* Amount */}
               <Text style={{ fontSize: 16, fontWeight: '900', color: meta.color }}>
-                {meta.sign}{tx.amount.toLocaleString()}
+                {meta.sign}{entry.amount.toLocaleString()}
                 <Text style={{ fontSize: 10, fontWeight: '600' }}> Ks</Text>
               </Text>
             </View>
@@ -224,12 +297,12 @@ export default function TransactionsScreen() {
               flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
             }}>
               <Text style={{ fontSize: 10, color: colors.textSecondary, fontFamily: 'monospace' }}>
-                {tx.transaction_number}
+                {entry.reference}
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {tx.fee > 0 && (
+                {entry.fee > 0 && (
                   <Text style={{ fontSize: 10, color: colors.textSecondary, marginRight: 10 }}>
-                    Fee: {tx.fee.toLocaleString()} Ks
+                    Fee: {entry.fee.toLocaleString()} Ks
                   </Text>
                 )}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -246,6 +319,8 @@ export default function TransactionsScreen() {
     );
   };
 
+  const totalRecords = transactions.filter((tx) => tx.transaction_type !== 'external_payment').length + (filter === 'all' ? externalPayments.length : 0);
+
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: colors.background }}>
 
@@ -257,7 +332,7 @@ export default function TransactionsScreen() {
               History
             </Text>
             <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>
-              {transactions.length} record{transactions.length !== 1 ? 's' : ''}
+              {totalRecords} record{totalRecords !== 1 ? 's' : ''}
             </Text>
           </View>
         </View>
@@ -282,7 +357,7 @@ export default function TransactionsScreen() {
             onChangeText={setSearchQuery}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            onSubmitEditing={() => fetchTransactions()}
+            onSubmitEditing={() => fetchHistory()}
             returnKeyType="search"
           />
           {searchQuery.length > 0 && (
@@ -326,34 +401,36 @@ export default function TransactionsScreen() {
       ) : (
         <FlatList
           data={groupedData}
-          keyExtractor={(item: any) => item.type === 'header' ? `h-${item.title}` : `tx-${item.id}`}
+          keyExtractor={(item: any) => item.type === 'header' ? `h-${item.title}` : item.key}
           renderItem={renderItem}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120, paddingTop: 4 }}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
-          }
-          ListEmptyComponent={
-            <View style={{
-              paddingVertical: 56, borderRadius: 24, alignItems: 'center',
-              backgroundColor: colors.surface,
-              borderWidth: 1, borderColor: colors.border,
-            }}>
+          {...({
+            contentContainerStyle: { paddingHorizontal: 24, paddingBottom: 120, paddingTop: 4 },
+            showsVerticalScrollIndicator: false,
+            refreshControl: (
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
+            ),
+            ListEmptyComponent: (
               <View style={{
-                width: 72, height: 72, borderRadius: 24,
-                backgroundColor: isDark ? colors.background : `${colors.border}33`,
-                alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+                paddingVertical: 56, borderRadius: 24, alignItems: 'center',
+                backgroundColor: colors.surface,
+                borderWidth: 1, borderColor: colors.border,
               }}>
-                <Feather name="inbox" size={30} color={colors.border} />
+                <View style={{
+                  width: 72, height: 72, borderRadius: 24,
+                  backgroundColor: isDark ? colors.background : `${colors.border}33`,
+                  alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+                }}>
+                  <Feather name="inbox" size={30} color={colors.border} />
+                </View>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: colors.textSecondary }}>
+                  No transactions
+                </Text>
+                <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 6 }}>
+                  Try a different filter or search
+                </Text>
               </View>
-              <Text style={{ fontSize: 16, fontWeight: '800', color: colors.textSecondary }}>
-                No transactions
-              </Text>
-              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 6 }}>
-                Try a different filter or search
-              </Text>
-            </View>
-          }
+            ),
+          } as any)}
         />
       )}
 

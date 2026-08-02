@@ -210,18 +210,23 @@ export default function VerifyOtpScreen() {
           <TouchableOpacity
             onPress={() => router.back()}
             style={{
-              width: 40, height: 40, borderRadius: 20,
-              backgroundColor: `${colors.secondary}26`,
-              alignItems: 'center', justifyContent: 'center',
-              marginBottom: 24,
+              marginBottom: 30,
+              marginTop:8,
             }}
-            activeOpacity={0.7}
+            activeOpacity={0.5}
           >
             <Feather name="arrow-left" size={20} color={colors.secondary} />
           </TouchableOpacity>
 
+          <Text style={{ fontSize: 22, fontWeight: '800', color: colors.secondary, letterSpacing: -0.5 }}>
+            {t('auth.verify_code_title')}
+          </Text>
+          <Text style={{ fontSize: 13, color: `${colors.secondary}99`, marginTop: 4 }}>
+            {t('auth.otp_sent_to_phone', { phone })}
+          </Text>
+
           {/* Step Indicator */}
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16 }}>
             {STEPS.map((step, i) => (
               <View key={step} style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View style={{
@@ -253,13 +258,6 @@ export default function VerifyOtpScreen() {
               </View>
             ))}
           </View>
-
-          <Text style={{ fontSize: 22, fontWeight: '800', color: colors.secondary, letterSpacing: -0.5 }}>
-            {t('auth.verify_code_title')}
-          </Text>
-          <Text style={{ fontSize: 13, color: `${colors.secondary}99`, marginTop: 4 }}>
-            {t('auth.otp_sent_to_phone', { phone })}
-          </Text>
         </LinearGradient>
 
         <ScrollView

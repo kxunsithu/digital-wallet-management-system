@@ -587,4 +587,71 @@ class ExternalPaymentTest extends TestCase
             'amount' => 5000,
         ])->assertStatus(201);
     }
+
+    public function test_agent_can_list_own_external_payment_history(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        [$otherAgent] = $this->makeAgent('09133333333', 100000);
+
+        $system = $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+        $otherSystem = $this->makeExternalSystem('sk_live_otherkey456', $otherAgent);
+
+        // one completed payment for our agent, one pending, one for another agent
+        $this->initiate($apiKey, ['customer_phone' => '09123456789', 'amount' => 20000])
+            ->assertStatus(201);
+        $this->initiate($apiKey, ['customer_phone' => '09123456789', 'amount' => 5000])
+            ->assertStatus(201);
+
+        $this->initiate('sk_live_otherkey456', ['customer_phone' => '09123456789', 'amount' => 9000])
+            ->assertStatus(201);
+
+        $this->actingAs($agent, 'sanctum')->getJson('/api/external-payments/mine')
+            ->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(2, 'data.data');
+
+        $refs = collect($this->actingAs($agent, 'sanctum')->getJson('/api/external-payments/mine')->json('data.data'))
+            ->pluck('agent_user_id');
+        $this->assertTrue($refs->every(fn ($id) => (int) $id === $agent->id));
+
+        // status filter
+        $this->actingAs($agent, 'sanctum')->getJson('/api/external-payments/mine?status=completed')
+            ->assertStatus(200)
+            ->assertJsonCount(0, 'data.data');
+    }
+
+    public function test_customer_can_list_own_external_payment_history(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+        [$otherCustomer] = $this->makeCustomer('09144444444', 'verified', 500000);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        $this->initiate($apiKey, ['customer_phone' => '09123456789', 'amount' => 20000])
+            ->assertStatus(201);
+        $this->initiate($apiKey, ['customer_phone' => '09144444444', 'amount' => 5000])
+            ->assertStatus(201);
+
+        // customers only see their own payments
+        $this->actingAs($customer, 'sanctum')->getJson('/api/external-payments/mine')
+            ->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(1, 'data.data');
+
+        $ids = collect($this->actingAs($customer, 'sanctum')->getJson('/api/external-payments/mine')->json('data.data'))
+            ->pluck('customer_user_id');
+        $this->assertTrue($ids->every(fn ($id) => (int) $id === $customer->id));
+
+        // the agent still sees both of theirs
+        $this->actingAs($agent, 'sanctum')->getJson('/api/external-payments/mine')
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'data.data');
+
+        // a non-customer/non-agent role is rejected
+        $this->actingAs($this->makeUser('09555555555', 1), 'sanctum')->getJson('/api/external-payments/mine')
+            ->assertStatus(403);
+    }
 }

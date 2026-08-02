@@ -119,6 +119,10 @@ Route::prefix('external/payments')->middleware('external.api')->group(function (
     Route::post('/confirm', [ExternalPaymentController::class, 'confirm'])->middleware('throttle:30,1');
 });
 
+Route::prefix('external-payments')->middleware('auth:sanctum')->group(function () {
+    Route::get('/mine', [ExternalPaymentController::class, 'myHistory']);
+});
+
 Route::prefix('external-payments')->middleware(['auth:sanctum', 'ensure.admin'])->group(function () {
     Route::get('/', [ExternalPaymentController::class, 'index']);
     Route::get('/{id}', [ExternalPaymentController::class, 'show']);

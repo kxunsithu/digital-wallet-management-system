@@ -28,15 +28,23 @@ interface UserProfile {
   phone_number: string;
   full_name: string | null;
   nrc_number: string | null;
-  nrc_location?: {
-    state_code: string;
-    township_code: string;
-    type: string | null;
-    number: string | null;
-  } | null;
+  state_region?: string | null;
+  township?: string | null;
   status: string;
   role?: string;
+  nrc_verification?: {
+    id: number;
+    status: string;
+    rejection_reason: string | null;
+  } | null;
   images?: {
+    id: number;
+    image_type: string;
+    image_url: string | null;
+    original_name: string | null;
+    image_size: number | null;
+  }[];
+  nrc_images?: {
     id: number;
     image_type: string;
     image_url: string | null;
@@ -69,6 +77,9 @@ export default function ProfileScreen() {
   const [newPin, setNewPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // NRC image preview state
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // Profile Edit state
   const [editProfileModal, setEditProfileModal] = useState(false);
@@ -134,7 +145,16 @@ export default function ProfileScreen() {
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      setEditProfileImageUri(result.assets[0].uri);
+      const asset = result.assets[0];
+      if (asset.fileSize && asset.fileSize > 4.5 * 1024 * 1024) {
+        Toast.show({
+          type: "error",
+          text1: "Image Too Large",
+          text2: "Please choose an image under 4.5 MB.",
+        });
+        return;
+      }
+      setEditProfileImageUri(asset.uri);
     }
   };
 
@@ -254,6 +274,19 @@ export default function ProfileScreen() {
 
   const avatarImage = profile?.images?.find(img => img.image_type === 'profile_image')?.image_url;
   const avatarLetter = profile?.full_name?.charAt(0)?.toUpperCase() ?? 'A';
+
+  const nrcVerification = profile?.nrc_verification?.status ?? null;
+  const nrcStatusConfig: Record<string, { label: string; color: string }> = {
+    verified: { label: 'Verified', color: colors.success },
+    pending: { label: 'Pending', color: '#F59E0B' },
+    rejected: { label: 'Rejected', color: colors.error },
+  };
+  const nrcStatus = nrcVerification
+    ? nrcStatusConfig[nrcVerification] ?? { label: nrcVerification, color: colors.textSecondary }
+    : { label: 'Not Submitted', color: colors.textSecondary };
+  const nrcRejectionReason = profile?.nrc_verification?.rejection_reason ?? null;
+  const nrcFrontImage = profile?.nrc_images?.find(img => img.image_type === 'nrc_front_image')?.image_url ?? null;
+  const nrcBackImage = profile?.nrc_images?.find(img => img.image_type === 'nrc_back_image')?.image_url ?? null;
 
   const InfoCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <View style={{
@@ -454,7 +487,67 @@ export default function ProfileScreen() {
             <InfoRow label="Full Name" value={profile?.full_name ?? '—'} icon="user" />
             <InfoRow label="Phone Number" value={profile?.phone_number ?? '—'} icon="phone" />
             <InfoRow label="NRC Number" value={profile?.nrc_number ?? '—'} icon="credit-card" />
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 0.5, borderBottomColor: `${colors.border}4D` }}>
+              <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: `${colors.primary}12`, alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                <Feather name="shield" size={13} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 10, color: colors.textSecondary }}>NRC Status</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                  <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: nrcStatus.color, marginRight: 6 }} />
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: nrcStatus.color }}>{nrcStatus.label}</Text>
+                </View>
+                {nrcStatus.label === 'Rejected' && nrcRejectionReason ? (
+                  <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 3 }}>{nrcRejectionReason}</Text>
+                ) : null}
+              </View>
+            </View>
             <InfoRow label="Account Status" value={profile?.status ?? '—'} icon="check-circle" />
+          </InfoCard>
+        </View>
+
+        {/* NRC Documents */}
+        <View style={{ paddingHorizontal: 24 }}>
+          <InfoCard title="NRC Documents">
+            {nrcFrontImage || nrcBackImage ? (
+              <View style={{ flexDirection: 'row' }}>
+                {nrcFrontImage ? (
+                  <View style={{ flex: 1, marginRight: nrcBackImage ? 10 : 0 }}>
+                    <Text style={{ fontSize: 10, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: '600', marginBottom: 8 }}>
+                      Front
+                    </Text>
+                    <TouchableOpacity onPress={() => setPreviewImage(nrcFrontImage)} activeOpacity={0.8}>
+                      <Image
+                        source={{ uri: nrcFrontImage }}
+                        style={{ width: '100%', height: 140, borderRadius: 14, backgroundColor: `${colors.border}33` }}
+                        resizeMode="cover"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
+                {nrcBackImage ? (
+                  <View style={{ flex: 1, marginLeft: nrcFrontImage ? 10 : 0 }}>
+                    <Text style={{ fontSize: 10, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6, fontWeight: '600', marginBottom: 8 }}>
+                      Back
+                    </Text>
+                    <TouchableOpacity onPress={() => setPreviewImage(nrcBackImage)} activeOpacity={0.8}>
+                      <Image
+                        source={{ uri: nrcBackImage }}
+                        style={{ width: '100%', height: 140, borderRadius: 14, backgroundColor: `${colors.border}33` }}
+                        resizeMode="cover"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
+              </View>
+            ) : (
+              <View style={{ alignItems: 'center', paddingVertical: 18 }}>
+                <Feather name="file-text" size={26} color={colors.textSecondary} />
+                <Text style={{ fontSize: 13, color: colors.textSecondary, marginTop: 10 }}>
+                  No NRC images uploaded
+                </Text>
+              </View>
+            )}
           </InfoCard>
         </View>
 
@@ -467,7 +560,7 @@ export default function ProfileScreen() {
               <InfoRow label="Agent Code" value={profile.agent_profile.agent_code ?? '—'} icon="hash" />
               <InfoRow
                 label="State / Township"
-                value={profile.nrc_location ? `${profile.nrc_location.state_code} / ${profile.nrc_location.township_code}` : '—'}
+                value={profile.state_region && profile.township ? `${profile.state_region} / ${profile.township}` : (profile.state_region || profile.township || '—')}
                 icon="map"
               />
             </InfoCard>

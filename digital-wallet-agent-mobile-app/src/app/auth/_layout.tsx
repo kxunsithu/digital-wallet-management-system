@@ -15,10 +15,19 @@ export default function AuthLayout() {
       <SafeAreaView style={{ position: 'absolute', right: 16, top: 8, zIndex: 10 }}>
         <TouchableOpacity
           onPress={toggleTheme}
-          style={{ paddingHorizontal: 12, paddingVertical: 4, borderRadius: 4 }}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 999,
+            backgroundColor: `${colors.secondary}26`,
+            borderWidth: 1,
+            borderColor: `${colors.secondary}33`,
+          }}
           accessibilityLabel="Toggle theme"
         >
-          <Feather name={isDark ? 'sun' : 'moon'} size={18} color={colors.primary} />
+          <Feather name={isDark ? 'sun' : 'moon'} size={18} color={colors.secondary} />
         </TouchableOpacity>
       </SafeAreaView>
       <Stack 

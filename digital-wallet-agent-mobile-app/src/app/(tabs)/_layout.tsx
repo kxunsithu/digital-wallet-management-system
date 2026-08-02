@@ -21,11 +21,6 @@ function TabIcon({
         <View
           style={[
             styles.activeCircle,
-            {
-              backgroundColor: isDark
-                ? 'rgba(255,255,255,0.09)'
-                : '#EBEBEB',
-            },
           ]}
         />
       )}
@@ -71,6 +66,7 @@ export default function TabLayout() {
           elevation: 16,
           paddingBottom: 0,
           paddingTop: 0,
+          marginHorizontal: 10,
         },
         // KEY FIX: override React Navigation's internal icon margin
         // that reserves space for the label even when label is hidden
@@ -140,15 +136,15 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   iconBox: {
-    width: 44,
-    height: 44,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
   activeCircle: {
     position: 'absolute',
-    width: 44,
-    height: 44,
+    width: 32,
+    height: 32,
     borderRadius: 22,
   },
 });

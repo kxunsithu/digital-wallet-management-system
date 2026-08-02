@@ -75,7 +75,7 @@ class UserProfileController extends Controller
         }
 
         $data = $request->validate([
-            'profile_image' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],
+            'profile_image' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:5120'],
         ]);
 
         $file = $data['profile_image'];

@@ -91,9 +91,8 @@ export default function VerifyPinScreen() {
   const isPinComplete = pin.every((digit) => digit !== '');
 
   return (
-    <SafeAreaView
-      edges={['top', 'bottom']}
-      style={{ flex: 1, backgroundColor: colors.background }}
+    <View
+      style={{ flex: 1, backgroundColor: colors.background}}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -104,18 +103,10 @@ export default function VerifyPinScreen() {
           colors={[colors.primary, `${colors.primary}CC`]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={{ paddingTop: 20, paddingBottom: 40, paddingHorizontal: 24 }}
+          style={{ paddingTop: 60, paddingBottom: 40, paddingHorizontal: 24 }}
         >
           {/* Logo */}
-          <View style={{ marginBottom: 24 }}>
-            <View style={{
-              width: 52, height: 52, borderRadius: 16,
-              backgroundColor: `${colors.secondary}26`,
-              alignItems: 'center', justifyContent: 'center',
-              marginBottom: 12,
-            }}>
-              <Feather name="shield" size={24} color={colors.secondary} />
-            </View>
+          <View style={{ marginBottom: 24,marginTop: 40, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ fontSize: 22, fontWeight: '800', color: colors.secondary, letterSpacing: -0.5 }}>
               {t('auth.verify_pin_title')}
             </Text>
@@ -279,6 +270,6 @@ export default function VerifyPinScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

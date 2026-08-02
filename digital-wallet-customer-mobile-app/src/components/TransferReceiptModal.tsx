@@ -6,7 +6,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
-  Platform,
   ScrollView,
   Share,
   Text,
@@ -16,6 +15,7 @@ import {
 import Toast from 'react-native-toast-message';
 import ViewShot from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
+import CustomToast from './CustomToast';
 import { useTheme } from '../providers/ThemeProvider';
 import { useLanguage } from '../providers/LanguageProvider';
 import { getAutoSaveReceipt } from '../services/settingsStore';
@@ -70,12 +70,6 @@ export default function TransferReceiptModal({
   const [sharing, setSharing] = useState(false);
   const viewShotRef = useRef<any>(null);
   const lastAutoSavedRef = useRef<string | null>(null);
-
-  // Check if running in Expo Go - simplified check
-  const isExpoGo = useCallback(() => {
-    // In Expo Go, we can't access external storage
-    return !FileSystem.documentDirectory?.includes('ExponentExperienceData');
-  }, []);
 
   // Capture receipt as PNG
   const captureReceiptAsPNG = useCallback(async (): Promise<string | null> => {
@@ -183,13 +177,8 @@ export default function TransferReceiptModal({
       const imageUri = await captureReceiptAsPNG();
       if (!imageUri) return;
 
-      // Try to save to gallery first when available; otherwise fallback to local storage.
-      const isExpo = isExpoGo();
-      if (Platform.OS === 'android' && isExpo) {
-        await saveToGallery(imageUri, transaction);
-      } else {
-        await savePNGFile(imageUri, transaction);
-      }
+      // Save to gallery when MediaLibrary is available; otherwise fallback to app documents.
+      await saveToGallery(imageUri, transaction);
     } catch (e: any) {
       Toast.show({ 
         type: 'error', 
@@ -199,7 +188,7 @@ export default function TransferReceiptModal({
     } finally {
       setSaving(false);
     }
-  }, [transaction, saving, captureReceiptAsPNG, savePNGFile, saveToGallery, isExpoGo]);
+  }, [transaction, saving, captureReceiptAsPNG, savePNGFile, saveToGallery]);
 
   // Handle Share
   const handleShare = useCallback(async () => {
@@ -228,14 +217,14 @@ export default function TransferReceiptModal({
       Toast.show({ 
         type: 'success', 
         text1: t('receipt.shared'), 
-        text2: '' 
+        text2: t('receipt.shared_desc') 
       });
     } catch (e: any) {
       console.error('[Receipt] Share Error:', e);
       Toast.show({ 
         type: 'error', 
         text1: t('receipt.share_failed'), 
-        text2: e?.message ?? '' 
+        text2: e?.message ?? t('receipt.share_failed_desc') 
       });
     } finally {
       setSharing(false);
@@ -476,13 +465,11 @@ export default function TransferReceiptModal({
                   opacity: (saving || sharing) ? 0.7 : 1 
                 }}
               >
-                <LinearGradient
-                  colors={[colors.secondary, colors.surface]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
+                <View
                   style={{
                     paddingVertical: 15, borderRadius: 16,
                     alignItems: 'center', justifyContent: 'center', flexDirection: 'row',
+                    backgroundColor: colors.border,
                   }}
                 >
                   {sharing ? (
@@ -495,7 +482,7 @@ export default function TransferReceiptModal({
                       </Text>
                     </>
                   )}
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
             </View>
 
@@ -517,6 +504,13 @@ export default function TransferReceiptModal({
             </TouchableOpacity>
           </ScrollView>
         </View>
+        <Toast
+          config={{
+            success: (props: any) => <CustomToast {...props} />,
+            error: (props: any) => <CustomToast {...props} />,
+            info: (props: any) => <CustomToast {...props} />,
+          }}
+        />
       </View>
     </Modal>
   );

@@ -82,8 +82,7 @@ export default function RequestOtpScreen() {
   };
 
   return (
-    <SafeAreaView
-      edges={['top', 'bottom']}
+    <View
       style={{ flex: 1, backgroundColor: colors.background }}
     >
       <KeyboardAvoidingView
@@ -216,6 +215,14 @@ export default function RequestOtpScreen() {
                   autoFocus
                 />
               </View>
+              <Text style={{
+                fontSize: 11,
+                color: colors.textSecondary,
+                marginTop: 6,
+                marginLeft: 4,
+              }}>
+                {t('auth.otp_will_send')}
+              </Text>
             </View>
 
             {/* Submit Button */}
@@ -244,6 +251,7 @@ export default function RequestOtpScreen() {
                     <Text style={{ fontSize: 16, fontWeight: '700', color: colors.secondary, marginRight: 8 }}>
                       {t('auth.register_now')}
                     </Text>
+                    <Feather name="arrow-right" size={18} color={colors.secondary} />
                   </>
                 )}
               </LinearGradient>
@@ -261,6 +269,6 @@ export default function RequestOtpScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
