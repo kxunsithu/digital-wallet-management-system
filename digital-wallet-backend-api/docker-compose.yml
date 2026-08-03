@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: wallet-backend-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wallet
+      POSTGRES_PASSWORD: wallet
+      POSTGRES_DB: wallet
+    volumes:
+      - walletpgdata:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wallet -d wallet"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+    container_name: wallet-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_NAME: '"Digital Wallet"'
+      APP_ENV: production
+      # Reuse the key already present in .env so existing data stays compatible.
+      APP_KEY: ${APP_KEY:-base64:SJ18kMSpB72OOa1U20hYRqCfKyqg6Ispb8QvIBde9TM=}
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:8001
+      VITE_APP_NAME: '"Digital Wallet"'
+      # Local PostgreSQL (overrides the Render host in .env). The entrypoint
+      # parses DATABASE_URL into DB_* variables before running migrations.
+      DATABASE_URL: postgresql://wallet:wallet@db:5432/wallet
+    ports:
+      - "8001:80"
+
+volumes:
+  walletpgdata:

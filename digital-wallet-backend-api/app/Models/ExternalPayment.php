@@ -20,6 +20,7 @@ class ExternalPayment extends Model
         'fee',
         'order_reference',
         'description',
+        'redirect_url',
         'status',
         'expires_at',
         'completed_at',

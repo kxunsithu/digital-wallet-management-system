@@ -5,15 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\External\ConfirmPaymentRequest;
 use App\Http\Requests\External\InitiatePaymentRequest;
-use App\Http\Resources\TransactionResource;
 use App\Models\CustomerProfile;
 use App\Models\ExternalPayment;
-use App\Models\Transaction;
 use App\Models\User;
+use App\Services\ExternalPaymentService;
 use App\Services\OtpService;
-use App\Services\PinService;
 use App\Services\TransferSettingsService;
-use App\Services\WalletService;
 use App\Traits\NormalizesPhoneNumber;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -27,11 +24,9 @@ class ExternalPaymentController extends Controller
 
     public function __construct(
         private readonly OtpService $otpService,
-        private readonly PinService $pinService,
         private readonly TransferSettingsService $settingsService,
-        private readonly WalletService $walletService,
-    ) {
-    }
+        private readonly ExternalPaymentService $paymentService,
+    ) {}
 
     /**
      * Step 1 — the external system starts a payment for a customer.
@@ -112,6 +107,7 @@ class ExternalPaymentController extends Controller
             'fee' => $fee,
             'order_reference' => $data['order_reference'] ?? null,
             'description' => $data['description'] ?? null,
+            'redirect_url' => $data['redirect_url'] ?? null,
             'status' => 'pending',
             'expires_at' => $expiresAt,
         ]);
@@ -121,9 +117,10 @@ class ExternalPaymentController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Payment initiated. An OTP has been sent to the customer phone to confirm this payment.',
+            'message' => 'Payment initiated. Redirect the customer to the hosted payment page to enter their OTP and PIN.',
             'data' => [
                 'payment_reference' => $payment->reference,
+                'payment_url' => route('external-payments.pay', $payment->reference),
                 'amount' => (float) $payment->amount,
                 'fee' => (float) $payment->fee,
                 'total' => round((float) $payment->amount + (float) $payment->fee, 2),
@@ -137,116 +134,47 @@ class ExternalPaymentController extends Controller
     /**
      * Step 2 — the customer confirms the payment with the OTP and their PIN.
      * The amount and receiver were fixed when the payment was initiated.
+     *
+     * Kept for backwards compatibility with external systems that collect the
+     * OTP/PIN themselves. New integrations should redirect the customer to the
+     * hosted payment page (payment_url) instead.
      */
     public function confirm(ConfirmPaymentRequest $request): JsonResponse
     {
         $data = $request->validated();
 
-        $payment = ExternalPayment::with(['customer', 'agent'])->where('reference', $data['payment_reference'])->first();
+        $payment = $this->paymentService->findByReference($data['payment_reference']);
         if (! $payment) {
             return response()->json(['success' => false, 'message' => 'Payment request not found.'], 404);
         }
 
-        if ($payment->status !== 'pending') {
-            return response()->json([
-                'success' => false,
-                'message' => 'This payment request is already '.$payment->status.'.',
-            ], 400);
+        return $this->paymentService->complete($payment, $data['otp'], $data['pin']);
+    }
+
+    /**
+     * External systems can poll the status of a payment (e.g. after the customer
+     * returns from the hosted payment page) to reconcile their local records.
+     */
+    public function externalStatus(string $reference): JsonResponse
+    {
+        $payment = ExternalPayment::with('transaction')->where('reference', $reference)->first();
+        if (! $payment) {
+            return response()->json(['success' => false, 'message' => 'Payment not found.'], 404);
         }
 
-        if ($payment->expires_at && Carbon::parse($payment->expires_at)->isPast()) {
-            $payment->update(['status' => 'expired']);
-
-            return response()->json(['success' => false, 'message' => 'This payment request has expired. Please initiate a new payment.'], 422);
-        }
-
-        $customer = $payment->customer;
-        $agent = $payment->agent;
-
-        if ($this->resolveUserRole($customer->id) !== 'customer' || $customer->status !== 'active') {
-            return response()->json(['success' => false, 'message' => 'Customer account is no longer eligible to make payments.'], 422);
-        }
-
-        if ($this->resolveUserRole($agent->id) !== 'agent' || $agent->status !== 'active') {
-            return response()->json(['success' => false, 'message' => 'Agent account is no longer eligible to receive payments.'], 422);
-        }
-
-        $purpose = 'external_payment:'.$payment->id;
-
-        $otpResult = $this->otpService->verify($customer->id, $data['otp'], $purpose);
-        if ($otpResult !== true) {
-            return response()->json(['success' => false, 'message' => $otpResult], 422);
-        }
-
-        if (! $this->pinService->verify($customer->id, $data['pin'])) {
-            return response()->json(['success' => false, 'message' => 'Invalid PIN.'], 422);
-        }
-
-        $result = DB::transaction(function () use ($payment, $customer, $agent) {            $customerWallet = DB::table('wallets')->where('user_id', $customer->id)->lockForUpdate()->first();
-            $agentWallet = DB::table('wallets')->where('user_id', $agent->id)->lockForUpdate()->first();
-
-            if (! $customerWallet || ! $agentWallet) {
-                return response()->json(['success' => false, 'message' => 'Wallet not found for the customer or agent.'], 422);
-            }
-
-            if (($customerWallet->status ?? 'active') !== 'active') {
-                return response()->json(['success' => false, 'message' => 'Customer wallet is inactive.'], 422);
-            }
-
-            if (($agentWallet->status ?? 'active') !== 'active') {
-                return response()->json(['success' => false, 'message' => 'Agent wallet is inactive.'], 422);
-            }
-
-            $amount = (float) $payment->amount;
-            $fee = (float) $payment->fee;
-            $total = round($amount + $fee, 2);
-
-            if ((float) $customerWallet->balance < $total) {
-                return response()->json(['success' => false, 'message' => 'Insufficient balance.'], 422);
-            }
-
-            DB::table('wallets')->where('id', $customerWallet->id)->decrement('balance', (string) $total);
-            DB::table('wallets')->where('id', $agentWallet->id)->increment('balance', (string) $amount);
-
-            if ($fee > 0) {
-                $adminWallet = $this->walletService->adminWallet();
-                if ($adminWallet && (int) $adminWallet->id !== (int) $customerWallet->id && (int) $adminWallet->id !== (int) $agentWallet->id) {
-                    DB::table('wallets')->where('id', $adminWallet->id)->increment('balance', (string) $fee);
-                }
-            }
-
-            $txId = DB::table('transactions')->insertGetId([
-                'transaction_number' => 'TX'.Str::upper(Str::random(12)),
-                'sender_wallet_id' => $customerWallet->id,
-                'receiver_wallet_id' => $agentWallet->id,
-                'transaction_type' => 'external_payment',
-                'amount' => $amount,
-                'fee' => $fee,
-                'external_payment_id' => $payment->id,
-                'agent_id' => $agent->id,
-                'status' => 'completed',
-                'pin_verified' => true,
-                'description' => $payment->description ?? ('External payment '.$payment->reference),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            $payment->update(['status' => 'completed', 'completed_at' => now()]);
-
-            $tx = Transaction::with(['senderWallet.user', 'receiverWallet.user'])->find($txId);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Payment completed successfully.',
-                'data' => new TransactionResource($tx),
-            ], 200);
-        });
-
-        if ($result->getStatusCode() === 200) {
-            $this->otpService->markUsed($customer->id, $purpose);
-        }
-
-        return $result;
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'reference' => $payment->reference,
+                'order_reference' => $payment->order_reference,
+                'status' => $payment->status,
+                'amount' => (float) $payment->amount,
+                'fee' => (float) $payment->fee,
+                'total' => round((float) $payment->amount + (float) $payment->fee, 2),
+                'transaction_number' => $payment->transaction?->transaction_number,
+                'completed_at' => $payment->completed_at?->toISOString(),
+            ],
+        ], 200);
     }
 
     /**
@@ -343,13 +271,13 @@ class ExternalPaymentController extends Controller
         return DB::table('roles')->where('id', $roleId)->value('name');
     }
 
-    protected function findUserByPhone(string $phone): ?\App\Models\User
+    protected function findUserByPhone(string $phone): ?User
     {
         $localPhone = $this->normalizePhone($phone);
         $intlPhone = $this->phoneToInternational($localPhone);
         $rawPhone = ltrim($intlPhone, '+');
 
-        return \App\Models\User::where('phone_number', $localPhone)
+        return User::where('phone_number', $localPhone)
             ->orWhere('phone_number', $intlPhone)
             ->orWhere('phone_number', $rawPhone)
             ->orWhere('phone_number', $phone)

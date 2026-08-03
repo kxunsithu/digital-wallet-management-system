@@ -94,7 +94,7 @@ if [ ! -z "$DATABASE_URL" ]; then\n\
 \n\
     DB_USERNAME=$(echo $DB_URL | cut -d":" -f1)\n\
     DB_PASSWORD=$(echo $DB_URL | cut -d":" -f2 | cut -d"@" -f1)\n\
-    DB_HOST=$(echo $DB_URL | cut -d"@" -f2 | cut -d"/" -f1)\n\
+    DB_HOST=$(echo $DB_URL | cut -d"@" -f2 | cut -d"/" -f1 | cut -d":" -f1)\n\
     DB_DATABASE=$(echo $DB_URL | cut -d"/" -f2)\n\
 \n\
     echo "DB_CONNECTION=pgsql" >> .env\n\

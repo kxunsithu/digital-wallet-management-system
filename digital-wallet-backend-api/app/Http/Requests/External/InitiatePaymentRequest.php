@@ -18,6 +18,7 @@ class InitiatePaymentRequest extends FormRequest
             'amount' => ['required', 'numeric', 'min:0.01', 'max:100000000'],
             'order_reference' => ['nullable', 'string', 'max:64'],
             'description' => ['nullable', 'string', 'max:255'],
+            'redirect_url' => ['nullable', 'url', 'max:2048'],
         ];
     }
 }

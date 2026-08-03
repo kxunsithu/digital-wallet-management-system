@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class ExternalPaymentTest extends TestCase
@@ -114,7 +115,7 @@ class ExternalPaymentTest extends TestCase
         return $this->makeWallet($admin, 1000000);
     }
 
-    protected function initiate(string $apiKey, array $payload): \Illuminate\Testing\TestResponse
+    protected function initiate(string $apiKey, array $payload): TestResponse
     {
         return $this->postJson('/api/external/payments/initiate', $payload, ['X-API-Key' => $apiKey]);
     }
@@ -441,6 +442,79 @@ class ExternalPaymentTest extends TestCase
         ], ['X-API-Key' => $apiKey])->assertStatus(400);
 
         $this->assertDatabaseCount('transactions', 1);
+    }
+
+    public function test_initiate_returns_payment_url_and_stores_redirect_url(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        $response = $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 20000,
+            'order_reference' => 'PP-ABC123',
+            'redirect_url' => 'http://localhost:8000/api/v1/wallet-payment/callback',
+        ]);
+
+        $response->assertStatus(201);
+        $reference = $response->json('data.payment_reference');
+
+        $this->assertStringContainsString("/external-payments/pay/{$reference}", $response->json('data.payment_url'));
+        $this->assertDatabaseHas('external_payments', [
+            'reference' => $reference,
+            'redirect_url' => 'http://localhost:8000/api/v1/wallet-payment/callback',
+        ]);
+    }
+
+    public function test_external_can_poll_payment_status(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        $init = $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 20000,
+            'order_reference' => 'PP-ABC123',
+        ])->assertStatus(201);
+        $reference = $init->json('data.payment_reference');
+
+        // pending before confirmation
+        $this->getJson('/api/external/payments/'.$reference, ['X-API-Key' => $apiKey])
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'pending')
+            ->assertJsonPath('data.order_reference', 'PP-ABC123');
+
+        // completed after confirmation, with the wallet transaction number
+        $this->postJson('/api/external/payments/confirm', [
+            'payment_reference' => $reference,
+            'otp' => $this->otpForPayment($reference),
+            'pin' => '1234',
+        ], ['X-API-Key' => $apiKey])->assertStatus(200);
+
+        $status = $this->getJson('/api/external/payments/'.$reference, ['X-API-Key' => $apiKey])
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'completed')
+            ->assertJsonPath('data.total', 20100);
+
+        $this->assertNotEmpty($status->json('data.transaction_number'));
+
+        $tx = DB::table('transactions')->where('external_payment_id', DB::table('external_payments')->where('reference', $reference)->value('id'))->first();
+        $this->assertNotNull($tx);
+    }
+
+    public function test_external_status_unknown_reference_returns_404(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        $this->getJson('/api/external/payments/PAY-UNKNOWN', ['X-API-Key' => $apiKey])
+            ->assertStatus(404);
     }
 
     public function test_agent_can_create_external_system_without_generating_key(): void

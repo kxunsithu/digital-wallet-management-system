@@ -1,0 +1,37 @@
+# Secrets — never bake into the image
+.env
+.env.*
+*.local
+auth.json
+
+# VCS / CI
+.git
+.gitignore
+.github
+.harness
+
+# Dependencies installed fresh at build time
+/vendor
+/node_modules
+
+# Build artifacts
+/public/build
+/public/hot
+public/storage
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+*.log
+
+# Local tooling / stray dirs
+/.idea
+/.vscode
+/.codex
+/.cursor
+/.zed
+.phpunit.result.cache
+.phpunit.cache
+usr/
+docs/
+tests/

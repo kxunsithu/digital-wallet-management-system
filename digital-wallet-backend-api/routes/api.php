@@ -1,20 +1,18 @@
 <?php
 
-use App\Http\Controllers\Api\AuthController;
-
-use App\Http\Controllers\Api\AgentManagerController;
 use App\Http\Controllers\Api\AgentController;
+use App\Http\Controllers\Api\AgentManagerController;
+use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\ExternalPaymentController;
+use App\Http\Controllers\Api\ExternalSystemController;
 use App\Http\Controllers\Api\MoneyTransferController;
 use App\Http\Controllers\Api\NrcVerificationController;
-use App\Http\Controllers\Api\UserProfileController;
-use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\QrCodeController;
-use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\TransferSettingController;
-use App\Http\Controllers\Api\ExternalSystemController;
-use App\Http\Controllers\Api\ExternalPaymentController;
+use App\Http\Controllers\Api\UserProfileController;
+use App\Http\Controllers\Api\WalletController;
 use Illuminate\Support\Facades\Route;
 
 /* Welcome Route */
@@ -68,8 +66,6 @@ Route::prefix('profile')->middleware('auth:sanctum')->group(function () {
     Route::post('/change-pin', [UserProfileController::class, 'changePin']);
 });
 
-
-
 Route::prefix('customer/nrc-verifications')->middleware(['auth:sanctum', 'ensure.customer'])->group(function () {
     Route::post('/submit', [NrcVerificationController::class, 'submit']);
 });
@@ -117,6 +113,7 @@ Route::prefix('transfer-settings')->middleware(['auth:sanctum', 'ensure.admin'])
 Route::prefix('external/payments')->middleware('external.api')->group(function () {
     Route::post('/initiate', [ExternalPaymentController::class, 'initiate'])->middleware('throttle:10,1');
     Route::post('/confirm', [ExternalPaymentController::class, 'confirm'])->middleware('throttle:30,1');
+    Route::get('/{reference}', [ExternalPaymentController::class, 'externalStatus'])->middleware('throttle:60,1');
 });
 
 Route::prefix('external-payments')->middleware('auth:sanctum')->group(function () {
