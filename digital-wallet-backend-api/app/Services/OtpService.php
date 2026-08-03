@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Traits\NormalizesPhoneNumber;
 use Carbon\Carbon;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -50,8 +51,6 @@ class OtpService
     /**
      * Verify a pending OTP for the given user/purpose.
      * Returns true on success, or an error message string on failure.
-     *
-     * @return true|string
      */
     public function verify(int $userId, string $otpCode, string $purpose): true|string
     {
@@ -153,13 +152,14 @@ class OtpService
         $baseUrl = rtrim($config['base_url'] ?? '', '/');
         $baseUrl = preg_replace('#/messages/?$#', '', $baseUrl) ?: $config['base_url'];
 
+        $response = null;
         try {
             $response = Http::timeout(60)
                 ->retry(2, 200)
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                     'X-API-Key' => $config['api_key'],
-                ])->post($baseUrl . '/messages', [
+                ])->post($baseUrl.'/messages', [
                     'channel' => 'sms',
                     'to' => $formattedPhone,
                     'from' => $config['sender_number'],
@@ -190,9 +190,19 @@ class OtpService
             ]);
         }
 
+        $detail = null;
+        if ($response instanceof Response && ! $response->successful()) {
+            $detail = trim(implode(' ', array_filter([
+                $response->json('code'),
+                $response->json('message'),
+            ])));
+        }
+
         return [
             'success' => false,
-            'message' => 'SMS delivery could not be completed. Please try again later.',
+            'message' => ($detail !== null && $detail !== '')
+                ? 'SMS delivery failed: '.$detail
+                : 'SMS delivery could not be completed. Please try again later.',
         ];
     }
 }

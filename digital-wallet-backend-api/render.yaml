@@ -25,13 +25,13 @@ services:
       - key: AUTH_ADMIN_PHONE
         value: "+959944074981"
       - key: INFINIREACH_API_KEY
-        value: smsrelay_6b86908d75b8526fd4898bec03964bc58e479dd86b8b4923302e4187f3581569
+        value: smsrelay_b89e44c05a6576225149b37264a154d06bd5c262b8c80c462310bc8f32037ab0
       - key: INFINIREACH_BASE_URL
         value: https://api.infinireach.io/api/v1
       - key: INFINIREACH_SENDER_NUMBER
         value: "+959944074981"
       - key: LOG_LEVEL
-        value: error
+        value: warning
       - key: SESSION_DRIVER
         value: database
       - key: CACHE_STORE

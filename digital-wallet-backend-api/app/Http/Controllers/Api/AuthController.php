@@ -15,20 +15,21 @@ use App\Models\Wallet;
 use App\Services\QrCodeService;
 use App\Traits\NormalizesPhoneNumber;
 use Carbon\Carbon;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     use NormalizesPhoneNumber;
-    public function __construct(private readonly QrCodeService $qrCodeService)
-    {
-    }
+
+    public function __construct(private readonly QrCodeService $qrCodeService) {}
 
     public function requestOtp(RequestOtpRequest $request): JsonResponse
     {
@@ -66,21 +67,21 @@ class AuthController extends Controller
 
                 return response()->json([
                     'success' => false,
-                    'message' => ucfirst($requestedRoleName) . ' account not found. ' . $suggestion,
+                    'message' => ucfirst($requestedRoleName).' account not found. '.$suggestion,
                 ], 422);
             }
 
             if ($user->role_id !== $requestedRoleId) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'This phone number is not registered as an ' . str_replace('_', ' ', $requestedRoleName) . '.',
+                    'message' => 'This phone number is not registered as an '.str_replace('_', ' ', $requestedRoleName).'.',
                 ], 422);
             }
 
             if (! in_array($user->status, ['active', 'pending'], true)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Your ' . str_replace('_', ' ', $requestedRoleName) . ' account is currently ' . $user->status . '. Please contact your administrator.',
+                    'message' => 'Your '.str_replace('_', ' ', $requestedRoleName).' account is currently '.$user->status.'. Please contact your administrator.',
                 ], 403);
             }
         }
@@ -95,9 +96,10 @@ class AuthController extends Controller
 
             if ($isRequestingCustomerRole && $userRoleId && in_array($userRoleId, $forbiddenRoles, true)) {
                 $currentRoleName = DB::table('roles')->where('id', $userRoleId)->value('name');
+
                 return response()->json([
                     'success' => false,
-                    'message' => 'This phone number is already registered as ' . ($currentRoleName ?? 'another role') . '. Please use the appropriate login flow or contact support.',
+                    'message' => 'This phone number is already registered as '.($currentRoleName ?? 'another role').'. Please use the appropriate login flow or contact support.',
                 ], 422);
             }
         }
@@ -133,13 +135,13 @@ class AuthController extends Controller
                 ['kyc_status' => 'pending']
             );
         }
-        
+
         // Auto-create wallet if user doesn't have one yet
-        if (!Wallet::where('user_id', $user->id)->exists()) {
+        if (! Wallet::where('user_id', $user->id)->exists()) {
             do {
-                $walletNumber = 'WAL-' . strtoupper(\Illuminate\Support\Str::random(8));
+                $walletNumber = 'WAL-'.strtoupper(Str::random(8));
             } while (Wallet::where('wallet_number', $walletNumber)->exists());
-            
+
             Wallet::create([
                 'user_id' => $user->id,
                 'wallet_number' => $walletNumber,
@@ -166,7 +168,7 @@ class AuthController extends Controller
         $smsResult = $this->sendOtpCode($data['phone_number'], $otpCode);
         $message = $smsResult['success']
             ? 'OTP sent successfully.'
-            : 'OTP generated successfully. ' . $smsResult['message'];
+            : 'OTP generated successfully. '.$smsResult['message'];
 
         $roleName = null;
         if (! empty($user->role_id)) {
@@ -353,7 +355,7 @@ class AuthController extends Controller
                     $initialBalance = (float) env('ADMIN_INITIAL_WALLET_BALANCE', 0);
                 }
 
-                $walletNumber = 'WAL-' . strtoupper(bin2hex(random_bytes(4)));
+                $walletNumber = 'WAL-'.strtoupper(bin2hex(random_bytes(4)));
 
                 Wallet::create([
                     'user_id' => $user->id,
@@ -439,7 +441,7 @@ class AuthController extends Controller
         // Check if OTP was verified recently (for first-time PIN verification)
         // For existing users, they can login with PIN without OTP
         $hasExistingPin = DB::table('pins')->where('user_id', $user->id)->exists();
-        
+
         if ($user->is_pin_created && $hasExistingPin) {
             // User already has PIN - normal login flow
             // No OTP required
@@ -466,8 +468,6 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
-
-
         $roleName = null;
         if (! empty($user->role_id)) {
             $roleName = DB::table('roles')->where('id', $user->role_id)->value('name');
@@ -489,7 +489,7 @@ class AuthController extends Controller
                 $initialBalance = (float) env('ADMIN_INITIAL_WALLET_BALANCE', 0);
             }
 
-            $walletNumber = 'WAL-' . strtoupper(bin2hex(random_bytes(4)));
+            $walletNumber = 'WAL-'.strtoupper(bin2hex(random_bytes(4)));
 
             Wallet::create([
                 'user_id' => $user->id,
@@ -507,9 +507,9 @@ class AuthController extends Controller
             'data' => array_merge(
                 (new UserResource($user))->resolve(),
                 [
-                    'role'         => $roleName,
+                    'role' => $roleName,
                     'access_token' => $token,
-                    'token_type'   => 'Bearer',
+                    'token_type' => 'Bearer',
                 ]
             ),
         ], 200);
@@ -648,13 +648,14 @@ class AuthController extends Controller
         $baseUrl = rtrim($config['base_url'] ?? '', '/');
         $baseUrl = preg_replace('#/messages/?$#', '', $baseUrl) ?: $config['base_url'];
 
+        $response = null;
         try {
             $response = Http::timeout(60)
                 ->retry(2, 200)
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                     'X-API-Key' => $config['api_key'],
-                ])->post($baseUrl . '/messages', [
+                ])->post($baseUrl.'/messages', [
                     'channel' => 'sms',
                     'to' => $formattedPhone,
                     'from' => $config['sender_number'],
@@ -685,9 +686,19 @@ class AuthController extends Controller
             ]);
         }
 
+        $detail = null;
+        if ($response instanceof Response && ! $response->successful()) {
+            $detail = trim(implode(' ', array_filter([
+                $response->json('code'),
+                $response->json('message'),
+            ])));
+        }
+
         return [
             'success' => false,
-            'message' => 'SMS delivery could not be completed. Please try again later.',
+            'message' => ($detail !== null && $detail !== '')
+                ? 'SMS delivery failed: '.$detail
+                : 'SMS delivery could not be completed. Please try again later.',
         ];
     }
 
@@ -704,8 +715,8 @@ class AuthController extends Controller
     protected function findUserByPhoneNumber(string $phoneNumber): ?User
     {
         $localPhone = $this->normalizePhone($phoneNumber);
-        $intlPhone  = $this->phoneToInternational($localPhone);
-        $rawPhone   = ltrim($intlPhone, '+');
+        $intlPhone = $this->phoneToInternational($localPhone);
+        $rawPhone = ltrim($intlPhone, '+');
 
         return User::where('phone_number', $localPhone)
             ->orWhere('phone_number', $intlPhone)
