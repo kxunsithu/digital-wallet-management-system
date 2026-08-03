@@ -33,6 +33,11 @@ services:
       APP_DEBUG: "false"
       APP_URL: http://localhost:8001
       VITE_APP_NAME: '"Digital Wallet"'
+      # Infinireach SMS service credentials (used for OTP delivery)
+      INFINIREACH_API_KEY: ${INFINIREACH_API_KEY:-}
+      INFINIREACH_SENDER_NUMBER: ${INFINIREACH_SENDER_NUMBER:-+959944074981}
+      INFINIREACH_BASE_URL: ${INFINIREACH_BASE_URL:-https://api.infinireach.io/api/v1}
+      INFINIREACH_TEST_MODE: ${INFINIREACH_TEST_MODE:-false}
       # Local PostgreSQL (overrides the Render host in .env). The entrypoint
       # parses DATABASE_URL into DB_* variables before running migrations.
       DATABASE_URL: postgresql://wallet:wallet@db:5432/wallet

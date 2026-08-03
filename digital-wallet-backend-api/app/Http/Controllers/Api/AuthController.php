@@ -651,7 +651,7 @@ class AuthController extends Controller
         $response = null;
         try {
             $response = Http::timeout(60)
-                ->retry(2, 200)
+                ->retry(2, 200, null, false)
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                     'X-API-Key' => $config['api_key'],

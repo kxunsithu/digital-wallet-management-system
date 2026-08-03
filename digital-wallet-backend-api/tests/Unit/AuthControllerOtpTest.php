@@ -35,4 +35,35 @@ class AuthControllerOtpTest extends TestCase
             return $request->url() === 'https://api.infinireach.io/api/v1/messages';
         });
     }
+
+    public function test_it_surfaces_the_provider_error_when_sms_delivery_fails(): void
+    {
+        app()->detectEnvironment(fn () => 'local');
+
+        config()->set('services.infinireach', [
+            'api_key' => 'test-key',
+            'sender_number' => '+959944074981',
+            'base_url' => 'https://api.infinireach.io/api/v1/messages',
+            'test_mode' => false,
+        ]);
+
+        Http::fake([
+            '*' => Http::response([
+                'code' => 'QUOTA_EXCEEDED',
+                'error' => 'Message sending blocked',
+                'message' => 'Free plan message limit reached (100 messages/month) - upgrade to send more',
+            ], 402),
+        ]);
+
+        $qrCodeServiceMock = $this->createMock(\App\Services\QrCodeService::class);
+        $controller = new AuthController($qrCodeServiceMock);
+        $method = new \ReflectionMethod(AuthController::class, 'sendOtpCode');
+        $method->setAccessible(true);
+
+        $result = $method->invoke($controller, '+959123456789', '123456');
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('QUOTA_EXCEEDED', $result['message']);
+        $this->assertStringContainsString('Free plan message limit reached', $result['message']);
+    }
 }
