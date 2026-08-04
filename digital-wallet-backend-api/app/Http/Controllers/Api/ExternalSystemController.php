@@ -147,6 +147,27 @@ class ExternalSystemController extends Controller
         return response()->json(['success' => true, 'data' => $systems], 200);
     }
 
+    public function systemInfo(Request $request): JsonResponse
+    {
+        $system = $request->attributes->get('external_system');
+
+        if (! $system) {
+            return response()->json(['success' => false, 'message' => 'External system not found.'], 404);
+        }
+
+        $agent = $system->user;
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'name' => $system->name,
+                'account_name' => $agent->full_name ?? null,
+                'wallet_phone' => $agent->phone_number ?? null,
+                'system_link' => $system->system_link,
+            ],
+        ], 200);
+    }
+
     public function generateKey(Request $request, int $id): JsonResponse
     {
         $system = ExternalSystem::where('id', $id)

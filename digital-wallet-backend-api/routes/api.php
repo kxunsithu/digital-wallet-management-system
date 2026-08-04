@@ -116,6 +116,11 @@ Route::prefix('external/payments')->middleware('external.api')->group(function (
     Route::get('/{reference}', [ExternalPaymentController::class, 'externalStatus'])->middleware('throttle:60,1');
 });
 
+// Resolve an external system's details (name, account name, wallet phone) from its API key.
+Route::prefix('external')->middleware('external.api')->group(function () {
+    Route::get('/system-info', [ExternalSystemController::class, 'systemInfo'])->middleware('throttle:60,1');
+});
+
 Route::prefix('external-payments')->middleware('auth:sanctum')->group(function () {
     Route::get('/mine', [ExternalPaymentController::class, 'myHistory']);
 });

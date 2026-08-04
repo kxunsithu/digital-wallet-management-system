@@ -517,6 +517,34 @@ class ExternalPaymentTest extends TestCase
             ->assertStatus(404);
     }
 
+    public function test_system_info_returns_external_system_details_for_valid_key(): void
+    {
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        $response = $this->getJson('/api/external/system-info', ['X-API-Key' => $apiKey])
+            ->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        $data = $response->json('data');
+        $this->assertSame('Test Shopping', $data['name']);
+        $this->assertSame('User 09122222222', $data['account_name']);
+        $this->assertSame('09122222222', $data['wallet_phone']);
+        $this->assertSame('https://shop.example.com', $data['system_link']);
+    }
+
+    public function test_system_info_rejects_invalid_or_inactive_keys(): void
+    {
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem('sk_live_testkey123', $agent, status: 'inactive');
+
+        $this->getJson('/api/external/system-info', ['X-API-Key' => 'sk_live_wrongkey999'])
+            ->assertStatus(401);
+
+        $this->getJson('/api/external/system-info', ['X-API-Key' => 'sk_live_testkey123'])
+            ->assertStatus(401);
+    }
+
     public function test_agent_can_create_external_system_without_generating_key(): void
     {
         [$agent] = $this->makeAgent('09122222222', 100000);
