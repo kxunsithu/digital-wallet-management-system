@@ -225,19 +225,23 @@ class ExternalPaymentTest extends TestCase
         $this->assertDatabaseCount('external_payments', 0);
     }
 
-    public function test_initiate_rejects_non_customer_sender(): void
+    public function test_initiate_rejects_sender_that_is_not_customer_or_agent(): void
     {
         $this->makeAdmin();
         [$agent] = $this->makeAgent('09122222222', 100000);
         $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
 
+        // An admin is neither a customer nor an agent and cannot pay.
+        $adminSender = $this->makeUser('09133333333', 1);
+
         $response = $this->initiate($apiKey, [
-            'customer_phone' => '09122222222',
+            'customer_phone' => '09133333333',
             'amount' => 1000,
         ]);
 
         $response->assertStatus(422);
-        $this->assertStringContainsString('Sender must be a customer', $response->json('message'));
+        $this->assertStringContainsString('Sender must be a customer or an agent', $response->json('message'));
+        $this->assertDatabaseCount('external_payments', 0);
     }
 
     public function test_initiate_unverified_customer_above_limit_rejected(): void
@@ -333,6 +337,73 @@ class ExternalPaymentTest extends TestCase
             'purpose' => 'external_payment:'.$paymentId,
             'status' => 'used',
         ]);
+    }
+
+    public function test_agent_to_agent_transfer_through_external_system(): void
+    {
+        $adminWalletId = $this->makeAdmin();
+        [$senderAgent, $senderWalletId] = $this->makeAgent('09123456789', 500000);
+        [$receiverAgent, $receiverWalletId] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $receiverAgent);
+
+        // 150000 exceeds the 100000 unverified-customer limit, but that limit
+        // only applies to customers — agents are trusted senders.
+        $init = $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 150000,
+        ])->assertStatus(201);
+
+        $reference = $init->json('data.payment_reference');
+        $otp = $this->otpForPayment($reference);
+
+        // OTP was issued to the sender agent, not a customer.
+        $this->assertDatabaseHas('external_payments', [
+            'reference' => $reference,
+            'customer_user_id' => $senderAgent->id,
+            'agent_user_id' => $receiverAgent->id,
+        ]);
+
+        $response = $this->postJson('/api/external/payments/confirm', [
+            'payment_reference' => $reference,
+            'otp' => $otp,
+            'pin' => '1234',
+        ], ['X-API-Key' => $apiKey]);
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('data.transaction_type', 'external_payment');
+
+        // sender agent: 500000 - (150000 + 750)
+        $this->assertDatabaseHas('wallets', ['id' => $senderWalletId, 'balance' => 349250]);
+        // receiver agent: 100000 + 150000
+        $this->assertDatabaseHas('wallets', ['id' => $receiverWalletId, 'balance' => 250000]);
+        // fee to admin wallet (admin started with 1,000,000)
+        $this->assertDatabaseHas('wallets', ['id' => $adminWalletId, 'balance' => 1000750]);
+
+        $this->assertDatabaseHas('transactions', [
+            'transaction_type' => 'external_payment',
+            'sender_wallet_id' => $senderWalletId,
+            'receiver_wallet_id' => $receiverWalletId,
+            'receiver_phone' => '09122222222',
+            'amount' => 150000,
+            'fee' => 750,
+            'status' => 'completed',
+        ]);
+    }
+
+    public function test_initiate_rejects_agent_sending_to_itself(): void
+    {
+        $this->makeAdmin();
+        [$agent] = $this->makeAgent('09122222222', 500000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        $response = $this->initiate($apiKey, [
+            'customer_phone' => '09122222222',
+            'amount' => 20000,
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('Sender and receiver cannot be the same', $response->json('message'));
+        $this->assertDatabaseCount('external_payments', 0);
     }
 
     public function test_confirm_with_invalid_otp_rejected(): void
@@ -782,5 +853,47 @@ class ExternalPaymentTest extends TestCase
         // a non-customer/non-agent role is rejected
         $this->actingAs($this->makeUser('09555555555', 1), 'sanctum')->getJson('/api/external-payments/mine')
             ->assertStatus(403);
+    }
+
+    public function test_agent_history_includes_outgoing_agent_to_agent_payments(): void
+    {
+        $this->makeAdmin();
+        [$payerAgent] = $this->makeAgent('09123456789', 500000);
+        [$receiverAgent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $receiverAgent);
+
+        $this->initiate($apiKey, ['customer_phone' => '09123456789', 'amount' => 20000])
+            ->assertStatus(201);
+
+        // The payer agent sees the payment as outgoing.
+        $this->actingAs($payerAgent, 'sanctum')->getJson('/api/external-payments/mine')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.direction', 'outgoing');
+
+        // The receiving agent sees the same payment as incoming.
+        $this->actingAs($receiverAgent, 'sanctum')->getJson('/api/external-payments/mine')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.direction', 'incoming');
+    }
+
+    public function test_admin_index_exposes_sender_role(): void
+    {
+        $this->makeAdmin();
+        [$senderAgent] = $this->makeAgent('09123456789', 500000);
+        [$receiverAgent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $receiverAgent);
+
+        $this->initiate($apiKey, ['customer_phone' => '09123456789', 'amount' => 20000])
+            ->assertStatus(201);
+
+        $admin = $this->makeUser('09111111112', 1);
+
+        $this->actingAs($admin, 'sanctum')->getJson('/api/external-payments')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.customer.role.name', 'agent')
+            ->assertJsonPath('data.data.0.agent.role.name', 'agent');
     }
 }

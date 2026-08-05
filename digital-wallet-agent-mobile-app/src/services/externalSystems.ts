@@ -59,6 +59,8 @@ export interface AgentExternalPayment {
   completed_at: string | null;
   created_at: string;
   updated_at: string;
+  /** Whether the authenticated user was the payer ('outgoing') or the merchant ('incoming'). */
+  direction?: 'incoming' | 'outgoing';
   external_system: { id: number; name: string } | null;
   customer: { id: number; full_name: string; phone_number: string } | null;
 }

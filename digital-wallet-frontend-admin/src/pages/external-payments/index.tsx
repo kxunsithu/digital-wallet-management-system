@@ -26,8 +26,8 @@ type ExternalPayment = {
   id: number;
   reference: string;
   external_system?: { id: number; name: string };
-  customer?: { full_name?: string; phone_number?: string };
-  agent?: { full_name?: string; phone_number?: string };
+  customer?: { full_name?: string; phone_number?: string; role?: { name?: string } };
+  agent?: { full_name?: string; phone_number?: string; role?: { name?: string } };
   amount: number | string;
   fee: number | string;
   order_reference?: string | null;
@@ -91,7 +91,7 @@ export default function ExternalPaymentsPage() {
           <div>
             <h2 className="text-xl font-bold tracking-tight text-foreground">External Payments</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Payments initiated by external systems against customer wallets.
+              Payments initiated by external systems against customer or agent wallets.
             </p>
           </div>
         </div>
@@ -149,7 +149,7 @@ export default function ExternalPaymentsPage() {
                 System
               </TableHead>
               <TableHead className="bg-slate-50/50 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Customer
+                Sender
               </TableHead>
               <TableHead className="bg-slate-50/50 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Agent
@@ -196,7 +196,14 @@ export default function ExternalPaymentsPage() {
                     {p.external_system?.name || "—"}
                   </TableCell>
                   <TableCell className="px-4 py-3">
-                    <p className="text-sm font-medium text-foreground">{p.customer?.full_name || "—"}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-foreground">{p.customer?.full_name || "—"}</p>
+                      {p.customer?.role?.name ? (
+                        <Badge variant="outline" className="border-slate-200 bg-slate-100 px-1.5 py-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          {p.customer.role.name}
+                        </Badge>
+                      ) : null}
+                    </div>
                     <p className="text-xs text-muted-foreground">{p.customer?.phone_number || ""}</p>
                   </TableCell>
                   <TableCell className="px-4 py-3">

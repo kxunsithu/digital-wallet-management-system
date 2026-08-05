@@ -43,6 +43,8 @@ interface HistoryEntry {
   reference: string;
   counterparty: string;
   created_at: string;
+  label?: string;
+  sign?: string;
   tx?: Transaction;
   payment?: AgentExternalPayment;
 }
@@ -173,6 +175,7 @@ export default function TransactionsScreen() {
       externalPayments.forEach((p) => {
         const system = p.external_system?.name || 'External System';
         const customer = p.customer ? (p.customer.full_name || p.customer.phone_number) : '';
+        const outgoing = p.direction === 'outgoing';
         entries.push({
           key: `ext-${p.id}`,
           kind: 'external',
@@ -181,7 +184,11 @@ export default function TransactionsScreen() {
           amount: Number(p.amount),
           fee: Number(p.fee),
           reference: p.reference,
-          counterparty: customer ? `${system} • ${customer}` : system,
+          label: outgoing ? 'External Payment Sent' : 'External Payment',
+          sign: outgoing ? '-' : '+',
+          // Outgoing: the receiver is the merchant's system. Incoming: the
+          // payer is shown alongside the system.
+          counterparty: outgoing || !customer ? system : `${system} • ${customer}`,
           created_at: p.created_at,
           payment: p,
         });
@@ -274,7 +281,7 @@ export default function TransactionsScreen() {
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Text style={{ fontSize: 13, fontWeight: '800', color: colors.text }}>
-                    {meta.label}
+                    {entry.label ?? meta.label}
                   </Text>
                 </View>
                 <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>
@@ -284,7 +291,7 @@ export default function TransactionsScreen() {
 
               {/* Amount */}
               <Text style={{ fontSize: 16, fontWeight: '900', color: meta.color }}>
-                {meta.sign}{entry.amount.toLocaleString()}
+                {entry.sign ?? meta.sign}{entry.amount.toLocaleString()}
                 <Text style={{ fontSize: 10, fontWeight: '600' }}> Ks</Text>
               </Text>
             </View>

@@ -29,18 +29,20 @@ class ExternalPaymentController extends Controller
     ) {}
 
     /**
-     * Step 1 — the external system starts a payment for a customer.
+     * Step 1 — the external system starts a payment for a payer.
      *
-     * The customer is identified by phone number and the receiver must be an
-     * agent. An OTP is sent to the customer's phone and a pending payment
-     * intent is stored so the amount/agent cannot be changed at confirmation.
+     * The payer (customer or agent) is identified by phone number and the
+     * receiver must be the agent linked to the external system. This enables
+     * both customer-to-agent and agent-to-agent transfers through the external
+     * system only. An OTP is sent to the payer's phone and a pending payment
+     * intent is stored so the amount/receiver cannot be changed at confirmation.
      */
     public function initiate(InitiatePaymentRequest $request): JsonResponse
     {
         $externalSystem = $request->attributes->get('external_system');
         $data = $request->validated();
 
-        $customerPhone = $this->normalizePhone($data['customer_phone']);
+        $payerPhone = $this->normalizePhone($data['customer_phone']);
 
         if (! $externalSystem->user_id) {
             return response()->json(['success' => false, 'message' => 'External system is not linked to an agent and cannot receive payments.'], 422);
@@ -59,47 +61,56 @@ class ExternalPaymentController extends Controller
             return response()->json(['success' => false, 'message' => 'Agent account is '.$agent->status.' and cannot receive payments.'], 403);
         }
 
-        $customer = $this->findUserByPhone($customerPhone);
-        if (! $customer) {
-            return response()->json(['success' => false, 'message' => 'Customer account not found for the given phone number.'], 422);
+        $sender = $this->findUserByPhone($payerPhone);
+        if (! $sender) {
+            return response()->json(['success' => false, 'message' => 'Sender account not found for the given phone number.'], 422);
         }
 
-        if ($this->resolveUserRole($customer->id) !== 'customer') {
-            return response()->json(['success' => false, 'message' => 'Sender must be a customer.'], 422);
+        $senderRole = $this->resolveUserRole($sender->id);
+        if (! in_array($senderRole, ['customer', 'agent'], true)) {
+            return response()->json(['success' => false, 'message' => 'Sender must be a customer or an agent.'], 422);
         }
 
-        if ($customer->status !== 'active') {
-            return response()->json(['success' => false, 'message' => 'Customer account is '.$customer->status.' and cannot make payments.'], 403);
+        if ($sender->id === $agent->id) {
+            return response()->json(['success' => false, 'message' => 'Sender and receiver cannot be the same account.'], 422);
         }
 
-        $customerWallet = DB::table('wallets')->where('user_id', $customer->id)->first();
-        if (! $customerWallet) {
-            return response()->json(['success' => false, 'message' => 'Customer has no wallet.'], 422);
+        if ($sender->status !== 'active') {
+            return response()->json(['success' => false, 'message' => 'Sender account is '.$sender->status.' and cannot make payments.'], 403);
         }
 
-        if (($customerWallet->status ?? 'active') !== 'active') {
-            return response()->json(['success' => false, 'message' => 'Customer wallet is inactive.'], 422);
+        $senderWallet = DB::table('wallets')->where('user_id', $sender->id)->first();
+        if (! $senderWallet) {
+            return response()->json(['success' => false, 'message' => 'Sender has no wallet.'], 422);
+        }
+
+        if (($senderWallet->status ?? 'active') !== 'active') {
+            return response()->json(['success' => false, 'message' => 'Sender wallet is inactive.'], 422);
         }
 
         $amount = (float) $data['amount'];
         $settings = $this->settingsService->get();
         $fee = round($amount * (float) $settings->customer_transfer_fee_percent / 100, 2);
 
-        $customerProfile = CustomerProfile::where('user_id', $customer->id)->first();
-        $isNrcVerified = $customerProfile && $customerProfile->kyc_status === 'verified';
+        // The unverified-NRC limit applies to customer senders only; agent
+        // senders are treated as trusted and are not subject to it.
+        if ($senderRole === 'customer') {
+            $senderProfile = CustomerProfile::where('user_id', $sender->id)->first();
+            $isNrcVerified = $senderProfile && $senderProfile->kyc_status === 'verified';
 
-        $limit = $settings->unverified_customer_transfer_limit;
-        if (! $isNrcVerified && $limit !== null && $amount > (float) $limit) {
-            return response()->json([
-                'success' => false,
-                'message' => 'The customer account is not NRC-verified yet. Payments are limited to '.number_format((float) $limit, 2).' MMK per transaction. Please verify the customer NRC to remove this limit.',
-            ], 422);
+            $limit = $settings->unverified_customer_transfer_limit;
+            if (! $isNrcVerified && $limit !== null && $amount > (float) $limit) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The customer account is not NRC-verified yet. Payments are limited to '.number_format((float) $limit, 2).' MMK per transaction. Please verify the customer NRC to remove this limit.',
+                ], 422);
+            }
         }
 
         // Reject up front (before creating any record or sending an OTP) when the
-        // customer cannot cover the amount + fee, instead of failing at confirm.
+        // sender cannot cover the amount + fee, instead of failing at confirm.
         $total = round($amount + $fee, 2);
-        if ((float) $customerWallet->balance < $total) {
+        if ((float) $senderWallet->balance < $total) {
             return response()->json([
                 'success' => false,
                 'message' => 'Insufficient balance. Please top up your wallet before making this payment.',
@@ -111,7 +122,7 @@ class ExternalPaymentController extends Controller
         $payment = ExternalPayment::create([
             'reference' => 'PAY-'.Str::upper(Str::random(12)),
             'external_system_id' => $externalSystem->id,
-            'customer_user_id' => $customer->id,
+            'customer_user_id' => $sender->id,
             'agent_user_id' => $agent->id,
             'amount' => $amount,
             'fee' => $fee,
@@ -123,7 +134,7 @@ class ExternalPaymentController extends Controller
         ]);
 
         $purpose = 'external_payment:'.$payment->id;
-        $otp = $this->otpService->issue($customer->id, $customer->phone_number, $purpose);
+        $otp = $this->otpService->issue($sender->id, $sender->phone_number, $purpose);
 
         return response()->json([
             'success' => true,
@@ -193,7 +204,7 @@ class ExternalPaymentController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = min(100, max(1, (int) $request->query('per_page', 15)));
-        $query = ExternalPayment::with(['customer', 'agent', 'externalSystem']);
+        $query = ExternalPayment::with(['customer.role', 'agent.role', 'externalSystem']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->query('status'));
@@ -222,7 +233,7 @@ class ExternalPaymentController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $payment = ExternalPayment::with(['customer', 'agent', 'externalSystem', 'transaction'])->find($id);
+        $payment = ExternalPayment::with(['customer.role', 'agent.role', 'externalSystem', 'transaction'])->find($id);
         if (! $payment) {
             return response()->json(['success' => false, 'message' => 'Payment request not found.'], 404);
         }
@@ -231,8 +242,12 @@ class ExternalPaymentController extends Controller
     }
 
     /**
-     * Listing of external payments belonging to the authenticated user
-     * (agents receive them, customers pay them).
+     * Listing of external payments belonging to the authenticated user.
+     *
+     * Agents appear as the merchant (incoming, linked external system) or as the
+     * payer (outgoing, agent-to-agent via an external system); customers appear
+     * only as payers. A `direction` field tells the client which side the user
+     * was on.
      */
     public function myHistory(Request $request): JsonResponse
     {
@@ -243,7 +258,10 @@ class ExternalPaymentController extends Controller
         $query = ExternalPayment::with(['customer', 'externalSystem']);
 
         if ($roleName === 'agent') {
-            $query->where('agent_user_id', $user->id);
+            $query->where(function ($q) use ($user) {
+                $q->where('agent_user_id', $user->id)
+                    ->orWhere('customer_user_id', $user->id);
+            });
         } elseif ($roleName === 'customer') {
             $query->where('customer_user_id', $user->id);
         } else {
@@ -267,6 +285,12 @@ class ExternalPaymentController extends Controller
         }
 
         $list = $query->orderByDesc('id')->paginate($perPage);
+
+        $list->getCollection()->transform(function ($payment) use ($user) {
+            $payment->direction = $payment->customer_user_id === $user->id ? 'outgoing' : 'incoming';
+
+            return $payment;
+        });
 
         return response()->json(['success' => true, 'data' => $list], 200);
     }
