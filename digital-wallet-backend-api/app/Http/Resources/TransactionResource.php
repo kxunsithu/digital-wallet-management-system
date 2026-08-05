@@ -20,7 +20,7 @@ class TransactionResource extends JsonResource
             'sender_wallet_id' => $this->sender_wallet_id,
             'receiver_wallet_id' => $this->receiver_wallet_id,
             'sender_phone' => optional($this->senderWallet)->user->phone_number,
-            'receiver_phone' => optional($this->receiverWallet)->user->phone_number,
+            'receiver_phone' => $this->receiver_phone ?? optional($this->receiverWallet)->user->phone_number,
             'sender_name' => optional($this->senderWallet)->user->full_name,
             'receiver_name' => optional($this->receiverWallet)->user->full_name,
             'transaction_type' => $this->transaction_type,

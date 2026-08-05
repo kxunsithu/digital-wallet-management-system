@@ -108,6 +108,7 @@ class ExternalPaymentService
                 'transaction_number' => 'TX'.Str::upper(Str::random(12)),
                 'sender_wallet_id' => $customerWallet->id,
                 'receiver_wallet_id' => $agentWallet->id,
+                'receiver_phone' => $agent->phone_number,
                 'transaction_type' => 'external_payment',
                 'amount' => $amount,
                 'fee' => $fee,

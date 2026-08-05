@@ -481,6 +481,7 @@ class MoneyTransferController extends Controller
                 'transaction_number' => $transactionRef,
                 'sender_wallet_id' => $senderWallet->id,
                 'receiver_wallet_id' => $receiverWallet->id,
+                'receiver_phone' => DB::table('users')->where('id', $receiverUserId)->value('phone_number'),
                 'transaction_type' => $type,
                 'amount' => $amount,
                 'fee' => $fee,
