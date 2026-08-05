@@ -96,6 +96,16 @@ class ExternalPaymentController extends Controller
             ], 422);
         }
 
+        // Reject up front (before creating any record or sending an OTP) when the
+        // customer cannot cover the amount + fee, instead of failing at confirm.
+        $total = round($amount + $fee, 2);
+        if ((float) $customerWallet->balance < $total) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Insufficient balance. Please top up your wallet before making this payment.',
+            ], 422);
+        }
+
         $expiresAt = Carbon::now()->addMinutes(10);
 
         $payment = ExternalPayment::create([

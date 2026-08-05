@@ -257,6 +257,28 @@ class ExternalPaymentTest extends TestCase
         $this->assertDatabaseCount('external_payments', 0);
     }
 
+    public function test_initiate_rejects_customer_without_enough_balance(): void
+    {
+        $this->makeAdmin();
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
+
+        // Amount 10000 + fee 50 exceeds the customer's 500 balance.
+        $response = $this->initiate($apiKey, [
+            'customer_phone' => '09123456789',
+            'amount' => 10000,
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('Insufficient balance', $response->json('message'));
+
+        // No payment intent, no transaction, and no OTP were created.
+        $this->assertDatabaseCount('external_payments', 0);
+        $this->assertDatabaseCount('transactions', 0);
+        $this->assertDatabaseCount('otp_verifications', 0);
+    }
+
     public function test_confirm_completes_payment_and_updates_balances(): void
     {
         $adminWalletId = $this->makeAdmin();
@@ -365,7 +387,9 @@ class ExternalPaymentTest extends TestCase
     public function test_confirm_insufficient_balance_rejected(): void
     {
         $this->makeAdmin();
-        [$customer] = $this->makeCustomer('09123456789', 'verified', 500);
+        // Customer has enough balance to initiate but not enough by confirm time
+        // (e.g. funds spent elsewhere while the OTP was pending).
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
         [$agent] = $this->makeAgent('09122222222', 100000);
         $this->makeExternalSystem($apiKey = 'sk_live_testkey123', $agent);
 
@@ -373,6 +397,9 @@ class ExternalPaymentTest extends TestCase
             'customer_phone' => '09123456789',
             'amount' => 10000,
         ])->assertStatus(201);
+
+        $customerWalletId = $customer->wallet()->first()->id;
+        DB::table('wallets')->where('id', $customerWalletId)->update(['balance' => 100]);
 
         $response = $this->postJson('/api/external/payments/confirm', [
             'payment_reference' => $init->json('data.payment_reference'),
