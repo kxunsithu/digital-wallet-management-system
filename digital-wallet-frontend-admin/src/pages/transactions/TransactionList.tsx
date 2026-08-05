@@ -43,7 +43,6 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [transactionType, setTransactionType] = useState("all");
-  const [status, setStatus] = useState("all");
 
   // Pagination states
   const [page, setPage] = useState(1);
@@ -72,7 +71,6 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
       };
       if (debouncedSearch) params.search = debouncedSearch;
       if (transactionType !== "all") params.transaction_type = transactionType;
-      if (status !== "all") params.status = status;
 
       const res = await getTransactions(params);
       const resData = res.data;
@@ -111,7 +109,7 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
     setPage(1);
     setFilterNonce((n) => n + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(filterParams), debouncedSearch, transactionType, status]);
+  }, [JSON.stringify(filterParams), debouncedSearch, transactionType]);
 
   useEffect(() => {
     void load(page, perPage);
@@ -121,7 +119,6 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
   const handleClearFilters = () => {
     setSearch("");
     setTransactionType("all");
-    setStatus("all");
     setPage(1);
   };
 
@@ -165,7 +162,7 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
               <div>
                 <h3 className="text-sm font-semibold text-foreground">Search &amp; Filters</h3>
                 <p className="text-xs text-muted-foreground">
-                  Narrow transfer records by type, status, or search details.
+                  Narrow transfer records by type or search details.
                 </p>
               </div>
             </div>
@@ -197,7 +194,7 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Refine results
             </p>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-foreground">Transaction Type</label>
                 <Select
@@ -220,27 +217,6 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
                     <SelectItem value="customer_to_customer">Customer to Customer</SelectItem>
                     <SelectItem value="customer_to_agent">Customer to Agent</SelectItem>
                     <SelectItem value="external_payment">External Payment</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Status</label>
-                <Select
-                  value={status}
-                  onValueChange={(val: string | null) => {
-                    setStatus(val || "all");
-                    setPage(1);
-                  }}
-                >
-                  <SelectTrigger className="h-12 w-full">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="failed">Failed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -284,9 +260,6 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
                 Fee
               </TableHead>
               <TableHead className="bg-slate-50/50 text-slate-500 text-xs font-semibold uppercase tracking-wider px-4">
-                Status
-              </TableHead>
-              <TableHead className="bg-slate-50/50 text-slate-500 text-xs font-semibold uppercase tracking-wider px-4">
                 Date &amp; Time
               </TableHead>
               <TableHead className="bg-slate-50/50 text-slate-500 text-xs font-semibold uppercase tracking-wider px-6 text-right">
@@ -297,13 +270,13 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-10">
+                <TableCell colSpan={8} className="text-center py-10">
                   Loading transactions...
                 </TableCell>
               </TableRow>
             ) : items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center py-10">
+                <TableCell colSpan={8} className="text-center py-10">
                   No transactions found.
                 </TableCell>
               </TableRow>
@@ -341,19 +314,6 @@ export default function TransactionList({ filterParams = {}, pageTitle = "Transa
                   <TableCell className="px-4 py-3 text-right font-medium text-slate-700 text-sm">
                     {new Intl.NumberFormat("en-MM").format(Number(tx.fee || 0))}
                     <span className="ml-1 text-xs text-slate-400">MMK</span>
-                  </TableCell>
-                  <TableCell className="px-4 py-3">
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize ${
-                        tx.status === "completed"
-                          ? "border border-[#52C41A] bg-white text-[#52C41A]"
-                          : tx.status === "pending"
-                            ? "border border-[#BCF807] bg-[#BCF807] text-[#10110E]"
-                            : "border border-[#FF4D4F] bg-white text-[#FF4D4F]"
-                      }`}
-                    >
-                      {tx.status || "pending"}
-                    </span>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-xs text-slate-500">
                     {tx.created_at ? new Date(tx.created_at).toLocaleString() : "-"}
