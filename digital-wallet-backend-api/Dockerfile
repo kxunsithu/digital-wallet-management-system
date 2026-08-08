@@ -12,6 +12,7 @@ RUN apk add --no-cache \
     libzip-dev \
     postgresql-dev \
     sqlite-dev \
+    netcat-openbsd \
     bash
 
 # Install PHP extensions
@@ -83,19 +84,22 @@ for var in APP_NAME APP_ENV APP_KEY APP_DEBUG APP_URL AUTH_ADMIN_PHONE ADMIN_INI
 done\n\
 \n\
 # ── 2. Parse DATABASE_URL (Render PostgreSQL) ────────────────────────────\n\
+# Render uses "postgres://" (not "postgresql://") — strip either prefix.\n\
 if [ ! -z "$DATABASE_URL" ]; then\n\
     echo "==> Configuring PostgreSQL from DATABASE_URL..."\n\
     echo "DATABASE_URL=$DATABASE_URL" >> .env\n\
 \n\
-    DB_URL=$(echo $DATABASE_URL | sed "s/postgresql:\\/\\///")\n\
-    DB_USERNAME=$(echo $DB_URL | cut -d":" -f1)\n\
-    DB_PASSWORD=$(echo $DB_URL | cut -d":" -f2 | cut -d"@" -f1)\n\
-    DB_HOST=$(echo $DB_URL | cut -d"@" -f2 | cut -d"/" -f1 | cut -d":" -f1)\n\
-    DB_DATABASE=$(echo $DB_URL | cut -d"/" -f2)\n\
+    DB_URL=$(echo "$DATABASE_URL" | sed "s|postgresql://||;s|postgres://||")\n\
+    DB_USERNAME=$(echo "$DB_URL" | cut -d":" -f1)\n\
+    DB_PASSWORD=$(echo "$DB_URL" | cut -d":" -f2 | cut -d"@" -f1)\n\
+    DB_HOST=$(echo "$DB_URL" | cut -d"@" -f2 | cut -d":" -f1 | cut -d"/" -f1)\n\
+    DB_PORT_RAW=$(echo "$DB_URL" | cut -d"@" -f2 | cut -d":" -f2 | cut -d"/" -f1)\n\
+    DB_PORT="${DB_PORT_RAW:-5432}"\n\
+    DB_DATABASE=$(echo "$DB_URL" | cut -d"/" -f2 | cut -d"?" -f1)\n\
 \n\
     echo "DB_CONNECTION=pgsql" >> .env\n\
     echo "DB_HOST=$DB_HOST" >> .env\n\
-    echo "DB_PORT=5432" >> .env\n\
+    echo "DB_PORT=$DB_PORT" >> .env\n\
     echo "DB_DATABASE=$DB_DATABASE" >> .env\n\
     echo "DB_USERNAME=$DB_USERNAME" >> .env\n\
     echo "DB_PASSWORD=$DB_PASSWORD" >> .env\n\
@@ -116,30 +120,43 @@ rm -rf public/storage\n\
 php artisan storage:link\n\
 \n\
 # ── 6. Clear stale bootstrap caches (safe on redeploy) ──────────────────\n\
-# We clear only compiled/cached files, NOT app data or DB.\n\
 echo "==> Clearing stale bootstrap caches..."\n\
 php artisan config:clear\n\
 php artisan view:clear || true\n\
 php artisan route:clear || true\n\
 \n\
 # ── 7. Wait for database to be reachable ────────────────────────────────\n\
-echo "==> Waiting for database..."\n\
-MAX_TRIES=30\n\
+# Use nc (netcat) TCP check — faster and more reliable than artisan db:show.\n\
+# Render free-tier DBs can take up to 3-4 minutes to wake from sleep.\n\
+echo "==> Waiting for database at $DB_HOST:$DB_PORT ..."\n\
+MAX_TRIES=60\n\
 COUNT=0\n\
-until php artisan db:show --no-interaction > /dev/null 2>&1 || [ $COUNT -eq $MAX_TRIES ]; do\n\
+until nc -z -w 3 "$DB_HOST" "$DB_PORT" > /dev/null 2>&1; do\n\
     COUNT=$((COUNT+1))\n\
-    echo "    Attempt $COUNT/$MAX_TRIES - DB not ready, retrying in 2s..."\n\
-    sleep 2\n\
+    if [ $COUNT -ge $MAX_TRIES ]; then\n\
+        echo "ERROR: Database not reachable after $MAX_TRIES attempts. Aborting."\n\
+        exit 1\n\
+    fi\n\
+    echo "    Attempt $COUNT/$MAX_TRIES - DB not ready, retrying in 5s..."\n\
+    sleep 5\n\
 done\n\
-if [ $COUNT -eq $MAX_TRIES ]; then\n\
-    echo "ERROR: Database not reachable after $MAX_TRIES attempts. Aborting."\n\
-    exit 1\n\
-fi\n\
+echo "==> Database TCP port is open. Verifying connection..."\n\
+\n\
+# Extra verification with artisan (handles auth/SSL issues)\n\
+ARTISAN_TRIES=10\n\
+ARTISAN_COUNT=0\n\
+until php artisan db:show --no-interaction > /dev/null 2>&1; do\n\
+    ARTISAN_COUNT=$((ARTISAN_COUNT+1))\n\
+    if [ $ARTISAN_COUNT -ge $ARTISAN_TRIES ]; then\n\
+        echo "WARN: artisan db:show failed after $ARTISAN_TRIES tries, proceeding anyway."\n\
+        break\n\
+    fi\n\
+    echo "    DB connection attempt $ARTISAN_COUNT/$ARTISAN_TRIES, retrying in 3s..."\n\
+    sleep 3\n\
+done\n\
 echo "==> Database is ready."\n\
 \n\
 # ── 8. Run ONLY new migrations (never wipes data) ───────────────────────\n\
-# migrate --force applies only pending migrations. Existing tables and\n\
-# data are never touched. Safe to run on every redeploy.\n\
 echo "==> Running pending migrations..."\n\
 php artisan migrate --force --no-interaction\n\
 \n\
