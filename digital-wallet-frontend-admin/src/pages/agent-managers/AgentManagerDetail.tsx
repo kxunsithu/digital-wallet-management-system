@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { User, Phone, CreditCard, MapPin, Image as ImageIcon, Activity, Edit2, Wallet as WalletIcon } from "lucide-react";
+import { User, Phone, CreditCard, MapPin, Image as ImageIcon, Activity, Edit2, Wallet as WalletIcon, ZoomIn, X } from "lucide-react";
 import MainLayout from "@/components/layouts/MainLayout";
 import {
   Breadcrumb,
@@ -21,6 +21,7 @@ export default function AgentManagerDetail() {
   const navigate = useNavigate();
   const [manager, setManager] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [previewImage, setPreviewImage] = useState<{ src: string; label: string } | null>(null);
 
   useEffect(() => {
     const fetchManager = async () => {
@@ -186,16 +187,24 @@ export default function AgentManagerDetail() {
             <div className="flex flex-col items-center justify-center space-y-2">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Front Image</p>
               {nrcFront ? (
-                <div className="relative mt-2 flex max-w-lg items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2">
+                <button
+                  type="button"
+                  onClick={() => setPreviewImage({ src: resolveImageUrl(nrcFront) ?? "", label: "NRC Front" })}
+                  className="group relative mt-2 flex w-full max-w-lg cursor-zoom-in items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2 transition-all hover:border-[#BCF807] hover:shadow-md"
+                >
                   <img
                     src={resolveImageUrl(nrcFront) ?? ""}
                     alt="NRC Front"
                     className="max-h-[250px] w-auto rounded object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://via.placeholder.com/300x200?text=Image+Not+Found";
-                    }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = "https://via.placeholder.com/300x200?text=Image+Not+Found"; }}
                   />
-                </div>
+                  <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/0 transition-all group-hover:bg-black/20">
+                    <div className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 opacity-0 shadow-sm transition-all group-hover:opacity-100">
+                      <ZoomIn className="h-3.5 w-3.5" />
+                      Preview
+                    </div>
+                  </div>
+                </button>
               ) : (
                 <p className="text-sm text-slate-400 italic">No front image uploaded.</p>
               )}
@@ -203,16 +212,24 @@ export default function AgentManagerDetail() {
             <div className="flex flex-col items-center justify-center space-y-2">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Back Image</p>
               {nrcBack ? (
-                <div className="relative mt-2 flex max-w-lg items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2">
+                <button
+                  type="button"
+                  onClick={() => setPreviewImage({ src: resolveImageUrl(nrcBack) ?? "", label: "NRC Back" })}
+                  className="group relative mt-2 flex w-full max-w-lg cursor-zoom-in items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2 transition-all hover:border-[#BCF807] hover:shadow-md"
+                >
                   <img
                     src={resolveImageUrl(nrcBack) ?? ""}
                     alt="NRC Back"
                     className="max-h-[250px] w-auto rounded object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://via.placeholder.com/300x200?text=Image+Not+Found";
-                    }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = "https://via.placeholder.com/300x200?text=Image+Not+Found"; }}
                   />
-                </div>
+                  <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/0 transition-all group-hover:bg-black/20">
+                    <div className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 opacity-0 shadow-sm transition-all group-hover:opacity-100">
+                      <ZoomIn className="h-3.5 w-3.5" />
+                      Preview
+                    </div>
+                  </div>
+                </button>
               ) : (
                 <p className="text-sm text-slate-400 italic">No back image uploaded.</p>
               )}
@@ -259,6 +276,40 @@ export default function AgentManagerDetail() {
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
+
+      {/* NRC Image Lightbox */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="relative flex max-h-[90vh] max-w-[90vw] flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex w-full items-center justify-between">
+              <span className="rounded-full bg-white/10 px-3 py-1 text-sm font-semibold text-white">
+                {previewImage.label}
+              </span>
+              <button
+                onClick={() => setPreviewImage(null)}
+                className="ml-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <img
+              src={previewImage.src}
+              alt={previewImage.label}
+              className="max-h-[80vh] max-w-full rounded-2xl object-contain shadow-2xl"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "https://via.placeholder.com/600x400?text=Image+Not+Found";
+              }}
+            />
+            <p className="mt-3 text-xs text-white/50">Click outside to close</p>
+          </div>
         </div>
       )}
     </MainLayout>
