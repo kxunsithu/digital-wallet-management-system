@@ -8,7 +8,7 @@ import {
   getExternalSystems,
   toggleExternalSystemStatus,
 } from "@/services/externalSystem.service";
-import { Search, PlugZap } from "lucide-react";
+import { Search, PlugZap, ImageOff } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -31,6 +31,7 @@ type ExternalSystem = {
   name: string;
   api_key_prefix: string;
   system_link?: string | null;
+  system_logo?: string | null;
   status: string;
   created_at: string;
   user?: {
@@ -39,6 +40,17 @@ type ExternalSystem = {
     phone_number?: string;
   } | null;
 };
+
+/** Build the public URL for a logo stored on the Laravel backend. */
+function getLogoUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  // If already absolute (e.g. from formatSystem), return as-is
+  if (path.startsWith("http")) return path;
+  const base = (import.meta.env.VITE_API_URL as string)
+    .replace(/\/api\/?$/, "")   // strip trailing /api
+    .replace(/\/$/, "");         // strip trailing slash
+  return `${base}/storage/${path}`;
+}
 
 export default function ExternalSystemsPage() {
   const [systems, setSystems] = useState<ExternalSystem[]>([]);
@@ -144,6 +156,9 @@ export default function ExternalSystemsPage() {
               <TableHead className="bg-slate-50/50 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground w-14">
                 No
               </TableHead>
+              <TableHead className="bg-slate-50/50 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground w-16">
+                Logo
+              </TableHead>
               <TableHead className="bg-slate-50/50 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Name
               </TableHead>
@@ -170,7 +185,7 @@ export default function ExternalSystemsPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
                   Loading...
                 </TableCell>
               </TableRow>
@@ -182,6 +197,26 @@ export default function ExternalSystemsPage() {
                 >
                   <TableCell className="px-5 py-3 text-sm text-muted-foreground">
                     {(page - 1) * perPage + index + 1}
+                  </TableCell>
+                  {/* Logo */}
+                  <TableCell className="px-4 py-3">
+                    {getLogoUrl(s.system_logo) ? (
+                      <img
+                        src={getLogoUrl(s.system_logo)!}
+                        alt={s.name}
+                        className="h-9 w-9 rounded-lg object-cover border border-border shadow-sm"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                          (e.currentTarget.nextElementSibling as HTMLElement | null)?.style.setProperty("display", "flex");
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="h-9 w-9 rounded-lg border border-border bg-slate-100 items-center justify-center text-muted-foreground"
+                      style={{ display: getLogoUrl(s.system_logo) ? "none" : "flex" }}
+                    >
+                      <ImageOff className="h-4 w-4" />
+                    </div>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-sm font-semibold text-foreground">
                     {s.name}
@@ -251,7 +286,7 @@ export default function ExternalSystemsPage() {
             )}
             {!loading && systems.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
                   No external systems found
                 </TableCell>
               </TableRow>

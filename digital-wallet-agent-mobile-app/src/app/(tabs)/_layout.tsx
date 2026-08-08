@@ -51,8 +51,8 @@ export default function TabLayout() {
         tabBarStyle: {
           position: 'absolute',
           bottom: Platform.OS === 'ios' ? 36 : 22,
-          left: 32,
-          right: 32,
+          left: 20,
+          right: 20,
           borderRadius: 40,
           height: 64,
           borderTopWidth: 0,
@@ -68,8 +68,6 @@ export default function TabLayout() {
           paddingTop: 0,
           marginHorizontal: 10,
         },
-        // KEY FIX: override React Navigation's internal icon margin
-        // that reserves space for the label even when label is hidden
         tabBarIconStyle: {
           flex: 1,
           alignItems: 'center',
@@ -87,6 +85,21 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              name={focused ? 'home' : 'home-outline'}
+              focused={focused}
+              isDark={isDark}
+              primaryColor={colors.primary}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="transactions"
         options={{
           title: 'History',
@@ -102,12 +115,12 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="index"
+        name="external-systems"
         options={{
-          title: 'Home',
+          title: 'Systems',
           tabBarIcon: ({ focused }) => (
             <TabIcon
-              name={focused ? 'home' : 'home-outline'}
+              name={focused ? 'link' : 'link-outline'}
               focused={focused}
               isDark={isDark}
               primaryColor={colors.primary}

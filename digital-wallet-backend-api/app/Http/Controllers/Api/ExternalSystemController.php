@@ -171,6 +171,20 @@ class ExternalSystemController extends Controller
         return response()->json(['success' => true, 'data' => $systems], 200);
     }
 
+    /**
+     * List all active external systems — accessible by any authenticated user
+     * (customers, agents, etc.) for browsing available integrations.
+     */
+    public function listActive(): JsonResponse
+    {
+        $systems = ExternalSystem::where('status', 'active')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn ($s) => $this->formatSystem($s));
+
+        return response()->json(['success' => true, 'data' => $systems], 200);
+    }
+
     private function formatSystem(ExternalSystem $system): array
     {
         $data = $system->toArray();

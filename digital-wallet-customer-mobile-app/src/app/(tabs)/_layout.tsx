@@ -22,7 +22,6 @@ function TabIcon({
         <View
           style={[
             styles.activeCircle,
-
           ]}
         />
       )}
@@ -54,8 +53,8 @@ export default function TabLayout() {
         tabBarStyle: {
           position: 'absolute',
           bottom: Platform.OS === 'ios' ? 36 : 22,
-          left: 32,
-          right: 32,
+          left: 20,
+          right: 20,
           borderRadius: 40,
           height: 64,
           borderTopWidth: 0,
@@ -69,9 +68,8 @@ export default function TabLayout() {
           elevation: 16,
           paddingBottom: 0,
           paddingTop: 0,
-          marginHorizontal:10
+          marginHorizontal: 10,
         },
-        // KEY FIX: override React Navigation's default icon margin
         tabBarIconStyle: {
           flex: 1,
           alignItems: 'center',
@@ -89,6 +87,21 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
+        name="index"
+        options={{
+          title: t('nav.home'),
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              name={focused ? 'home' : 'home-outline'}
+              focused={focused}
+              isDark={isDark}
+              primaryColor={colors.primary}
+            />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="transactions"
         options={{
           title: t('nav.history'),
@@ -104,12 +117,12 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="index"
+        name="external-systems"
         options={{
-          title: t('nav.home'),
+          title: t('nav.services'),
           tabBarIcon: ({ focused }) => (
             <TabIcon
-              name={focused ? 'home' : 'home-outline'}
+              name={focused ? 'grid' : 'grid-outline'}
               focused={focused}
               isDark={isDark}
               primaryColor={colors.primary}

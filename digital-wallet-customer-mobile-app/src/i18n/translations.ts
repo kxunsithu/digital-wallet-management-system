@@ -7,6 +7,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Common & Navigation
     'nav.home': 'Home',
     'nav.history': 'History',
+    'nav.services': 'Services',
     'nav.profile': 'Profile',
     'common.back': 'Back',
     'common.save': 'Save',
@@ -358,6 +359,7 @@ export const translations: Record<Language, Record<string, string>> = {
     // Common & Navigation
     'nav.home': 'ပင်မ',
     'nav.history': 'မှတ်တမ်း',
+    'nav.services': 'ဝန်ဆောင်မှုများ',
     'nav.profile': 'ပရိုဖိုင်',
     'common.back': 'နောက်သို့',
     'common.save': 'သိမ်းဆည်းမည်',

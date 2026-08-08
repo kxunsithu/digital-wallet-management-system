@@ -131,6 +131,7 @@ Route::prefix('external-payments')->middleware(['auth:sanctum', 'ensure.admin'])
 });
 
 Route::prefix('external-systems')->middleware('auth:sanctum')->group(function () {
+    Route::get('/active', [ExternalSystemController::class, 'listActive']);
     Route::put('/{id}', [ExternalSystemController::class, 'update']);
     Route::post('/{id}/update', [ExternalSystemController::class, 'update']);
 });
