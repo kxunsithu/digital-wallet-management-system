@@ -211,6 +211,31 @@ export default function ProfileScreen() {
     }
   };
 
+  const isLocalUri = (uri?: string | null): boolean => {
+    if (!uri) return false;
+    return uri.startsWith('file://') || uri.startsWith('content://') || uri.startsWith('ph://') || (!uri.startsWith('http://') && !uri.startsWith('https://'));
+  };
+
+  const buildFilePayload = (uri: string, defaultPrefix: string) => {
+    let cleanUri = uri.split('?')[0];
+    try {
+      cleanUri = decodeURI(cleanUri);
+    } catch (e) {
+      // fallback
+    }
+
+    const isPng = cleanUri.toLowerCase().endsWith('.png');
+    const mimeType = isPng ? 'image/png' : 'image/jpeg';
+    const ext = isPng ? 'png' : 'jpg';
+    const name = `${defaultPrefix}_${Date.now()}.${ext}`;
+
+    return {
+      uri,
+      name,
+      type: mimeType,
+    };
+  };
+
   const handleUpdateProfile = async () => {
     if (!editFullName.trim()) {
       Toast.show({ type: "error", text1: "Error", text2: "Full name is required" });
@@ -219,21 +244,12 @@ export default function ProfileScreen() {
     setUpdatingProfile(true);
     try {
       let uploadSuccess = true;
-      const isLocalUri = editProfileImageUri && (editProfileImageUri.startsWith("file://") || editProfileImageUri.startsWith("content://") || !editProfileImageUri.startsWith("http"));
 
-      if (isLocalUri && editProfileImageUri) {
-        const cleanUri = editProfileImageUri.split('?')[0];
-        const ext = cleanUri.split('.').pop()?.toLowerCase();
-        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
-        const filename = `profile_${Date.now()}.${ext === 'png' ? 'png' : 'jpg'}`;
-
+      if (isLocalUri(editProfileImageUri) && editProfileImageUri) {
+        const payload = buildFilePayload(editProfileImageUri, 'profile');
         const formData = new FormData();
         // @ts-ignore
-        formData.append('profile_image', {
-          uri: editProfileImageUri,
-          name: filename,
-          type: mimeType,
-        });
+        formData.append('profile_image', payload);
 
         const imgRes = await apiFetch("/profile/upload-profile-picture", {
           method: "POST",
@@ -261,8 +277,8 @@ export default function ProfileScreen() {
           Toast.show({ type: "error", text1: "Error", text2: res.body?.message ?? "Failed to update profile" });
         }
       }
-    } catch (e) {
-      Toast.show({ type: "error", text1: "Error", text2: "Network error" });
+    } catch (e: any) {
+      Toast.show({ type: "error", text1: "Error", text2: e?.message ?? "Network error" });
     } finally {
       setUpdatingProfile(false);
     }

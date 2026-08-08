@@ -19,6 +19,31 @@ export async function getMyExternalSystems(): Promise<AgentExternalSystem[]> {
   throw new Error(res.body?.message ?? "Failed to load external systems");
 }
 
+const isLocalUri = (uri?: string | null): boolean => {
+  if (!uri) return false;
+  return uri.startsWith('file://') || uri.startsWith('content://') || uri.startsWith('ph://') || (!uri.startsWith('http://') && !uri.startsWith('https://'));
+};
+
+const buildFilePayload = (uri: string, defaultPrefix: string) => {
+  let cleanUri = uri.split('?')[0];
+  try {
+    cleanUri = decodeURI(cleanUri);
+  } catch (e) {
+    // fallback
+  }
+
+  const isPng = cleanUri.toLowerCase().endsWith('.png');
+  const mimeType = isPng ? 'image/png' : 'image/jpeg';
+  const ext = isPng ? 'png' : 'jpg';
+  const name = `${defaultPrefix}_${Date.now()}.${ext}`;
+
+  return {
+    uri,
+    name,
+    type: mimeType,
+  };
+};
+
 export async function createExternalSystem(
   name: string,
   systemLink?: string,
@@ -29,13 +54,10 @@ export async function createExternalSystem(
   if (systemLink && systemLink.trim()) {
     formData.append('system_link', systemLink.trim());
   }
-  if (logoUri) {
-    const cleanUri = logoUri.split('?')[0];
-    const ext = cleanUri.split('.').pop()?.toLowerCase();
-    const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
-    const filename = `system_logo_${Date.now()}.${ext === 'png' ? 'png' : 'jpg'}`;
+  if (isLocalUri(logoUri) && logoUri) {
+    const payload = buildFilePayload(logoUri, 'system_logo');
     // @ts-ignore
-    formData.append('system_logo', { uri: logoUri, name: filename, type: mimeType });
+    formData.append('system_logo', payload);
   }
   const res = await apiFetch('/external-systems', {
     method: 'POST',
@@ -61,13 +83,10 @@ export async function updateExternalSystem(
     // send empty string so backend clears it
     formData.append('system_link', '');
   }
-  if (logoUri) {
-    const cleanUri = logoUri.split('?')[0];
-    const ext = cleanUri.split('.').pop()?.toLowerCase();
-    const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
-    const filename = `system_logo_${Date.now()}.${ext === 'png' ? 'png' : 'jpg'}`;
+  if (isLocalUri(logoUri) && logoUri) {
+    const payload = buildFilePayload(logoUri, 'system_logo');
     // @ts-ignore
-    formData.append('system_logo', { uri: logoUri, name: filename, type: mimeType });
+    formData.append('system_logo', payload);
   }
   const res = await apiFetch(`/external-systems/${id}/update`, {
     method: 'POST',

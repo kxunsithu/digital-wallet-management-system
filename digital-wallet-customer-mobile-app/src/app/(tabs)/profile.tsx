@@ -266,6 +266,31 @@ export default function ProfileScreen() {
     }
   };
 
+  const isLocalUri = (uri?: string | null): boolean => {
+    if (!uri) return false;
+    return uri.startsWith('file://') || uri.startsWith('content://') || uri.startsWith('ph://') || (!uri.startsWith('http://') && !uri.startsWith('https://'));
+  };
+
+  const buildFilePayload = (uri: string, defaultPrefix: string) => {
+    let cleanUri = uri.split('?')[0];
+    try {
+      cleanUri = decodeURI(cleanUri);
+    } catch (e) {
+      // fallback
+    }
+
+    const isPng = cleanUri.toLowerCase().endsWith('.png');
+    const mimeType = isPng ? 'image/png' : 'image/jpeg';
+    const ext = isPng ? 'png' : 'jpg';
+    const name = `${defaultPrefix}_${Date.now()}.${ext}`;
+
+    return {
+      uri,
+      name,
+      type: mimeType,
+    };
+  };
+
   const handleUpdateProfile = async () => {
     if (!editFullName.trim()) {
       Toast.show({ type: "error", text1: t("common.error"), text2: t("profile.full_name_required") });
@@ -274,24 +299,18 @@ export default function ProfileScreen() {
     setUpdatingProfile(true);
     try {
       let uploadSuccess = true;
-      const isLocalUri = editProfileImageUri &&
-        (editProfileImageUri.startsWith("file://") ||
-          editProfileImageUri.startsWith("content://") ||
-          !editProfileImageUri.startsWith("http"));
 
-      if (isLocalUri && editProfileImageUri) {
-        const cleanUri = editProfileImageUri.split('?')[0];
-        const ext = cleanUri.split('.').pop()?.toLowerCase();
-        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
-        const filename = `profile_${Date.now()}.${ext === 'png' ? 'png' : 'jpg'}`;
-
+      if (isLocalUri(editProfileImageUri) && editProfileImageUri) {
+        const payload = buildFilePayload(editProfileImageUri, 'profile');
         const formData = new FormData();
         // @ts-ignore
-        formData.append('profile_image', { uri: editProfileImageUri, name: filename, type: mimeType });
+        formData.append('profile_image', payload);
+
         const imgRes = await apiFetch("/profile/upload-profile-picture", {
           method: "POST",
           body: formData,
         });
+
         if (imgRes.status !== 200 || !imgRes.body?.success) {
           uploadSuccess = false;
           Toast.show({ type: "error", text1: t('common.error'), text2: imgRes.body?.message ?? t('profile.upload_image_failed') });
@@ -316,36 +335,42 @@ export default function ProfileScreen() {
           Toast.show({ type: "error", text1: t('common.error'), text2: res.body?.message ?? t('profile.update_profile_failed') });
         }
       }
-    } catch (e) {
-      Toast.show({ type: "error", text1: t('common.error'), text2: t('common.network_error') });
+    } catch (e: any) {
+      Toast.show({ type: "error", text1: t('common.error'), text2: e?.message ?? t('common.network_error') });
     } finally {
       setUpdatingProfile(false);
     }
   };
 
   const handleSubmitNrc = async () => {
+    if (isKycVerified) {
+      Toast.show({
+        type: "info",
+        text1: t("common.info"),
+        text2: "Your KYC identity is verified. NRC documents cannot be modified.",
+      });
+      return;
+    }
     if (!nrcFrontUri || !nrcBackUri) {
       Toast.show({ type: "error", text1: t("common.required"), text2: t("profile.select_nrc_images") });
       return;
     }
+
+    if (!isLocalUri(nrcFrontUri) || !isLocalUri(nrcBackUri)) {
+      Toast.show({ type: "error", text1: t("common.error"), text2: t("profile.select_nrc_images") });
+      return;
+    }
+
     setSubmittingNrc(true);
     try {
       const formData = new FormData();
-
-      const frontClean = nrcFrontUri.split('?')[0];
-      const frontExt = frontClean.split('.').pop()?.toLowerCase();
-      const frontMime = frontExt === 'png' ? 'image/png' : 'image/jpeg';
-      const frontFilename = `nrc_front_${Date.now()}.${frontExt === 'png' ? 'png' : 'jpg'}`;
-
-      const backClean = nrcBackUri.split('?')[0];
-      const backExt = backClean.split('.').pop()?.toLowerCase();
-      const backMime = backExt === 'png' ? 'image/png' : 'image/jpeg';
-      const backFilename = `nrc_back_${Date.now()}.${backExt === 'png' ? 'png' : 'jpg'}`;
+      const frontPayload = buildFilePayload(nrcFrontUri, 'nrc_front');
+      const backPayload = buildFilePayload(nrcBackUri, 'nrc_back');
 
       // @ts-ignore
-      formData.append('nrc_front_image', { uri: nrcFrontUri, name: frontFilename, type: frontMime });
+      formData.append('nrc_front_image', frontPayload);
       // @ts-ignore
-      formData.append('nrc_back_image', { uri: nrcBackUri, name: backFilename, type: backMime });
+      formData.append('nrc_back_image', backPayload);
 
       const res = await apiFetch("/customer/nrc-verifications/submit", {
         method: "POST",
@@ -362,8 +387,8 @@ export default function ProfileScreen() {
       } else {
         Toast.show({ type: "error", text1: t('common.error'), text2: res.body?.message ?? t('profile.submit_verification_failed') });
       }
-    } catch (e) {
-      Toast.show({ type: "error", text1: t('common.error'), text2: t('common.network_error') });
+    } catch (e: any) {
+      Toast.show({ type: "error", text1: t('common.error'), text2: e?.message ?? t('common.network_error') });
     } finally {
       setSubmittingNrc(false);
     }
