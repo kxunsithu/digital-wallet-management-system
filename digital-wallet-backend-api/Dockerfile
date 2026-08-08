@@ -85,6 +85,7 @@ done\n\
 \n\
 # ── 2. Parse DATABASE_URL (Render PostgreSQL) ────────────────────────────\n\
 # Render uses "postgres://" (not "postgresql://") — strip either prefix.\n\
+# Render internal DB URLs may omit the port (no :5432), so we validate it.\n\
 if [ ! -z "$DATABASE_URL" ]; then\n\
     echo "==> Configuring PostgreSQL from DATABASE_URL..."\n\
     echo "DATABASE_URL=$DATABASE_URL" >> .env\n\
@@ -94,7 +95,12 @@ if [ ! -z "$DATABASE_URL" ]; then\n\
     DB_PASSWORD=$(echo "$DB_URL" | cut -d":" -f2 | cut -d"@" -f1)\n\
     DB_HOST=$(echo "$DB_URL" | cut -d"@" -f2 | cut -d":" -f1 | cut -d"/" -f1)\n\
     DB_PORT_RAW=$(echo "$DB_URL" | cut -d"@" -f2 | cut -d":" -f2 | cut -d"/" -f1)\n\
-    DB_PORT="${DB_PORT_RAW:-5432}"\n\
+    # Validate port is numeric — if no port in URL, DB_PORT_RAW will be the hostname\n\
+    if printf "%s" "$DB_PORT_RAW" | grep -qE "^[0-9]+$"; then\n\
+        DB_PORT="$DB_PORT_RAW"\n\
+    else\n\
+        DB_PORT="5432"\n\
+    fi\n\
     DB_DATABASE=$(echo "$DB_URL" | cut -d"/" -f2 | cut -d"?" -f1)\n\
 \n\
     echo "DB_CONNECTION=pgsql" >> .env\n\
@@ -103,13 +109,17 @@ if [ ! -z "$DATABASE_URL" ]; then\n\
     echo "DB_DATABASE=$DB_DATABASE" >> .env\n\
     echo "DB_USERNAME=$DB_USERNAME" >> .env\n\
     echo "DB_PASSWORD=$DB_PASSWORD" >> .env\n\
+    echo "==> Parsed DB: host=$DB_HOST port=$DB_PORT db=$DB_DATABASE user=$DB_USERNAME"\n\
 fi\n\
 \n\
-# ── 3. Defaults ─────────────────────────────────────────────────────────\n\
-echo "SESSION_DRIVER=file" >> .env\n\
-echo "CACHE_STORE=file" >> .env\n\
-echo "QUEUE_CONNECTION=sync" >> .env\n\
-echo "LOG_CHANNEL=stderr" >> .env\n\
+# ── 3. Defaults (only set if NOT already provided by environment) ────────\n\
+# These fallback to safe file/sync drivers when the env doesn't specify them.\n\
+# If Render env has SESSION_DRIVER=database etc., those values are already\n\
+# written by the loop above and must NOT be overridden here.\n\
+[ -z "$SESSION_DRIVER" ] && echo "SESSION_DRIVER=file" >> .env\n\
+[ -z "$CACHE_STORE" ]    && echo "CACHE_STORE=file"    >> .env\n\
+[ -z "$QUEUE_CONNECTION" ] && echo "QUEUE_CONNECTION=sync" >> .env\n\
+[ -z "$LOG_CHANNEL" ]    && echo "LOG_CHANNEL=stderr"  >> .env\n\
 \n\
 # ── 4. Storage permissions ───────────────────────────────────────────────\n\
 chmod -R 775 storage bootstrap/cache\n\
