@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import {
   getCustomer,
   verifyCustomerNrc,
+  rejectCustomerNrc,
   toggleCustomerStatus,
   toggleCustomerKycStatus,
 } from "@/services/customer.service";
@@ -48,6 +49,7 @@ export default function CustomerDetail() {
   const [actionLoading, setActionLoading] = useState(false);
 
   const [kycModalOpen, setKycModalOpen] = useState(false);
+  const [kycModalMode, setKycModalMode] = useState<"toggle" | "reject">("toggle");
   const [selectedKycStatus, setSelectedKycStatus] = useState<"verified" | "pending" | "rejected" | "">("");
   const [rejectionReason, setRejectionReason] = useState("");
 
@@ -82,28 +84,38 @@ export default function CustomerDetail() {
   const handleToggleKycStatus = () => {
     // Normalize legacy "approved" values to "verified"
     const normalized = customer?.kyc_status === "approved" ? "verified" : customer?.kyc_status;
-    setSelectedKycStatus(normalized || "pending");
+    const initialStatus = normalized === "rejected" ? "rejected" : "verified";
+    setSelectedKycStatus(initialStatus);
     setRejectionReason(customer?.user?.nrc_verification?.rejection_reason || "");
+    setKycModalMode("toggle");
     setKycModalOpen(true);
   };
 
   const handleKycSubmit = async () => {
-    if (!selectedKycStatus) {
-      toast.error("Please select a status");
+    const isRejecting = kycModalMode === "reject" || selectedKycStatus === "rejected";
+
+    if (isRejecting && !rejectionReason.trim()) {
+      toast.error("Please specify a rejection reason");
       return;
     }
-    if (selectedKycStatus === "rejected" && !rejectionReason.trim()) {
-      toast.error("Please specify a rejection reason");
+    if (!isRejecting && !selectedKycStatus) {
+      toast.error("Please select a status");
       return;
     }
 
     setActionLoading(true);
     try {
-      const response = await toggleCustomerKycStatus(id!, {
-        status: selectedKycStatus,
-        rejection_reason: selectedKycStatus === "rejected" ? rejectionReason : "",
-      });
-      toast.success(response.data?.message || "KYC status updated successfully.");
+      if (kycModalMode === "reject" && customer?.user?.nrc_verification?.id) {
+        await rejectCustomerNrc(customer.user.nrc_verification.id, rejectionReason);
+        toast.success("NRC verification rejected.");
+      } else {
+        const targetStatus = kycModalMode === "reject" ? "rejected" : selectedKycStatus;
+        const response = await toggleCustomerKycStatus(id!, {
+          status: targetStatus,
+          rejection_reason: targetStatus === "rejected" ? rejectionReason : "",
+        });
+        toast.success(response.data?.message || "KYC status updated successfully.");
+      }
       setKycModalOpen(false);
       await fetchCustomer();
     } catch (err: any) {
@@ -134,6 +146,7 @@ export default function CustomerDetail() {
   const handleReject = () => {
     setSelectedKycStatus("rejected");
     setRejectionReason(customer?.user?.nrc_verification?.rejection_reason || "");
+    setKycModalMode("reject");
     setKycModalOpen(true);
   };
 
@@ -528,38 +541,41 @@ export default function CustomerDetail() {
         <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-slate-900">
-              Update KYC Status
+              {kycModalMode === "reject" ? "Reject KYC Verification" : "Update KYC Status"}
             </DialogTitle>
             <DialogDescription className="text-sm text-slate-500">
-              Update {user?.full_name || "customer"}'s identity verification status.
+              {kycModalMode === "reject"
+                ? `Specify rejection reason for ${user?.full_name || "customer"}'s identity verification.`
+                : `Update ${user?.full_name || "customer"}'s identity verification status.`}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-5 py-3">
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { value: "verified", label: "Verified", activeColor: "border-[#52C41A] bg-[#52C41A]/10 text-[#52C41A]" },
-                { value: "pending", label: "Pending", activeColor: "border-[#BCF807] bg-[#BCF807]/10 text-[#10110E]" },
-                { value: "rejected", label: "Rejected", activeColor: "border-[#FF4D4F] bg-[#FF4D4F]/10 text-[#FF4D4F]" }
-              ].map((opt) => {
-                const isActive = selectedKycStatus === opt.value;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setSelectedKycStatus(opt.value as any)}
-                    className={`py-3.5 px-2.5 rounded-xl border-2 text-xs font-bold transition-all text-center ${
-                      isActive ? opt.activeColor : "border-slate-100 bg-slate-50/50 text-slate-500 hover:border-slate-200"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
-            </div>
+            {kycModalMode === "toggle" && (
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { value: "verified", label: "Verified", activeColor: "border-[#52C41A] bg-[#52C41A]/10 text-[#52C41A]" },
+                  { value: "rejected", label: "Rejected", activeColor: "border-[#FF4D4F] bg-[#FF4D4F]/10 text-[#FF4D4F]" }
+                ].map((opt) => {
+                  const isActive = selectedKycStatus === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setSelectedKycStatus(opt.value as any)}
+                      className={`py-3.5 px-2.5 rounded-xl border-2 text-xs font-bold transition-all text-center ${
+                        isActive ? opt.activeColor : "border-slate-100 bg-slate-50/50 text-slate-500 hover:border-slate-200"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Rejection reason box */}
-            {selectedKycStatus === "rejected" && (
+            {(kycModalMode === "reject" || selectedKycStatus === "rejected") && (
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                   Rejection Reason
@@ -586,9 +602,17 @@ export default function CustomerDetail() {
             <Button
               onClick={handleKycSubmit}
               disabled={actionLoading}
-              className="w-full rounded-xl bg-[#BCF807] hover:bg-[#BCF807]/90 font-semibold text-[#10110E]"
+              className={`w-full rounded-xl font-semibold ${
+                kycModalMode === "reject"
+                  ? "bg-[#FF4D4F] hover:bg-[#FF4D4F]/90 text-white"
+                  : "bg-[#BCF807] hover:bg-[#BCF807]/90 text-[#10110E]"
+              }`}
             >
-              {actionLoading ? "Saving..." : "Save Changes"}
+              {actionLoading
+                ? "Saving..."
+                : kycModalMode === "reject"
+                ? "Confirm Rejection"
+                : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
