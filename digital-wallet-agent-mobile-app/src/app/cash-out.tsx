@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useEffect } from "react";
@@ -535,14 +536,17 @@ export default function CashOutScreen() {
 
       {/* ── VERIFY PIN MODAL BOX ── */}
       <Modal visible={pinModalVisible} animationType="slide" transparent onRequestClose={() => setPinModalVisible(false)}>
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.7)' }}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <View style={{
-              borderTopLeftRadius: 28, borderTopRightRadius: 28,
-              padding: 24,
-              backgroundColor: colors.surface,
-              borderTopWidth: 1, borderTopColor: colors.border,
-            }}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.7)' }}
+        >
+          <Pressable style={{ flex: 1 }} onPress={() => setPinModalVisible(false)} />
+          <View style={{
+            borderTopLeftRadius: 28, borderTopRightRadius: 28,
+            padding: 24,
+            backgroundColor: colors.surface,
+            borderTopWidth: 1, borderTopColor: colors.border,
+          }}>
               <View style={{ alignItems: 'center', marginBottom: 16 }}>
                 <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
               </View>
@@ -587,6 +591,18 @@ export default function CashOutScreen() {
                   secureTextEntry
                   autoFocus
                 />
+                <TouchableOpacity
+                  onPress={() => {
+                    setPinModalVisible(false);
+                    router.push('/auth/forgot-pin');
+                  }}
+                  style={{ marginTop: 8, alignItems: 'center' }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>
+                    Forgot your PIN?
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -626,8 +642,7 @@ export default function CashOutScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-          </KeyboardAvoidingView>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* QR Scanner Modal */}

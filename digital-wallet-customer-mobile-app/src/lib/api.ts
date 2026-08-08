@@ -13,7 +13,14 @@ export async function getAuthToken(): Promise<string | null> {
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const token = await getAuthToken();
-  const isFormData = options.body && (options.body instanceof FormData || (options.body.constructor && options.body.constructor.name === 'FormData'));
+  const isFormData = options.body && (
+    typeof options.body !== 'string' &&
+    (
+      options.body instanceof FormData ||
+      '_parts' in (options.body as any) ||
+      (options.body.constructor && typeof options.body.constructor.name === 'string' && options.body.constructor.name.includes('FormData'))
+    )
+  );
   const headers: Record<string, string> = {
     'Accept': 'application/json',
     ...(isFormData ? {} : { 'Content-Type': 'application/json' }),

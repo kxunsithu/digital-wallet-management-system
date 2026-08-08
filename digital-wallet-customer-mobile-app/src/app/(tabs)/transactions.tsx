@@ -85,6 +85,7 @@ export default function TransactionsScreen() {
     { label: t('history.filter_received'), value: "agent_to_customer" },
     { label: t('history.filter_sent'), value: "customer_to_agent" },
     { label: t('history.filter_p2p'), value: "customer_to_customer" },
+    { label: t('history.filter_external'), value: "external_payment" },
   ];
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -101,21 +102,26 @@ export default function TransactionsScreen() {
   const fetchHistory = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     try {
+      const fetchExternal = filter === "all" || filter === "external_payment";
+      const fetchTransactions = filter !== "external_payment";
+
       let url = "/transactions?per_page=50";
       if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
-      if (filter !== "all") url += `&transaction_type=${filter}`;
+      if (filter !== "all" && filter !== "external_payment") url += `&transaction_type=${filter}`;
 
       const [txRes, extPayments] = await Promise.all([
-        apiFetch(url),
-        filter === "all"
+        fetchTransactions ? apiFetch(url) : Promise.resolve(null),
+        fetchExternal
           ? getMyExternalPayments().catch(() => [])
           : Promise.resolve([]),
       ]);
 
-      if (txRes.status === 200) {
+      if (txRes && txRes.status === 200) {
         setTransactions(txRes.body.data || []);
-      } else {
+      } else if (txRes) {
         Toast.show({ type: "error", text1: t('common.error'), text2: t('history.load_failed') });
+      } else {
+        setTransactions([]);
       }
 
       setExternalPayments(extPayments);
@@ -139,7 +145,8 @@ export default function TransactionsScreen() {
       fee: Number(p.fee),
       sender_name: p.customer?.full_name ?? null,
       sender_phone: p.customer?.phone_number ?? null,
-      receiver_name: p.external_system?.name ?? null,
+      receiver_name: p.agent?.full_name ?? p.external_system?.name ?? null,
+      receiver_phone: p.agent?.phone_number ?? null,
       description: p.description,
       status: p.status,
       created_at: p.created_at,
@@ -167,7 +174,7 @@ export default function TransactionsScreen() {
     });
   });
 
-  if (filter === 'all') {
+  if (filter === 'all' || filter === 'external_payment') {
     externalPayments.forEach((p) => {
       const system = p.external_system?.name || 'External System';
       entries.push({

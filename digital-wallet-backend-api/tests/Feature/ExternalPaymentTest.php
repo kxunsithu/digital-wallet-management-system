@@ -896,4 +896,43 @@ class ExternalPaymentTest extends TestCase
             ->assertJsonPath('data.data.0.customer.role.name', 'agent')
             ->assertJsonPath('data.data.0.agent.role.name', 'agent');
     }
+
+    public function test_agent_can_update_own_external_system(): void
+    {
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        $system = $this->makeExternalSystem('sk_live_testkey123', $agent);
+
+        $response = $this->actingAs($agent, 'sanctum')->putJson("/api/external-systems/{$system->id}", [
+            'name' => 'Updated System Name',
+            'system_link' => 'https://updated-link.example.com',
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.name', 'Updated System Name');
+
+        $this->assertDatabaseHas('external_systems', [
+            'id' => $system->id,
+            'name' => 'Updated System Name',
+            'system_link' => 'https://updated-link.example.com',
+        ]);
+    }
+
+    public function test_agent_cannot_update_another_agents_external_system(): void
+    {
+        [$agent] = $this->makeAgent('09122222222', 100000);
+        [$otherAgent] = $this->makeAgent('09133333333', 100000);
+        $system = $this->makeExternalSystem('sk_live_testkey123', $agent);
+
+        $response = $this->actingAs($otherAgent, 'sanctum')->putJson("/api/external-systems/{$system->id}", [
+            'name' => 'Hacked System Name',
+        ]);
+
+        $response->assertStatus(403);
+
+        $this->assertDatabaseHas('external_systems', [
+            'id' => $system->id,
+            'name' => 'Test Shopping',
+        ]);
+    }
 }

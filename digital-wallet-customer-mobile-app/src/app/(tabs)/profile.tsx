@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Pressable,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -24,6 +25,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
 import { getAutoSaveReceipt, setAutoSaveReceipt } from "../../services/settingsStore";
 import NrcImagePreviewModal from "../../components/NrcImagePreviewModal";
+import NRCInput from "../../components/NRCInput";
 
 interface UserProfile {
   id: number;
@@ -267,12 +269,14 @@ export default function ProfileScreen() {
           !editProfileImageUri.startsWith("http"));
 
       if (isLocalUri && editProfileImageUri) {
-        const filename = editProfileImageUri.split('/').pop() || 'profile.jpg';
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : `image/jpeg`;
+        const cleanUri = editProfileImageUri.split('?')[0];
+        const ext = cleanUri.split('.').pop()?.toLowerCase();
+        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+        const filename = `profile_${Date.now()}.${ext === 'png' ? 'png' : 'jpg'}`;
+
         const formData = new FormData();
         // @ts-ignore
-        formData.append('profile_image', { uri: editProfileImageUri, name: filename, type });
+        formData.append('profile_image', { uri: editProfileImageUri, name: filename, type: mimeType });
         const imgRes = await apiFetch("/profile/upload-profile-picture", {
           method: "POST",
           body: formData,
@@ -316,19 +320,21 @@ export default function ProfileScreen() {
     setSubmittingNrc(true);
     try {
       const formData = new FormData();
-      
-      const frontFilename = nrcFrontUri.split('/').pop() || 'nrc_front.jpg';
-      const frontMatch = /\.(\w+)$/.exec(frontFilename);
-      const frontType = frontMatch ? `image/${frontMatch[1]}` : `image/jpeg`;
-      
-      const backFilename = nrcBackUri.split('/').pop() || 'nrc_back.jpg';
-      const backMatch = /\.(\w+)$/.exec(backFilename);
-      const backType = backMatch ? `image/${backMatch[1]}` : `image/jpeg`;
+
+      const frontClean = nrcFrontUri.split('?')[0];
+      const frontExt = frontClean.split('.').pop()?.toLowerCase();
+      const frontMime = frontExt === 'png' ? 'image/png' : 'image/jpeg';
+      const frontFilename = `nrc_front_${Date.now()}.${frontExt === 'png' ? 'png' : 'jpg'}`;
+
+      const backClean = nrcBackUri.split('?')[0];
+      const backExt = backClean.split('.').pop()?.toLowerCase();
+      const backMime = backExt === 'png' ? 'image/png' : 'image/jpeg';
+      const backFilename = `nrc_back_${Date.now()}.${backExt === 'png' ? 'png' : 'jpg'}`;
 
       // @ts-ignore
-      formData.append('nrc_front_image', { uri: nrcFrontUri, name: frontFilename, type: frontType });
+      formData.append('nrc_front_image', { uri: nrcFrontUri, name: frontFilename, type: frontMime });
       // @ts-ignore
-      formData.append('nrc_back_image', { uri: nrcBackUri, name: backFilename, type: backType });
+      formData.append('nrc_back_image', { uri: nrcBackUri, name: backFilename, type: backMime });
 
       const res = await apiFetch("/customer/nrc-verifications/submit", {
         method: "POST",
@@ -863,14 +869,19 @@ export default function ProfileScreen() {
       </ScrollView>
 
       {/* ── Edit Profile Modal ── */}
-      <Modal visible={editProfileModal} animationType="slide" transparent>
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' }}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <View style={{
-              borderTopLeftRadius: 28, borderTopRightRadius: 28,
-              padding: 28, backgroundColor: colors.surface,
-              borderTopWidth: 1, borderTopColor: colors.border,
-            }}>
+      <Modal visible={editProfileModal} animationType="slide" transparent onRequestClose={() => setEditProfileModal(false)}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' }}
+        >
+          <Pressable style={{ flex: 1 }} onPress={() => setEditProfileModal(false)} />
+          <View style={{
+            borderTopLeftRadius: 28, borderTopRightRadius: 28,
+            padding: 28, backgroundColor: colors.surface,
+            borderTopWidth: 1, borderTopColor: colors.border,
+            maxHeight: '90%',
+          }}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <View style={{ alignItems: 'center', marginBottom: 20 }}>
                 <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
               </View>
@@ -916,18 +927,12 @@ export default function ProfileScreen() {
               </View>
 
               {/* NRC Number */}
-              <View style={{ marginBottom: 24 }}>
-                <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
-                  {t('profile.nrc')}
-                </Text>
-                <TextInput
-                  placeholder={t('profile.placeholder_nrc')}
-                  placeholderTextColor={colors.textSecondary}
-                  style={{ padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, backgroundColor: isDark ? colors.background : `${colors.border}22`, fontSize: 15, fontWeight: '600', color: colors.text }}
-                  value={editNrcNumber}
-                  onChangeText={setEditNrcNumber}
-                />
-              </View>
+              <NRCInput
+                value={editNrcNumber}
+                onChange={setEditNrcNumber}
+                label={t('profile.nrc')}
+                required={false}
+              />
 
               {/* State / Region */}
               <View style={{ marginBottom: 16 }}>
@@ -969,20 +974,25 @@ export default function ProfileScreen() {
                   }
                 </LinearGradient>
               </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
-        </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ── NRC Verification Modal ── */}
-      <Modal visible={nrcModalVisible} animationType="slide" transparent>
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' }}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <View style={{
-              borderTopLeftRadius: 28, borderTopRightRadius: 28,
-              padding: 28, backgroundColor: colors.surface,
-              borderTopWidth: 1, borderTopColor: colors.border,
-            }}>
+      <Modal visible={nrcModalVisible} animationType="slide" transparent onRequestClose={() => setNrcModalVisible(false)}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' }}
+        >
+          <Pressable style={{ flex: 1 }} onPress={() => setNrcModalVisible(false)} />
+          <View style={{
+            borderTopLeftRadius: 28, borderTopRightRadius: 28,
+            padding: 28, backgroundColor: colors.surface,
+            borderTopWidth: 1, borderTopColor: colors.border,
+            maxHeight: '90%',
+          }}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <View style={{ alignItems: 'center', marginBottom: 20 }}>
                 <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
               </View>
@@ -1081,20 +1091,25 @@ export default function ProfileScreen() {
                   )}
                 </LinearGradient>
               </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
-        </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ── Change PIN Modal ── */}
-      <Modal visible={changePinModal} animationType="slide" transparent>
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' }}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <View style={{
-              borderTopLeftRadius: 28, borderTopRightRadius: 28,
-              padding: 28, backgroundColor: colors.surface,
-              borderTopWidth: 1, borderTopColor: colors.border,
-            }}>
+      <Modal visible={changePinModal} animationType="slide" transparent onRequestClose={() => setChangePinModal(false)}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' }}
+        >
+          <Pressable style={{ flex: 1 }} onPress={() => setChangePinModal(false)} />
+          <View style={{
+            borderTopLeftRadius: 28, borderTopRightRadius: 28,
+            padding: 28, backgroundColor: colors.surface,
+            borderTopWidth: 1, borderTopColor: colors.border,
+            maxHeight: '90%',
+          }}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <View style={{ alignItems: 'center', marginBottom: 20 }}>
                 <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
               </View>
@@ -1121,9 +1136,9 @@ export default function ProfileScreen() {
                   }
                 </LinearGradient>
               </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
-        </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ── Logout Confirmation Modal ── */}

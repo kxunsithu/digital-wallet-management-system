@@ -8,6 +8,7 @@ use App\Http\Requests\ExternalSystem\UpdateExternalSystemRequest;
 use App\Models\ExternalSystem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ExternalSystemController extends Controller
@@ -48,17 +49,23 @@ class ExternalSystemController extends Controller
 
         $data = $request->validated();
 
+        $logoPath = null;
+        if ($request->hasFile('system_logo')) {
+            $logoPath = $request->file('system_logo')->store('external-system-logos', 'public');
+        }
+
         $system = ExternalSystem::create([
             'name' => $data['name'],
             'user_id' => $agent->id,
             'system_link' => $data['system_link'] ?? null,
+            'system_logo' => $logoPath,
             'status' => 'active',
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'External system created. Generate its API key from your app.',
-            'data' => $system->fresh('user'),
+            'data' => $this->formatSystem($system->fresh('user')),
         ], 201);
     }
 
@@ -79,6 +86,14 @@ class ExternalSystemController extends Controller
             return response()->json(['success' => false, 'message' => 'External system not found.'], 404);
         }
 
+        $user = $request->user();
+        $isAdmin = $user->role?->name === 'admin';
+        $isAgent = $user->role?->name === 'agent';
+
+        if (! $isAdmin && (! $isAgent || (int) $system->user_id !== (int) $user->id)) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized or external system not found.'], 403);
+        }
+
         $data = $request->validated();
         $payload = [];
 
@@ -90,8 +105,16 @@ class ExternalSystemController extends Controller
             $payload['system_link'] = $data['system_link'];
         }
 
-        if (isset($data['status'])) {
+        if (isset($data['status']) && $isAdmin) {
             $payload['status'] = $data['status'];
+        }
+
+        if ($request->hasFile('system_logo')) {
+            // Delete old logo if it exists
+            if ($system->system_logo) {
+                Storage::disk('public')->delete($system->system_logo);
+            }
+            $payload['system_logo'] = $request->file('system_logo')->store('external-system-logos', 'public');
         }
 
         if (! empty($payload)) {
@@ -101,7 +124,7 @@ class ExternalSystemController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'External system updated.',
-            'data' => $system->fresh('user'),
+            'data' => $this->formatSystem($system->fresh('user')),
         ], 200);
     }
 
@@ -142,9 +165,19 @@ class ExternalSystemController extends Controller
     {
         $systems = ExternalSystem::where('user_id', $request->user()->id)
             ->orderByDesc('id')
-            ->get();
+            ->get()
+            ->map(fn ($s) => $this->formatSystem($s));
 
         return response()->json(['success' => true, 'data' => $systems], 200);
+    }
+
+    private function formatSystem(ExternalSystem $system): array
+    {
+        $data = $system->toArray();
+        $data['system_logo_url'] = $system->system_logo
+            ? Storage::disk('public')->url($system->system_logo)
+            : null;
+        return $data;
     }
 
     public function systemInfo(Request $request): JsonResponse

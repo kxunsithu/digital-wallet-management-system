@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Pressable,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -221,16 +222,17 @@ export default function ProfileScreen() {
       const isLocalUri = editProfileImageUri && (editProfileImageUri.startsWith("file://") || editProfileImageUri.startsWith("content://") || !editProfileImageUri.startsWith("http"));
 
       if (isLocalUri && editProfileImageUri) {
-        const filename = editProfileImageUri.split('/').pop() || 'profile.jpg';
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : `image/jpeg`;
+        const cleanUri = editProfileImageUri.split('?')[0];
+        const ext = cleanUri.split('.').pop()?.toLowerCase();
+        const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+        const filename = `profile_${Date.now()}.${ext === 'png' ? 'png' : 'jpg'}`;
 
         const formData = new FormData();
         // @ts-ignore
         formData.append('profile_image', {
           uri: editProfileImageUri,
           name: filename,
-          type,
+          type: mimeType,
         });
 
         const imgRes = await apiFetch("/profile/upload-profile-picture", {
@@ -713,16 +715,21 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
       {/* Edit Profile Modal */}
-      <Modal visible={editProfileModal} animationType="slide" transparent>
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' }}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <View style={{
-              borderTopLeftRadius: 28, borderTopRightRadius: 28,
-              padding: 28,
-              backgroundColor: colors.surface,
-              borderTopWidth: 1,
-              borderTopColor: colors.border,
-            }}>
+      <Modal visible={editProfileModal} animationType="slide" transparent onRequestClose={() => setEditProfileModal(false)}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' }}
+        >
+          <Pressable style={{ flex: 1 }} onPress={() => setEditProfileModal(false)} />
+          <View style={{
+            borderTopLeftRadius: 28, borderTopRightRadius: 28,
+            padding: 28,
+            backgroundColor: colors.surface,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            maxHeight: '90%',
+          }}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <View style={{ alignItems: 'center', marginBottom: 20 }}>
                 <View style={{
                   width: 40, height: 4, borderRadius: 2,
@@ -808,21 +815,26 @@ export default function ProfileScreen() {
                   }
                 </LinearGradient>
               </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
-        </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
       {/* Change PIN Modal */}
-      <Modal visible={changePinModal} animationType="slide" transparent>
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' }}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <View style={{
-              borderTopLeftRadius: 28, borderTopRightRadius: 28,
-              padding: 28,
-              backgroundColor: colors.surface,
-              borderTopWidth: 1,
-              borderTopColor: colors.border,
-            }}>
+      <Modal visible={changePinModal} animationType="slide" transparent onRequestClose={() => setChangePinModal(false)}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.65)' }}
+        >
+          <Pressable style={{ flex: 1 }} onPress={() => setChangePinModal(false)} />
+          <View style={{
+            borderTopLeftRadius: 28, borderTopRightRadius: 28,
+            padding: 28,
+            backgroundColor: colors.surface,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            maxHeight: '90%',
+          }}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
               <View style={{ alignItems: 'center', marginBottom: 20 }}>
                 <View style={{
                   width: 40, height: 4, borderRadius: 2,
@@ -866,9 +878,9 @@ export default function ProfileScreen() {
                   }
                 </LinearGradient>
               </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
-        </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ── LOGOUT CONFIRMATION MODAL BOX ── */}

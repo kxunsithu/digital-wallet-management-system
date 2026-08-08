@@ -255,7 +255,7 @@ class ExternalPaymentController extends Controller
         $roleName = optional($user->role)->name;
         $perPage = min(100, max(1, (int) $request->query('per_page', 50)));
 
-        $query = ExternalPayment::with(['customer', 'externalSystem']);
+        $query = ExternalPayment::with(['customer', 'agent', 'externalSystem']);
 
         if ($roleName === 'agent') {
             $query->where(function ($q) use ($user) {

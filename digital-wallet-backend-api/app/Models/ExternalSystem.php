@@ -15,6 +15,7 @@ class ExternalSystem extends Model
         'name',
         'user_id',
         'system_link',
+        'system_logo',
         'api_key_hash',
         'api_key_prefix',
         'status',

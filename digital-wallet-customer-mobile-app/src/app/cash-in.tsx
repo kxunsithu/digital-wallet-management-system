@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useEffect, useRef } from "react";
@@ -536,32 +537,37 @@ export default function CashInScreen() {
                     {t('transfer.info_title')}
                   </Text>
                 </View>
+
+                {/* Transfer Fee Row */}
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 13, color: colors.text }}>{t('transfer.fee')}</Text>
+                  <Text style={{ fontSize: 13, color: colors.text, fontWeight: '500' }}>{t('transfer.fee')}</Text>
                   <Text style={{ fontSize: 13, fontWeight: '700', color: colors.primary }}>
                     {Number(transferInfo.customer_transfer_fee_percent) > 0
                       ? t('transfer.fee_percent', { percent: String(transferInfo.customer_transfer_fee_percent) })
                       : t('transfer.fee_free')}
                   </Text>
                 </View>
+
+                {/* Transfer Limit Row */}
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 13, color: colors.text }}>{t('transfer.limit')}</Text>
+                  <Text style={{ fontSize: 13, color: colors.text, fontWeight: '500' }}>{t('transfer.limit_label')}</Text>
                   {transferInfo.is_nrc_verified ? (
                     <Text style={{ fontSize: 13, fontWeight: '700', color: colors.primary }}>
-                      {t('transfer.limit_unlimited')}
+                      {t('transfer.limit_unlimited_val')}
                     </Text>
                   ) : transferInfo.unverified_customer_transfer_limit != null ? (
                     <Text style={{ fontSize: 13, fontWeight: '700', color: colors.primary }}>
-                      {t('transfer.limit', { amount: Number(transferInfo.unverified_customer_transfer_limit).toLocaleString() })}
+                      {t('transfer.limit_val', { amount: Number(transferInfo.unverified_customer_transfer_limit).toLocaleString() })}
                     </Text>
                   ) : (
                     <Text style={{ fontSize: 13, fontWeight: '700', color: colors.primary }}>
-                      {t('transfer.limit_none')}
+                      {t('transfer.limit_none_val')}
                     </Text>
                   )}
                 </View>
+
                 {!transferInfo.is_nrc_verified && (
-                  <Text style={{ fontSize: 11, color: colors.textSecondary }}>
+                  <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>
                     {t('transfer.limit_hint')}
                   </Text>
                 )}
@@ -611,14 +617,17 @@ export default function CashInScreen() {
 
       {/* ── VERIFY PIN MODAL BOX ── */}
       <Modal visible={pinModalVisible} animationType="slide" transparent onRequestClose={() => setPinModalVisible(false)}>
-        <View style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.7)' }}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <View style={{
-              borderTopLeftRadius: 28, borderTopRightRadius: 28,
-              padding: 24,
-              backgroundColor: colors.surface,
-              borderTopWidth: 1, borderTopColor: colors.border,
-            }}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.7)' }}
+        >
+          <Pressable style={{ flex: 1 }} onPress={() => setPinModalVisible(false)} />
+          <View style={{
+            borderTopLeftRadius: 28, borderTopRightRadius: 28,
+            padding: 24,
+            backgroundColor: colors.surface,
+            borderTopWidth: 1, borderTopColor: colors.border,
+          }}>
               <View style={{ alignItems: 'center', marginBottom: 16 }}>
                 <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
               </View>
@@ -663,6 +672,18 @@ export default function CashInScreen() {
                   secureTextEntry
                   autoFocus
                 />
+                <TouchableOpacity
+                  onPress={() => {
+                    setPinModalVisible(false);
+                    router.push('/auth/forgot-pin');
+                  }}
+                  style={{ marginTop: 8, alignItems: 'center' }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>
+                    {t('auth.forgot_pin')}
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -702,8 +723,7 @@ export default function CashInScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-          </KeyboardAvoidingView>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* QR Scanner Modal */}

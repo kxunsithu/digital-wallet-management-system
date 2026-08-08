@@ -56,3 +56,13 @@ export const verifyPin = (userId: number, pin: string) =>
   });
 
 export const logout = () => api.post("auth/logout");
+
+export const forgotPin = (phoneNumber: string, roleId: number) =>
+  api.post("auth/forgot-pin", { phone_number: phoneNumber, role_id: roleId });
+
+export const resetPin = (phoneNumber: string, otpCode: string, newPin: string) =>
+  api.post("auth/reset-pin", {
+    phone_number: phoneNumber,
+    otp_code: otpCode,
+    new_pin: newPin,
+  });

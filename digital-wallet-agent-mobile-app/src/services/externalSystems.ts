@@ -4,6 +4,8 @@ export interface AgentExternalSystem {
   id: number;
   name: string;
   system_link: string | null;
+  system_logo: string | null;
+  system_logo_url: string | null;
   api_key_prefix: string | null;
   status: string;
   created_at: string;
@@ -19,19 +21,62 @@ export async function getMyExternalSystems(): Promise<AgentExternalSystem[]> {
 
 export async function createExternalSystem(
   name: string,
-  systemLink?: string
+  systemLink?: string,
+  logoUri?: string
 ): Promise<AgentExternalSystem> {
-  const res = await apiFetch("/external-systems", {
-    method: "POST",
-    body: JSON.stringify({
-      name,
-      system_link: systemLink && systemLink.trim() ? systemLink.trim() : null,
-    }),
+  const formData = new FormData();
+  formData.append('name', name);
+  if (systemLink && systemLink.trim()) {
+    formData.append('system_link', systemLink.trim());
+  }
+  if (logoUri) {
+    const cleanUri = logoUri.split('?')[0];
+    const ext = cleanUri.split('.').pop()?.toLowerCase();
+    const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+    const filename = `system_logo_${Date.now()}.${ext === 'png' ? 'png' : 'jpg'}`;
+    // @ts-ignore
+    formData.append('system_logo', { uri: logoUri, name: filename, type: mimeType });
+  }
+  const res = await apiFetch('/external-systems', {
+    method: 'POST',
+    body: formData,
   });
   if (res.status === 201 && res.body?.success) {
     return res.body.data;
   }
-  throw new Error(res.body?.message ?? "Failed to create external system");
+  throw new Error(res.body?.message ?? 'Failed to create external system');
+}
+
+export async function updateExternalSystem(
+  id: number,
+  name: string,
+  systemLink?: string,
+  logoUri?: string
+): Promise<AgentExternalSystem> {
+  const formData = new FormData();
+  formData.append('name', name);
+  if (systemLink && systemLink.trim()) {
+    formData.append('system_link', systemLink.trim());
+  } else {
+    // send empty string so backend clears it
+    formData.append('system_link', '');
+  }
+  if (logoUri) {
+    const cleanUri = logoUri.split('?')[0];
+    const ext = cleanUri.split('.').pop()?.toLowerCase();
+    const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+    const filename = `system_logo_${Date.now()}.${ext === 'png' ? 'png' : 'jpg'}`;
+    // @ts-ignore
+    formData.append('system_logo', { uri: logoUri, name: filename, type: mimeType });
+  }
+  const res = await apiFetch(`/external-systems/${id}/update`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (res.status === 200 && res.body?.success) {
+    return res.body.data;
+  }
+  throw new Error(res.body?.message ?? 'Failed to update external system');
 }
 
 export async function generateExternalSystemKey(id: number): Promise<{ system: AgentExternalSystem; apiKey: string }> {
@@ -63,6 +108,8 @@ export interface AgentExternalPayment {
   direction?: 'incoming' | 'outgoing';
   external_system: { id: number; name: string } | null;
   customer: { id: number; full_name: string; phone_number: string } | null;
+  /** The agent who owns the external system and receives the payment. */
+  agent: { id: number; full_name: string; phone_number: string } | null;
 }
 
 export async function getMyExternalPayments(): Promise<AgentExternalPayment[]> {

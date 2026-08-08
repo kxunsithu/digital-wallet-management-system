@@ -17,8 +17,10 @@ import {
 } from "@/components/ui/input-otp";
 import {
   createPin,
+  forgotPin,
   getErrorMessage,
   requestOtp,
+  resetPin,
   verifyOtp,
   verifyPin,
 } from "@/services/auth.service";
@@ -33,7 +35,7 @@ const ROLE_AGENT_MANAGER = 2;
 
 const FLOW_STORAGE_KEY = "admin_auth_flow";
 
-type Step = "role" | "phone" | "otp" | "pin" | "verify-pin" | "dashboard";
+type Step = "role" | "phone" | "otp" | "pin" | "verify-pin" | "reset-pin" | "dashboard";
 
 type PersistedFlow = {
   step: Step;
@@ -66,6 +68,7 @@ const LoginPage = () => {
   const [otp, setOtp] = useState("");
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
+  const [isResettingPin, setIsResettingPin] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -133,6 +136,31 @@ const LoginPage = () => {
     }
   };
 
+  // Trigger Forgot PIN
+  const handleStartForgotPin = async () => {
+    if (!phoneNumber.trim() || !roleId) {
+      toast.error("Please enter your phone number first.");
+      setStep("phone");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await forgotPin(normalizePhoneNumber(phoneNumber), roleId);
+      if (response.data?.success || response.status === 200) {
+        toast.success(response.data?.message ?? "OTP has been sent to your phone for PIN reset.");
+        setIsResettingPin(true);
+        setOtp("");
+        setStep("otp");
+      } else {
+        toast.error(response.data?.message ?? "Unable to send OTP.");
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Step 3: Verify OTP
   const handleVerifyOtp = async (event: FormEvent) => {
     event.preventDefault();
@@ -142,7 +170,12 @@ const LoginPage = () => {
       const nextStep = response.data?.data?.next_step;
       if (response.data?.success) {
         setUserId(response.data?.data?.user_id ?? null);
-        if (nextStep === "verify_pin") {
+        if (isResettingPin) {
+          setStep("reset-pin");
+          setPin("");
+          setConfirmPin("");
+          toast.success("OTP verified. Please set your new 4-digit PIN.");
+        } else if (nextStep === "verify_pin") {
           setStep("verify-pin");
           toast.success("OTP verified. Please enter your PIN to continue.");
         } else {
@@ -151,6 +184,32 @@ const LoginPage = () => {
         }
       } else {
         toast.error(response.data?.message ?? "Invalid OTP.");
+      }
+    } catch (err) {
+      toast.error(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reset PIN submit handler
+  const handleResetPinSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (pin.length !== 4 || confirmPin.length !== 4 || pin !== confirmPin) {
+      toast.error("PINs must match and be exactly 4 digits.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await resetPin(normalizePhoneNumber(phoneNumber), otp, pin);
+      if (response.data?.success || response.status === 200) {
+        toast.success(response.data?.message ?? "PIN reset successfully. Please verify your new PIN.");
+        setIsResettingPin(false);
+        setPin("");
+        setConfirmPin("");
+        setStep("verify-pin");
+      } else {
+        toast.error(response.data?.message ?? "Unable to reset PIN.");
       }
     } catch (err) {
       toast.error(getErrorMessage(err));
@@ -245,9 +304,10 @@ const LoginPage = () => {
     switch (step) {
       case "role": return "Welcome back";
       case "phone": return roleName === "agent_manager" ? "Agent Manager Login" : "Admin Login";
-      case "otp": return "Enter OTP Code";
+      case "otp": return isResettingPin ? "Verify OTP for Reset" : "Enter OTP Code";
       case "pin": return "Create your PIN";
       case "verify-pin": return "Verify your PIN";
+      case "reset-pin": return "Reset your PIN";
       case "dashboard": return "Welcome back";
       default: return "Login";
     }
@@ -260,6 +320,7 @@ const LoginPage = () => {
       case "otp": return "We sent a 6-digit code to your phone. Enter it below to continue.";
       case "pin": return "Create a new 4-digit PIN to complete your account setup.";
       case "verify-pin": return `Enter your 4-digit PIN to continue to the ${roleName === "agent_manager" ? "Agent Manager" : "Admin"} dashboard.`;
+      case "reset-pin": return "Choose a new 4-digit PIN to secure your account.";
       case "dashboard": return "Redirecting...";
       default: return "";
     }
@@ -473,8 +534,77 @@ const LoginPage = () => {
                 </div>
               </div>
 
+              <div className="flex items-center justify-between text-sm">
+                <button
+                  type="button"
+                  className="text-xs text-slate-500 hover:text-slate-900"
+                  onClick={() => setStep("phone")}
+                >
+                  ← Change phone
+                </button>
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-blue-600 hover:underline"
+                  onClick={handleStartForgotPin}
+                  disabled={loading}
+                >
+                  Forgot PIN?
+                </button>
+              </div>
+
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Verifying PIN..." : "Verify PIN"}
+              </Button>
+            </form>
+          ) : null}
+
+          {/* Step 4c: Reset PIN */}
+          {step === "reset-pin" ? (
+            <form className="space-y-5" onSubmit={handleResetPinSubmit}>
+              <div className="overflow-hidden rounded border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm text-slate-500">Enter a new 4-digit PIN.</p>
+                <div className="mt-4 flex justify-center">
+                  <InputOTP
+                    value={pin}
+                    onChange={(value) => setPin(value.replace(/\D/g, ""))}
+                    maxLength={4}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    containerClassName="justify-center gap-3"
+                    render={({ slots }) => (
+                      <InputOTPGroup className="gap-3">
+                        {slots.map((slot, index) => (
+                          <InputOTPSlot key={index} index={index} {...slot} />
+                        ))}
+                      </InputOTPGroup>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-hidden rounded border border-slate-200 bg-slate-50 p-4">
+                <p className="text-sm text-slate-500">Re-enter your new PIN for confirmation.</p>
+                <div className="mt-4 flex justify-center">
+                  <InputOTP
+                    value={confirmPin}
+                    onChange={(value) => setConfirmPin(value.replace(/\D/g, ""))}
+                    maxLength={4}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    containerClassName="justify-center gap-3"
+                    render={({ slots }) => (
+                      <InputOTPGroup className="gap-3">
+                        {slots.map((slot, index) => (
+                          <InputOTPSlot key={index} index={index} {...slot} />
+                        ))}
+                      </InputOTPGroup>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Resetting PIN..." : "Reset PIN"}
               </Button>
             </form>
           ) : null}

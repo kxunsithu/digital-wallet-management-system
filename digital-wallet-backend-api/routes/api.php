@@ -130,6 +130,11 @@ Route::prefix('external-payments')->middleware(['auth:sanctum', 'ensure.admin'])
     Route::get('/{id}', [ExternalPaymentController::class, 'show']);
 });
 
+Route::prefix('external-systems')->middleware('auth:sanctum')->group(function () {
+    Route::put('/{id}', [ExternalSystemController::class, 'update']);
+    Route::post('/{id}/update', [ExternalSystemController::class, 'update']);
+});
+
 Route::prefix('external-systems')->middleware(['auth:sanctum', 'ensure.agent'])->group(function () {
     Route::get('/mine', [ExternalSystemController::class, 'mySystems']);
     Route::post('/', [ExternalSystemController::class, 'store']);
@@ -139,7 +144,6 @@ Route::prefix('external-systems')->middleware(['auth:sanctum', 'ensure.agent'])-
 Route::prefix('external-systems')->middleware(['auth:sanctum', 'ensure.admin'])->group(function () {
     Route::get('/', [ExternalSystemController::class, 'index']);
     Route::get('/{id}', [ExternalSystemController::class, 'show']);
-    Route::put('/{id}', [ExternalSystemController::class, 'update']);
     Route::delete('/{id}', [ExternalSystemController::class, 'destroy']);
     Route::post('/{id}/toggle-status', [ExternalSystemController::class, 'toggleStatus']);
 });

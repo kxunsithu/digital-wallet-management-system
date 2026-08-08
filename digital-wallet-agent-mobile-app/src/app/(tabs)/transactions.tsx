@@ -7,6 +7,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   TextInput,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useEffect, useCallback } from "react";
@@ -54,6 +55,7 @@ const FILTER_OPTIONS = [
   { label: "Cash In", value: "agent_to_customer" },
   { label: "Float Return", value: "agent_to_agent_manager" },
   { label: "Cash Out", value: "customer_to_agent" },
+  { label: "External", value: "external_payment" },
 ];
 
 const getTxMeta = (type: string, colors: any) => {
@@ -104,23 +106,30 @@ export default function TransactionsScreen() {
   const fetchHistory = useCallback(async (isRefresh = false) => {
     if (!isRefresh) setLoading(true);
     try {
+      const fetchExternal = filter === "all" || filter === "external_payment";
+      const fetchTransactions = filter !== "external_payment";
+
       let url = "/transactions?per_page=50";
       if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
-      if (filter !== "all") url += `&transaction_type=${filter}`;
+      if (filter !== "all" && filter !== "external_payment") url += `&transaction_type=${filter}`;
 
       const [txRes, extRes] = await Promise.all([
-        apiFetch(url),
-        filter === "all" ? apiFetch("/external-payments/mine") : Promise.resolve(null),
+        fetchTransactions ? apiFetch(url) : Promise.resolve(null),
+        fetchExternal ? apiFetch("/external-payments/mine") : Promise.resolve(null),
       ]);
 
-      if (txRes.status === 200) {
+      if (txRes && txRes.status === 200) {
         setTransactions(txRes.body.data || []);
-      } else {
+      } else if (txRes) {
         Toast.show({ type: "error", text1: "Error", text2: "Failed to load transactions" });
+      } else {
+        setTransactions([]);
       }
 
       if (extRes && extRes.status === 200 && extRes.body?.success) {
         setExternalPayments(extRes.body.data?.data ?? []);
+      } else {
+        setExternalPayments([]);
       }
     } catch (e) {
       Toast.show({ type: "error", text1: "Error", text2: "Could not connect" });
@@ -142,7 +151,8 @@ export default function TransactionsScreen() {
       fee: Number(p.fee),
       sender_name: p.customer?.full_name ?? null,
       sender_phone: p.customer?.phone_number ?? null,
-      receiver_name: p.external_system?.name ?? null,
+      receiver_name: p.agent?.full_name ?? p.external_system?.name ?? null,
+      receiver_phone: p.agent?.phone_number ?? null,
       description: p.description,
       status: p.status,
       created_at: p.created_at,
@@ -171,7 +181,7 @@ export default function TransactionsScreen() {
       });
     });
 
-    if (filter === 'all') {
+    if (filter === 'all' || filter === 'external_payment') {
       externalPayments.forEach((p) => {
         const system = p.external_system?.name || 'External System';
         const customer = p.customer ? (p.customer.full_name || p.customer.phone_number) : '';
@@ -326,7 +336,7 @@ export default function TransactionsScreen() {
     );
   };
 
-  const totalRecords = transactions.filter((tx) => tx.transaction_type !== 'external_payment').length + (filter === 'all' ? externalPayments.length : 0);
+  const totalRecords = transactions.filter((tx) => tx.transaction_type !== 'external_payment').length + (filter === 'all' || filter === 'external_payment' ? externalPayments.length : 0);
 
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: colors.background }}>
@@ -375,7 +385,11 @@ export default function TransactionsScreen() {
         </View>
 
         {/* Filter Pills */}
-        <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8, paddingRight: 8, marginTop: 12 }}
+        >
           {FILTER_OPTIONS.map((opt) => (
             <TouchableOpacity
               key={opt.value}
@@ -397,7 +411,7 @@ export default function TransactionsScreen() {
               </Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       </View>
 
       {/* Transaction List */}

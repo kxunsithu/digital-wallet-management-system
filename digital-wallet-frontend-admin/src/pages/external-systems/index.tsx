@@ -6,11 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   getExternalSystems,
-  updateExternalSystem,
-  deleteExternalSystem,
   toggleExternalSystemStatus,
 } from "@/services/externalSystem.service";
-import { Search, Trash2, Edit2, PlugZap } from "lucide-react";
+import { Search, PlugZap } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -18,15 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogClose,
-} from "@/components/ui/dialog";
+
 import {
   Table,
   TableBody,
@@ -60,13 +50,7 @@ export default function ExternalSystemsPage() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
 
-  const [editTarget, setEditTarget] = useState<ExternalSystem | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editLink, setEditLink] = useState("");
-  const [savingEdit, setSavingEdit] = useState(false);
 
-  const [deleteTarget, setDeleteTarget] = useState<ExternalSystem | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   const fetchSystems = useCallback(async () => {
     setLoading(true);
@@ -89,31 +73,6 @@ export default function ExternalSystemsPage() {
     fetchSystems();
   }, [fetchSystems]);
 
-  const openEdit = (system: ExternalSystem) => {
-    setEditTarget(system);
-    setEditName(system.name);
-    setEditLink(system.system_link || "");
-  };
-
-  const handleEdit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editTarget || !editName.trim()) return;
-    setSavingEdit(true);
-    try {
-      const res = await updateExternalSystem(editTarget.id, {
-        name: editName.trim(),
-        system_link: editLink.trim() || null,
-      });
-      toast.success(res.data.message || "External system updated");
-      setEditTarget(null);
-      await fetchSystems();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to update external system");
-    } finally {
-      setSavingEdit(false);
-    }
-  };
-
   const handleToggle = async (system: ExternalSystem) => {
     try {
       const res = await toggleExternalSystemStatus(system.id);
@@ -121,21 +80,6 @@ export default function ExternalSystemsPage() {
       await fetchSystems();
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to update status");
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      const res = await deleteExternalSystem(deleteTarget.id);
-      toast.success(res.data.message || "External system deleted");
-      setDeleteTarget(null);
-      await fetchSystems();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to delete external system");
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -292,35 +236,15 @@ export default function ExternalSystemsPage() {
                     {new Date(s.created_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 rounded-lg border-border shadow-none hover:bg-[#BCF807]"
-                        onClick={() => openEdit(s)}
-                        title="Edit name"
-                      >
-                        <Edit2 className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 rounded-lg border-border text-xs shadow-none"
-                        onClick={() => void handleToggle(s)}
-                        title="Toggle status"
-                      >
-                        {s.status === "active" ? "Deactivate" : "Activate"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 rounded-lg border-red-100 text-red-500 shadow-none hover:bg-red-50 hover:text-red-700"
-                        onClick={() => setDeleteTarget(s)}
-                        title="Delete"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 rounded-lg border-border text-xs shadow-none hover:bg-[#BCF807]"
+                      onClick={() => void handleToggle(s)}
+                      title="Toggle status"
+                    >
+                      {s.status === "active" ? "Deactivate" : "Activate"}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -388,78 +312,7 @@ export default function ExternalSystemsPage() {
         )}
       </div>
 
-      {/* Edit Dialog */}
-      <Dialog
-        open={editTarget !== null}
-        onOpenChange={(open, details) => {
-          if (details?.reason === "outside-press") return;
-          if (!open) setEditTarget(null);
-        }}
-      >
-        <DialogContent showCloseButton={false}>
-          <form onSubmit={handleEdit}>
-            <DialogHeader>
-              <DialogTitle>Edit External System</DialogTitle>
-              <DialogDescription>Update the name and system link of this integration.</DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col gap-4 py-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-muted-foreground">System Name</label>
-                <Input
-                  placeholder="System name"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="h-10 text-sm"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-muted-foreground">System Link (Web)</label>
-                <Input
-                  type="url"
-                  placeholder="e.g. https://shopkart.com"
-                  value={editLink}
-                  onChange={(e) => setEditLink(e.target.value)}
-                  className="h-10 text-sm"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <DialogClose render={<Button type="button" variant="outline" onClick={() => setEditTarget(null)}>Cancel</Button>} />
-              <Button
-                type="submit"
-                disabled={savingEdit || !editName.trim()}
-                className="bg-[#BCF807] font-semibold text-[#10110E] hover:bg-[#BCF807]/90"
-              >
-                {savingEdit ? "Saving..." : "Save Changes"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
-      {/* Delete Dialog */}
-      <Dialog
-        open={deleteTarget !== null}
-        onOpenChange={(open, details) => {
-          if (details?.reason === "outside-press") return;
-          if (!open) setDeleteTarget(null);
-        }}
-      >
-        <DialogContent showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle>Delete External System</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete {deleteTarget?.name ? `"${deleteTarget.name}"` : "this system"}? Its API key will stop working immediately. This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose render={<Button variant="outline" onClick={() => setDeleteTarget(null)}>Cancel</Button>} />
-            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-              {deleting ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
     </MainLayout>
   );

@@ -17,6 +17,8 @@ export interface ExternalPayment {
   updated_at: string;
   external_system: { id: number; name: string } | null;
   customer: { id: number; full_name: string; phone_number: string } | null;
+  /** The agent who owns the external system and receives the payment. */
+  agent: { id: number; full_name: string; phone_number: string } | null;
 }
 
 export async function getMyExternalPayments(): Promise<ExternalPayment[]> {
