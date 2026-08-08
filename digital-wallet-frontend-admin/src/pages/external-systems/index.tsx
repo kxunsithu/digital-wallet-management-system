@@ -217,7 +217,7 @@ export default function ExternalSystemsPage() {
                     ) : null}
                     <div
                       className="h-9 w-9 rounded-lg border border-border bg-slate-100 items-center justify-center text-muted-foreground"
-                      style={{ display: getLogoUrl(s.system_logo) ? "none" : "flex" }}
+                      style={{ display: getLogoUrl(s) ? "none" : "flex" }}
                     >
                       <ImageOff className="h-4 w-4" />
                     </div>
