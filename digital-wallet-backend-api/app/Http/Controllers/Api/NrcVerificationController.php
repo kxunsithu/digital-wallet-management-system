@@ -45,6 +45,12 @@ class NrcVerificationController extends Controller
             return response()->json(['success' => false, 'message' => 'Admins cannot submit NRC verification.'], 403);
         }
 
+        // Prevent re-submission once KYC is already verified
+        $existingVerification = NrcVerification::where('user_id', $user->id)->first();
+        if ($existingVerification && $existingVerification->status === 'verified') {
+            return response()->json(['success' => false, 'message' => 'Your identity is already verified. NRC documents cannot be changed.'], 403);
+        }
+
         $data = $request->validate([
             'nrc_front_image' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],
             'nrc_back_image' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],

@@ -24,9 +24,16 @@ interface NRCInputProps {
   onChange: (formattedNrc: string) => void;
   label?: string;
   required?: boolean;
+  disabled?: boolean;
 }
 
-export function NRCInput({ value, onChange, label = "NRC Information", required = true }: NRCInputProps) {
+export function NRCInput({
+  value,
+  onChange,
+  label = "NRC Information",
+  required = true,
+  disabled = false,
+}: NRCInputProps) {
   const { theme, colors } = useTheme();
   const isDark = theme === "dark";
 
@@ -90,30 +97,35 @@ export function NRCInput({ value, onChange, label = "NRC Information", required 
       {/* Label and Live Preview Chip */}
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
         <Text style={{ fontSize: 13, fontWeight: "700", color: colors.text }}>
-          {label} {required && <Text style={{ color: colors.error }}>*</Text>}
+          {label} {required && !disabled && <Text style={{ color: colors.error }}>*</Text>}
         </Text>
         <View
           style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 4,
             paddingHorizontal: 10,
             paddingVertical: 4,
             borderRadius: 12,
-            backgroundColor: `${colors.primary}20`,
+            backgroundColor: disabled ? `${colors.success}20` : `${colors.primary}20`,
           }}
         >
-          <Text style={{ fontSize: 12, fontWeight: "700", color: colors.primary }}>
-            {formattedPreview || "State/Township(Type)123456"}
+          {disabled ? <Feather name="lock" size={11} color={colors.success} /> : null}
+          <Text style={{ fontSize: 12, fontWeight: "700", color: disabled ? colors.success : colors.primary }}>
+            {disabled ? `${formattedPreview} (Verified)` : formattedPreview || "State/Township(Type)123456"}
           </Text>
         </View>
       </View>
 
       {/* Selectors Grid */}
-      <View style={{ flexDirection: "row", gap: 8, marginBottom: 10 }}>
+      <View style={{ flexDirection: "row", gap: 8, marginBottom: 10, opacity: disabled ? 0.6 : 1 }}>
         {/* State Code Selector */}
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 10, fontWeight: "600", color: colors.textSecondary, textTransform: "uppercase", marginBottom: 4 }}>
             State
           </Text>
           <TouchableOpacity
+            disabled={disabled}
             onPress={() => {
               setSearchQuery("");
               setPickerModal("state");
@@ -144,7 +156,7 @@ export function NRCInput({ value, onChange, label = "NRC Information", required 
             Township
           </Text>
           <TouchableOpacity
-            disabled={!parts.stateCode}
+            disabled={disabled || !parts.stateCode}
             onPress={() => {
               setSearchQuery("");
               setPickerModal("township");
@@ -156,11 +168,11 @@ export function NRCInput({ value, onChange, label = "NRC Information", required 
               borderRadius: 12,
               borderWidth: 1,
               borderColor: colors.border,
-              backgroundColor: parts.stateCode ? colors.surface : `${colors.border}33`,
+              backgroundColor: parts.stateCode && !disabled ? colors.surface : `${colors.border}33`,
               flexDirection: "row",
               justifyContent: "space-between",
               alignItems: "center",
-              opacity: parts.stateCode ? 1 : 0.5,
+              opacity: parts.stateCode && !disabled ? 1 : 0.5,
             }}
           >
             <Text style={{ fontSize: 14, fontWeight: "600", color: parts.townshipCode ? colors.text : colors.textSecondary }} numberOfLines={1}>
@@ -176,6 +188,7 @@ export function NRCInput({ value, onChange, label = "NRC Information", required 
             Type
           </Text>
           <TouchableOpacity
+            disabled={disabled}
             onPress={() => {
               setSearchQuery("");
               setPickerModal("type");
@@ -202,11 +215,12 @@ export function NRCInput({ value, onChange, label = "NRC Information", required 
       </View>
 
       {/* 6-Digit Number Input */}
-      <View>
+      <View style={{ opacity: disabled ? 0.6 : 1 }}>
         <Text style={{ fontSize: 10, fontWeight: "600", color: colors.textSecondary, textTransform: "uppercase", marginBottom: 4 }}>
           NRC Number (6 Digits)
         </Text>
         <TextInput
+          editable={!disabled}
           value={parts.number}
           onChangeText={(val) => updateParts({ number: keepMyanmarDigits(val) })}
           placeholder="123456"

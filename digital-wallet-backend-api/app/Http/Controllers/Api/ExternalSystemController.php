@@ -177,7 +177,8 @@ class ExternalSystemController extends Controller
      */
     public function listActive(): JsonResponse
     {
-        $systems = ExternalSystem::where('status', 'active')
+        $systems = ExternalSystem::with('user')
+            ->where('status', 'active')
             ->orderByDesc('id')
             ->get()
             ->map(fn ($s) => $this->formatSystem($s));

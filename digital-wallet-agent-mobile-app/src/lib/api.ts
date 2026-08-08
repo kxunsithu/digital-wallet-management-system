@@ -40,6 +40,15 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   });
 
   const text = await res.text();
+
+  // Surface non-JSON server errors (e.g. 413 Request Entity Too Large from Nginx)
+  if (!res.ok && !text.trim().startsWith('{') && !text.trim().startsWith('[')) {
+    if (res.status === 413) {
+      throw new Error('File too large. Please choose a smaller image.');
+    }
+    throw new Error(`Server error (${res.status})`);
+  }
+
   try {
     return { status: res.status, body: text ? JSON.parse(text) : null };
   } catch (e) {

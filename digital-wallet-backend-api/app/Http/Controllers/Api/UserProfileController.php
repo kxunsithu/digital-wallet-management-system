@@ -49,6 +49,17 @@ class UserProfileController extends Controller
             unset($data['nrc_number']);
         }
 
+        // Prevent customers from changing NRC number once KYC is verified
+        if (isset($data['nrc_number'])) {
+            $isKycVerified = DB::table('nrc_verifications')
+                ->where('user_id', $user->id)
+                ->where('status', 'verified')
+                ->exists();
+            if ($isKycVerified) {
+                unset($data['nrc_number']);
+            }
+        }
+
         $user->fill($data);
         $user->save();
 

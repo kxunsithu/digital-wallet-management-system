@@ -26,6 +26,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { getAutoSaveReceipt, setAutoSaveReceipt } from "../../services/settingsStore";
 import NrcImagePreviewModal from "../../components/NrcImagePreviewModal";
 import NRCInput from "../../components/NRCInput";
+import LocationSelect from "../../components/LocationSelect";
 
 interface UserProfile {
   id: number;
@@ -195,7 +196,17 @@ export default function ProfileScreen() {
     setEditProfileModal(true);
   };
 
+  const isKycVerified = profile?.kyc_status === 'verified' || profile?.kyc_status === 'approved' || profile?.nrc_verification?.status === 'verified';
+
   const handleOpenNrcModal = () => {
+    if (isKycVerified) {
+      Toast.show({
+        type: "info",
+        text1: t("common.info"),
+        text2: "Your KYC identity is verified. NRC documents cannot be modified.",
+      });
+      return;
+    }
     setNrcFrontUri(profile?.nrc_images?.find(img => img.image_type === 'nrc_front_image')?.image_url ?? null);
     setNrcBackUri(profile?.nrc_images?.find(img => img.image_type === 'nrc_back_image')?.image_url ?? null);
     setNrcModalVisible(true);
@@ -932,35 +943,20 @@ export default function ProfileScreen() {
                 onChange={setEditNrcNumber}
                 label={t('profile.nrc')}
                 required={false}
+                disabled={isKycVerified}
               />
 
-              {/* State / Region */}
-              <View style={{ marginBottom: 16 }}>
-                <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
-                  {t('profile.state_region')}
-                </Text>
-                <TextInput
-                  placeholder={t('profile.placeholder_state_region')}
-                  placeholderTextColor={colors.textSecondary}
-                  style={{ padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, backgroundColor: isDark ? colors.background : `${colors.border}22`, fontSize: 15, fontWeight: '600', color: colors.text }}
-                  value={editStateRegion}
-                  onChangeText={setEditStateRegion}
-                />
-              </View>
-
-              {/* Township */}
-              <View style={{ marginBottom: 24 }}>
-                <Text style={{ fontSize: 11, fontWeight: '600', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
-                  {t('profile.township')}
-                </Text>
-                <TextInput
-                  placeholder={t('profile.placeholder_township')}
-                  placeholderTextColor={colors.textSecondary}
-                  style={{ padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: colors.border, backgroundColor: isDark ? colors.background : `${colors.border}22`, fontSize: 15, fontWeight: '600', color: colors.text }}
-                  value={editTownship}
-                  onChangeText={setEditTownship}
-                />
-              </View>
+              {/* State / Region and Township Dropdowns */}
+              <LocationSelect
+                stateRegion={editStateRegion}
+                township={editTownship}
+                onStateRegionChange={setEditStateRegion}
+                onTownshipChange={setEditTownship}
+                stateRegionLabel={t('profile.state_region')}
+                townshipLabel={t('profile.township')}
+                stateRegionPlaceholder={t('profile.placeholder_state_region')}
+                townshipPlaceholder={t('profile.placeholder_township')}
+              />
 
               <TouchableOpacity onPress={handleUpdateProfile} disabled={updatingProfile} activeOpacity={0.85} style={{ marginTop: 8, opacity: updatingProfile ? 0.7 : 1 }}>
                 <LinearGradient

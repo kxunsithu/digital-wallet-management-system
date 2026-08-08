@@ -935,4 +935,22 @@ class ExternalPaymentTest extends TestCase
             'name' => 'Test Shopping',
         ]);
     }
+
+    public function test_customer_can_list_active_external_systems(): void
+    {
+        [$customer] = $this->makeCustomer('09123456789', 'verified', 500000);
+        [$agent] = $this->makeAgent('09122222222', 100000);
+
+        $activeSystem = $this->makeExternalSystem('sk_live_testkey123', $agent, 'active');
+        $inactiveSystem = $this->makeExternalSystem('sk_live_testkey456', $agent, 'inactive');
+
+        $response = $this->actingAs($customer, 'sanctum')->getJson('/api/external-systems/active');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $activeSystem->id)
+            ->assertJsonPath('data.0.name', 'Test Shopping')
+            ->assertJsonPath('data.0.user.full_name', $agent->full_name);
+    }
 }
