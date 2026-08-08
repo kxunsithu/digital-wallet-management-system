@@ -121,13 +121,11 @@ fi\n\
 [ -z "$QUEUE_CONNECTION" ] && echo "QUEUE_CONNECTION=sync" >> .env\n\
 [ -z "$LOG_CHANNEL" ]    && echo "LOG_CHANNEL=stderr"  >> .env\n\
 \n\
-# ── 4. Storage permissions ───────────────────────────────────────────────\n\
-chmod -R 775 storage bootstrap/cache\n\
-chown -R www-data:www-data storage bootstrap/cache\n\
-\n\
-# ── 5. Storage symlink ───────────────────────────────────────────────────\n\
+# ── 4. Storage permissions & symlink ─────────────────────────────────────\n\
 rm -rf public/storage\n\
-php artisan storage:link\n\
+php artisan storage:link --force\n\
+chmod -R 775 storage bootstrap/cache public/storage\n\
+chown -R www-data:www-data storage bootstrap/cache public/storage\n\
 \n\
 # ── 6. Clear stale bootstrap caches (safe on redeploy) ──────────────────\n\
 echo "==> Clearing stale bootstrap caches..."\n\

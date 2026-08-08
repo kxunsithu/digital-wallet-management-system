@@ -41,7 +41,9 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            'url' => (isset($_SERVER['HTTP_HOST'])
+                ? ((($_SERVER['HTTPS'] ?? '') === 'on' || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ? 'https://' : 'http://') . $_SERVER['HTTP_HOST']
+                : rtrim(env('APP_URL', 'http://localhost'), '/')) . '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

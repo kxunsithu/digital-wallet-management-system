@@ -11,8 +11,54 @@ export async function getAuthToken(): Promise<string | null> {
   }
 }
 
-export async function apiFetch(path: string, options: RequestInit = {}) {
+export async function uploadFormData(path: string, formData: FormData): Promise<{ status: number; body: any }> {
   const token = await getAuthToken();
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', API_BASE + path);
+    xhr.setRequestHeader('Accept', 'application/json');
+    if (token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    }
+
+    xhr.onload = () => {
+      const text = xhr.responseText;
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve({ status: xhr.status, body: text ? JSON.parse(text) : null });
+        } catch (e) {
+          resolve({ status: xhr.status, body: text });
+        }
+      } else {
+        if (text && (text.trim().startsWith('{') || text.trim().startsWith('['))) {
+          try {
+            resolve({ status: xhr.status, body: JSON.parse(text) });
+            return;
+          } catch (e) {
+            // fallback
+          }
+        }
+        if (xhr.status === 413) {
+          reject(new Error('File too large. Please choose a smaller image.'));
+          return;
+        }
+        reject(new Error(text || `Server error (${xhr.status})`));
+      }
+    };
+
+    xhr.onerror = () => {
+      reject(new Error('Network error during file upload'));
+    };
+
+    xhr.ontimeout = () => {
+      reject(new Error('Upload request timed out'));
+    };
+
+    xhr.send(formData);
+  });
+}
+
+export async function apiFetch(path: string, options: RequestInit = {}) {
   const isFormData = options.body && (
     typeof options.body !== 'string' &&
     (
@@ -21,17 +67,17 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
       (options.body.constructor && typeof options.body.constructor.name === 'string' && options.body.constructor.name.includes('FormData'))
     )
   );
-  const headers: Record<string, string> = {
-    'Accept': 'application/json',
-    ...(options.headers as Record<string, string> || {}),
-  };
 
   if (isFormData) {
-    delete headers['Content-Type'];
-    delete headers['content-type'];
-  } else if (!headers['Content-Type'] && !headers['content-type']) {
-    headers['Content-Type'] = 'application/json';
+    return uploadFormData(path, options.body as FormData);
   }
+
+  const token = await getAuthToken();
+  const headers: Record<string, string> = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string> || {}),
+  };
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -44,7 +90,6 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
 
   const text = await res.text();
 
-  // Surface non-JSON server errors (e.g. 413 Request Entity Too Large from Nginx)
   if (!res.ok && !text.trim().startsWith('{') && !text.trim().startsWith('[')) {
     if (res.status === 413) {
       throw new Error('File too large. Please choose a smaller image.');
