@@ -100,7 +100,7 @@ export default function ProfilePage() {
         nrc_number: data.nrc_number ?? "",
       });
       const profileImage = data.images?.find((img) => img.image_type === "profile_image");
-      setPreviewUrl(getStorageUrl(profileImage?.image_path) ?? profileImage?.image_url ?? null);
+      setPreviewUrl(getStorageUrl(profileImage?.image_url) ?? getStorageUrl(profileImage?.image_path) ?? null);
       syncSessionCookie(data);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to load profile");
@@ -144,7 +144,7 @@ export default function ProfilePage() {
       setUploading(true);
       const response = await uploadProfilePicture(file);
       const imageUrl =
-        getStorageUrl(response.data?.data?.image_path) ?? response.data?.data?.image_url ?? null;
+        getStorageUrl(response.data?.data?.image_url) ?? getStorageUrl(response.data?.data?.image_path) ?? null;
       setPreviewUrl(imageUrl);
       toast.success(response.data?.message || "Profile picture uploaded.");
       await loadProfile();
@@ -392,7 +392,7 @@ export default function ProfilePage() {
                     const backImage = nrcImages.find((img) => img.image_type === "nrc_back_image");
 
                     const renderNrcImage = (image: ProfileImage | undefined, label: string) => {
-                      const imageUrl = getStorageUrl(image?.image_path) || image?.image_url;
+                      const imageUrl = getStorageUrl(image?.image_url) || getStorageUrl(image?.image_path);
                       if (!image || !imageUrl) {
                         return (
                           <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-slate-50/50 py-8">

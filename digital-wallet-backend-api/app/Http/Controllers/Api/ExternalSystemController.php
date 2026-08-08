@@ -36,6 +36,10 @@ class ExternalSystemController extends Controller
 
         $list = $query->orderByDesc('id')->paginate($perPage);
 
+        $list->setCollection(
+            $list->getCollection()->map(fn ($s) => $this->formatSystem($s))
+        );
+
         return response()->json(['success' => true, 'data' => $list], 200);
     }
 

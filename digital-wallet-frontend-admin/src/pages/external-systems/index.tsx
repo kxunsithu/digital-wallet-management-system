@@ -32,6 +32,7 @@ type ExternalSystem = {
   api_key_prefix: string;
   system_link?: string | null;
   system_logo?: string | null;
+  system_logo_url?: string | null;
   status: string;
   created_at: string;
   user?: {
@@ -42,7 +43,10 @@ type ExternalSystem = {
 };
 
 /** Build the public URL for a logo stored on the Laravel backend. */
-function getLogoUrl(path: string | null | undefined): string | null {
+function getLogoUrl(system: ExternalSystem | null | undefined): string | null {
+  if (!system) return null;
+  if (system.system_logo_url) return system.system_logo_url;
+  const path = system.system_logo;
   if (!path) return null;
   // If already absolute (e.g. from formatSystem), return as-is
   if (path.startsWith("http")) return path;
@@ -200,9 +204,9 @@ export default function ExternalSystemsPage() {
                   </TableCell>
                   {/* Logo */}
                   <TableCell className="px-4 py-3">
-                    {getLogoUrl(s.system_logo) ? (
+                    {getLogoUrl(s) ? (
                       <img
-                        src={getLogoUrl(s.system_logo)!}
+                        src={getLogoUrl(s)!}
                         alt={s.name}
                         className="h-9 w-9 rounded-lg object-cover border border-border shadow-sm"
                         onError={(e) => {

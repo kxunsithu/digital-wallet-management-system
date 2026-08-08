@@ -18,6 +18,7 @@ import { useLanguage } from '../../providers/LanguageProvider';
 import { createPin, setPendingAuthRoute } from '../../services/auth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import NRCInput from '../../components/NRCInput';
 
 const PIN_LENGTH = 4;
 const STEPS = ['Phone', 'OTP', 'PIN'];
@@ -335,7 +336,7 @@ export default function CreatePinScreen() {
 
             {step === 'profile' ? (
               <View>
-                <View style={{ marginBottom: 20 }}>
+                <View style={{ marginBottom: 16 }}>
                   <Text style={{
                     fontSize: 11, fontWeight: '600',
                     color: colors.textSecondary,
@@ -345,60 +346,30 @@ export default function CreatePinScreen() {
                   }}>
                     Full Name
                   </Text>
-                  <View style={{
-                    borderRadius: 16,
-                    borderWidth: 1.5,
-                    borderColor: colors.border,
-                    backgroundColor: colors.surface,
-                    paddingHorizontal: 16,
-                  }}>
-                    <TextInput
-                      placeholder="Your full name"
-                      placeholderTextColor={colors.textSecondary}
-                      value={fullName}
-                      onChangeText={setFullName}
-                      editable={!loading}
-                      style={{
-                        paddingVertical: 16,
-                        fontSize: 16,
-                        fontWeight: '500',
-                        color: colors.text,
-                      }}
-                    />
-                  </View>
+                  <TextInput
+                    placeholder="Your full name"
+                    placeholderTextColor={colors.textSecondary}
+                    value={fullName}
+                    onChangeText={setFullName}
+                    editable={!loading}
+                    style={{
+                      padding: 14,
+                      borderRadius: 14,
+                      borderWidth: 1.5,
+                      borderColor: colors.border,
+                      backgroundColor: isDark ? colors.background : `${colors.border}22`,
+                      fontSize: 15,
+                      fontWeight: '600',
+                      color: colors.text,
+                    }}
+                  />
                 </View>
-                <View style={{ marginBottom: 20 }}>
-                  <Text style={{
-                    fontSize: 11, fontWeight: '600',
-                    color: colors.textSecondary,
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.8,
-                    marginBottom: 8,
-                  }}>
-                    NRC Number
-                  </Text>
-                  <View style={{
-                    borderRadius: 16,
-                    borderWidth: 1.5,
-                    borderColor: colors.border,
-                    backgroundColor: colors.surface,
-                    paddingHorizontal: 16,
-                  }}>
-                    <TextInput
-                      placeholder="NRC number"
-                      placeholderTextColor={colors.textSecondary}
-                      value={nrcNumber}
-                      onChangeText={setNrcNumber}
-                      editable={!loading}
-                      style={{
-                        paddingVertical: 16,
-                        fontSize: 16,
-                        fontWeight: '500',
-                        color: colors.text,
-                      }}
-                    />
-                  </View>
-                </View>
+                <NRCInput
+                  value={nrcNumber}
+                  onChange={setNrcNumber}
+                  label="NRC Number"
+                  required
+                />
               </View>
             ) : (
               <>

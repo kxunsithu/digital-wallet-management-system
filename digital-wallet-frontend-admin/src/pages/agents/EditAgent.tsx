@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { resolveImageUrl } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -73,11 +74,10 @@ export default function EditAgent() {
           shop_address: agent.shop_address || "",
           status: agent.status || "pending",
         });
-        const baseUrl = (import.meta.env.VITE_API_URL?.replace('/api', '') ?? '') + '/storage/';
         const frontImg = agent.user?.images?.find((img: any) => img.image_type === 'nrc_front_image');
         const backImg  = agent.user?.images?.find((img: any) => img.image_type === 'nrc_back_image');
-        if (frontImg) setNrcFrontUrl(baseUrl + frontImg.image_path);
-        if (backImg)  setNrcBackUrl(baseUrl + backImg.image_path);
+        if (frontImg) setNrcFrontUrl(resolveImageUrl(frontImg) ?? '');
+        if (backImg)  setNrcBackUrl(resolveImageUrl(backImg) ?? '');
       } catch {
         toast.error("Failed to load agent");
         navigate("/agents");

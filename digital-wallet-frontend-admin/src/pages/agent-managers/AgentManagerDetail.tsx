@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { getAgentManager } from "@/services/agentManager.service";
 
@@ -92,7 +93,7 @@ export default function AgentManagerDetail() {
               <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-border bg-white text-muted-foreground">
                 {profileImage ? (
                   <img
-                    src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/storage/${profileImage.image_path}`}
+                    src={resolveImageUrl(profileImage) ?? ""}
                     alt="Profile"
                     className="h-full w-full object-cover"
                     onError={(e) => {
@@ -187,7 +188,7 @@ export default function AgentManagerDetail() {
               {nrcFront ? (
                 <div className="relative mt-2 flex max-w-lg items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2">
                   <img
-                    src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/storage/${nrcFront.image_path}`}
+                    src={resolveImageUrl(nrcFront) ?? ""}
                     alt="NRC Front"
                     className="max-h-[250px] w-auto rounded object-contain"
                     onError={(e) => {
@@ -204,7 +205,7 @@ export default function AgentManagerDetail() {
               {nrcBack ? (
                 <div className="relative mt-2 flex max-w-lg items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2">
                   <img
-                    src={`${import.meta.env.VITE_API_URL?.replace('/api', '')}/storage/${nrcBack.image_path}`}
+                    src={resolveImageUrl(nrcBack) ?? ""}
                     alt="NRC Back"
                     className="max-h-[250px] w-auto rounded object-contain"
                     onError={(e) => {

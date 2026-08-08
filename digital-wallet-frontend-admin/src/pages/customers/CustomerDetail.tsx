@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   getCustomer,
@@ -156,7 +157,6 @@ export default function CustomerDetail() {
   const nrcFront = user?.images?.find((img: any) => img.image_type === "nrc_front_image");
   const nrcBack = user?.images?.find((img: any) => img.image_type === "nrc_back_image");
   const profileImage = user?.images?.find((img: any) => img.image_type === "profile_image");
-  const storageBase = `${import.meta.env.VITE_API_URL?.replace("/api", "")}/storage/`;
   const hasNrcImages = !!(nrcFront || nrcBack);
 
   return (
@@ -235,7 +235,7 @@ export default function CustomerDetail() {
               <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-border bg-white text-muted-foreground">
                 {profileImage ? (
                   <img
-                    src={`${storageBase}${profileImage.image_path}`}
+                    src={resolveImageUrl(profileImage) ?? ""}
                     alt="Profile"
                     className="h-full w-full object-cover"
                     onError={(e) => {
@@ -435,7 +435,7 @@ export default function CustomerDetail() {
               {nrcFront ? (
                 <div className="relative mt-2 flex max-w-lg items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2">
                   <img
-                    src={`${storageBase}${nrcFront.image_path}`}
+                    src={resolveImageUrl(nrcFront) ?? ""}
                     alt="NRC Front"
                     className="max-h-[250px] w-auto rounded object-contain"
                     onError={(e) => {
@@ -455,7 +455,7 @@ export default function CustomerDetail() {
               {nrcBack ? (
                 <div className="relative mt-2 flex max-w-lg items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-2">
                   <img
-                    src={`${storageBase}${nrcBack.image_path}`}
+                    src={resolveImageUrl(nrcBack) ?? ""}
                     alt="NRC Back"
                     className="max-h-[250px] w-auto rounded object-contain"
                     onError={(e) => {
