@@ -20,12 +20,18 @@ export async function getMyExternalSystems(): Promise<AgentExternalSystem[]> {
 }
 
 const isLocalUri = (uri?: string | null): boolean => {
-  if (!uri) return false;
-  return uri.startsWith('file://') || uri.startsWith('content://') || uri.startsWith('ph://') || (!uri.startsWith('http://') && !uri.startsWith('https://'));
+  if (!uri || typeof uri !== 'string' || !uri.trim()) return false;
+  const trimmed = uri.trim();
+  return trimmed.startsWith('file://') || trimmed.startsWith('content://') || trimmed.startsWith('ph://') || (!trimmed.startsWith('http://') && !trimmed.startsWith('https://'));
 };
 
 const buildFilePayload = (uri: string, defaultPrefix: string) => {
-  let cleanUri = uri.split('?')[0];
+  const safeUri = String(uri || '').trim();
+  if (!safeUri) {
+    throw new Error('Invalid image file path');
+  }
+
+  let cleanUri = safeUri.split('?')[0];
   try {
     cleanUri = decodeURI(cleanUri);
   } catch (e) {
@@ -38,8 +44,8 @@ const buildFilePayload = (uri: string, defaultPrefix: string) => {
   const name = `${defaultPrefix}_${Date.now()}.${ext}`;
 
   return {
-    uri,
-    name,
+    uri: safeUri,
+    name: name,
     type: mimeType,
   };
 };

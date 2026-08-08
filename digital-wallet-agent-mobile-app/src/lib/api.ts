@@ -26,9 +26,15 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   );
   const headers: Record<string, string> = {
     'Accept': 'application/json',
-    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(options.headers as Record<string, string> || {}),
   };
+
+  if (isFormData) {
+    delete headers['Content-Type'];
+    delete headers['content-type'];
+  } else if (!headers['Content-Type'] && !headers['content-type']) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
