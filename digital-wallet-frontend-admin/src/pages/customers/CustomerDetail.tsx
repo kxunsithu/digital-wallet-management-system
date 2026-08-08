@@ -590,19 +590,19 @@ export default function CustomerDetail() {
             )}
           </div>
 
-          <DialogFooter className="flex gap-2">
+          <DialogFooter className="flex sm:flex-row gap-3 pt-2">
             <Button
               variant="outline"
               onClick={() => setKycModalOpen(false)}
               disabled={actionLoading}
-              className="w-full rounded-xl"
+              className="flex-1 rounded-xl"
             >
               Cancel
             </Button>
             <Button
               onClick={handleKycSubmit}
               disabled={actionLoading}
-              className={`w-full rounded-xl font-semibold ${
+              className={`flex-1 rounded-xl font-semibold ${
                 kycModalMode === "reject"
                   ? "bg-[#FF4D4F] hover:bg-[#FF4D4F]/90 text-white"
                   : "bg-[#BCF807] hover:bg-[#BCF807]/90 text-[#10110E]"
