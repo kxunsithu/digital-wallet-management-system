@@ -1,5 +1,12 @@
-import axios from "axios";
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { getCookie, clearAdminSession } from "./cookies";
+
+const MAX_RETRIES = 4;
+const RETRY_DELAY_MS = 3000;
+
+interface RetryableConfig extends InternalAxiosRequestConfig {
+  _retryCount?: number;
+}
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -18,13 +25,26 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error: AxiosError) => {
     if (error.response && error.response.status === 401) {
       clearAdminSession();
       if (typeof window !== "undefined") {
         window.location.href = "/login";
       }
+      return Promise.reject(error);
     }
+
+    const config = error.config as RetryableConfig | undefined;
+    const isNetworkError = !error.response;
+
+    if (config && isNetworkError) {
+      config._retryCount = (config._retryCount ?? 0) + 1;
+      if (config._retryCount <= MAX_RETRIES) {
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+        return api(config);
+      }
+    }
+
     return Promise.reject(error);
   }
 );
