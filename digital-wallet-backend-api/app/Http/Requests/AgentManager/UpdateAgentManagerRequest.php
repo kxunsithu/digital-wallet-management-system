@@ -31,8 +31,8 @@ class UpdateAgentManagerRequest extends FormRequest
             'parent_manager_id' => ['nullable', 'integer', 'exists:agent_manager_profiles,id'],
 
             // NRC images
-            'nrc_front_image'   => ['nullable', 'file', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],
-            'nrc_back_image'    => ['nullable', 'file', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],
+            'nrc_front_image'   => ['nullable', 'file', 'image', 'mimes:jpeg,jpg,png', 'max:5120'],
+            'nrc_back_image'    => ['nullable', 'file', 'image', 'mimes:jpeg,jpg,png', 'max:5120'],
         ];
     }
 

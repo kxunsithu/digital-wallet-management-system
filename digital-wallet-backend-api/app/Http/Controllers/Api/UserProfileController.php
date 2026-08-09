@@ -92,8 +92,8 @@ class UserProfileController extends Controller
         ]);
 
         $file = $data['profile_image'];
-        $storedPath = $file->store('profile-pictures', 'public');
-        $publicUrl = Storage::disk('public')->url($storedPath);
+        $storedPath = $file->store('profile-pictures', 'image');
+        $publicUrl = Storage::disk('image')->url($storedPath);
 
         Image::updateOrCreate(
             ['user_id' => $user->id, 'image_type' => 'profile_image'],

@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Image as ImageIcon, UploadCloud } from "lucide-react";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png"];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 interface ImageUploadProps {
   label?: string;
@@ -26,6 +27,11 @@ export function ImageUpload({ label, onChange, required, initialPreview }: Image
   const handleFile = (file: File) => {
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       toast.error("Only JPG, JPEG, and PNG image files are allowed.");
+      onChange(null);
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast.error("Image must be 5MB or smaller.");
       onChange(null);
       return;
     }

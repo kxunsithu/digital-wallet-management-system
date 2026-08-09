@@ -55,7 +55,7 @@ class ExternalSystemController extends Controller
 
         $logoPath = null;
         if ($request->hasFile('system_logo')) {
-            $logoPath = $request->file('system_logo')->store('external-system-logos', 'public');
+            $logoPath = $request->file('system_logo')->store('external-system-logos', 'image');
         }
 
         $system = ExternalSystem::create([
@@ -116,9 +116,9 @@ class ExternalSystemController extends Controller
         if ($request->hasFile('system_logo')) {
             // Delete old logo if it exists
             if ($system->system_logo) {
-                Storage::disk('public')->delete($system->system_logo);
+                Storage::disk('image')->delete($system->system_logo);
             }
-            $payload['system_logo'] = $request->file('system_logo')->store('external-system-logos', 'public');
+            $payload['system_logo'] = $request->file('system_logo')->store('external-system-logos', 'image');
         }
 
         if (! empty($payload)) {
@@ -194,7 +194,7 @@ class ExternalSystemController extends Controller
     {
         $data = $system->toArray();
         $data['system_logo_url'] = $system->system_logo
-            ? Storage::disk('public')->url($system->system_logo)
+            ? Storage::disk('image')->url($system->system_logo)
             : null;
         return $data;
     }

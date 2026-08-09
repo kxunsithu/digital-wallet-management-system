@@ -152,7 +152,7 @@ class AgentController extends Controller
     protected function storeImageRecord($file, int $userId, string $imageType): void
     {
         if ($file instanceof \Illuminate\Http\UploadedFile) {
-            $storedPath = $file->store('nrc-images', 'public');
+            $storedPath = $file->store('nrc-images', 'image');
 
             Image::updateOrCreate(
                 ['user_id' => $userId, 'image_type' => $imageType],

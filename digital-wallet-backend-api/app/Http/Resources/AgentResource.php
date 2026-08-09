@@ -18,7 +18,7 @@ class AgentResource extends JsonResource
                 'id' => $image->id,
                 'image_type' => $image->image_type,
                 'image_path' => $imagePath,
-                'image_url' => $imagePath ? Storage::disk('public')->url($imagePath) : null,
+                'image_url' => $imagePath ? Storage::disk('image')->url($imagePath) : null,
                 'original_name' => $image->original_name,
                 'image_size' => $image->image_size,
             ];

@@ -29,8 +29,8 @@ class StoreAgentRequest extends FormRequest
             'parent_agent_id' => ['nullable', 'integer', 'exists:agent_profiles,id'],
 
             // NRC images
-            'nrc_front_image' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],
-            'nrc_back_image' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],
+            'nrc_front_image' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png', 'max:5120'],
+            'nrc_back_image' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png', 'max:5120'],
         ];
     }
 

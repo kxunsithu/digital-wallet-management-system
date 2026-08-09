@@ -24,6 +24,8 @@ export default function ExternalSystemsScreen() {
   const { theme, colors } = useTheme();
   const isDark = theme === "dark";
 
+  const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
   const [systems, setSystems] = useState<AgentExternalSystem[]>([]);
   const [loading, setLoading] = useState(true);
   const [generatingId, setGeneratingId] = useState<number | null>(null);
@@ -77,7 +79,16 @@ export default function ExternalSystemsScreen() {
       quality: 0.8,
     });
     if (!result.canceled && result.assets?.[0]?.uri) {
-      onPicked(result.assets[0].uri);
+      const asset = result.assets[0];
+      if (asset.fileSize && asset.fileSize > MAX_IMAGE_SIZE) {
+        Toast.show({
+          type: "error",
+          text1: "Image Too Large",
+          text2: "Please choose an image under 5 MB.",
+        });
+        return;
+      }
+      onPicked(asset.uri);
     }
   };
 
@@ -214,7 +225,7 @@ export default function ExternalSystemsScreen() {
               {displayUri ? (uri ? "Change Logo" : "Change Logo") : "Upload Logo"}
             </Text>
             <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }}>
-              {displayUri ? "Tap to replace image" : "PNG or JPG, max 2MB"}
+              {displayUri ? "Tap to replace image" : "PNG or JPG, max 5MB"}
             </Text>
           </View>
           <Feather name="camera" size={16} color={colors.textSecondary} />

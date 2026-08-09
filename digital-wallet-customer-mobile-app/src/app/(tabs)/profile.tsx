@@ -71,6 +71,8 @@ interface UserProfile {
 
 type ProfileColors = ReturnType<typeof useTheme>["colors"];
 
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
 const NrcDocumentCard = ({
   label,
   uri,
@@ -230,7 +232,7 @@ export default function ProfileScreen() {
     });
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const asset = result.assets[0];
-      if (asset.fileSize && asset.fileSize > 4.5 * 1024 * 1024) {
+      if (asset.fileSize && asset.fileSize > MAX_IMAGE_SIZE) {
         Toast.show({
           type: 'error',
           text1: t('profile.image_too_large_title'),
@@ -258,10 +260,19 @@ export default function ProfileScreen() {
       quality: 0.8,
     });
     if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      if (asset.fileSize && asset.fileSize > MAX_IMAGE_SIZE) {
+        Toast.show({
+          type: 'error',
+          text1: t('profile.image_too_large_title'),
+          text2: t('profile.image_too_large_desc'),
+        });
+        return;
+      }
       if (side === 'front') {
-        setNrcFrontUri(result.assets[0].uri);
+        setNrcFrontUri(asset.uri);
       } else {
-        setNrcBackUri(result.assets[0].uri);
+        setNrcBackUri(asset.uri);
       }
     }
   };

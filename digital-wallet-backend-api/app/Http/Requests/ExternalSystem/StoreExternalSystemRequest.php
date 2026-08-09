@@ -16,7 +16,7 @@ class StoreExternalSystemRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'system_link' => ['nullable', 'url', 'max:255'],
-            'system_logo' => ['nullable', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],
+            'system_logo' => ['nullable', 'image', 'mimes:jpeg,jpg,png', 'max:5120'],
         ];
     }
 }

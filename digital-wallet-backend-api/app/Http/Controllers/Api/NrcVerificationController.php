@@ -52,12 +52,12 @@ class NrcVerificationController extends Controller
         }
 
         $data = $request->validate([
-            'nrc_front_image' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],
-            'nrc_back_image' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:2048'],
+            'nrc_front_image' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:5120'],
+            'nrc_back_image' => ['required', 'image', 'mimes:jpeg,jpg,png', 'max:5120'],
         ]);
 
-        $frontPath = $data['nrc_front_image']->store('nrc-images', 'public');
-        $backPath = $data['nrc_back_image']->store('nrc-images', 'public');
+        $frontPath = $data['nrc_front_image']->store('nrc-images', 'image');
+        $backPath = $data['nrc_back_image']->store('nrc-images', 'image');
 
         $verification = NrcVerification::updateOrCreate(
             ['user_id' => $user->id],

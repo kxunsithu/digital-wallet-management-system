@@ -239,7 +239,7 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-foreground">Profile Photo</p>
-                    <p className="text-xs text-muted-foreground">JPG, JPEG or PNG up to 2MB</p>
+                    <p className="text-xs text-muted-foreground">JPG, JPEG or PNG up to 5MB</p>
                   </div>
                 </div>
               </div>

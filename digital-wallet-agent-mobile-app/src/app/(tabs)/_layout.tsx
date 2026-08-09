@@ -115,12 +115,12 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
-        name="external-systems"
+        name="partner-services"
         options={{
-          title: 'Systems',
+          title: 'Partner Services',
           tabBarIcon: ({ focused }) => (
             <TabIcon
-              name={focused ? 'link' : 'link-outline'}
+              name={focused ? 'grid' : 'grid-outline'}
               focused={focused}
               isDark={isDark}
               primaryColor={colors.primary}

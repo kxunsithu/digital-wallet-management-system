@@ -49,15 +49,24 @@ return [
             'report' => false,
         ],
 
-        's3' => [
-            'driver' => 's3',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_BUCKET'),
-            'url' => env('AWS_URL'),
-            'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+        /*
+        |--------------------------------------------------------------------------
+        | Image Uploads Disk
+        |--------------------------------------------------------------------------
+        |
+        | Where uploaded images (profile pictures, NRC documents, external
+        | system logos) are stored. Kept as its own disk so it can be pointed
+        | at a different driver later without touching the controllers.
+        |
+        */
+
+        'image' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public'),
+            'url' => (isset($_SERVER['HTTP_HOST'])
+                ? ((($_SERVER['HTTPS'] ?? '') === 'on' || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ? 'https://' : 'http://') . $_SERVER['HTTP_HOST']
+                : rtrim(env('APP_URL', 'http://localhost'), '/')) . '/storage',
+            'visibility' => 'public',
             'throw' => false,
             'report' => false,
         ],

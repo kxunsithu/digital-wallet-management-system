@@ -69,6 +69,8 @@ interface UserProfile {
 
 type ProfileColors = ReturnType<typeof useTheme>["colors"];
 
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
 const NrcDocumentCard = ({
   label,
   uri,
@@ -199,11 +201,11 @@ export default function ProfileScreen() {
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const asset = result.assets[0];
-      if (asset.fileSize && asset.fileSize > 4.5 * 1024 * 1024) {
+      if (asset.fileSize && asset.fileSize > MAX_IMAGE_SIZE) {
         Toast.show({
           type: "error",
           text1: "Image Too Large",
-          text2: "Please choose an image under 4.5 MB.",
+          text2: "Please choose an image under 5 MB.",
         });
         return;
       }
