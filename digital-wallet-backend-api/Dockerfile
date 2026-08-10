@@ -178,6 +178,12 @@ php artisan view:cache || true\n\
 echo "==> Starting PHP-FPM..."\n\
 php-fpm -D\n\
 \n\
+# Configure Nginx port from $PORT env if set by host (e.g. Railway)\n\
+LISTEN_PORT="${PORT:-80}"\n\
+echo "==> Configuring Nginx to listen on port ${LISTEN_PORT}..."\n\
+sed -i "s/listen 80;/listen ${LISTEN_PORT};/g" /etc/nginx/http.d/default.conf\n\
+sed -i "s/listen \[::\]:80;/listen [::]:${LISTEN_PORT};/g" /etc/nginx/http.d/default.conf\n\
+\n\
 echo "==> Starting Nginx..."\n\
 exec nginx -g "daemon off;"\n\
 ' > /usr/local/bin/start-app.sh \
