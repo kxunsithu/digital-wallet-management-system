@@ -25,7 +25,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { resolveImageUrl } from "@/lib/utils";
+import { resolveImageUrl, handleImageError } from "@/lib/utils";
 import { toast } from "sonner";
 import { getAgent } from "@/services/agent.service";
 
@@ -139,9 +139,7 @@ export default function AgentDetail() {
                     src={resolveImageUrl(profileImage) ?? ""}
                     alt="Profile"
                     className="h-full w-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://via.placeholder.com/150?text=Profile";
-                    }}
+                    onError={(e) => handleImageError(e, 150, 150, "Profile")}
                   />
                 ) : (
                   <User className="h-8 w-8 text-slate-300" />
@@ -284,7 +282,7 @@ export default function AgentDetail() {
                     src={resolveImageUrl(nrcFront) ?? ""}
                     alt="NRC Front"
                     className="max-h-[250px] w-auto rounded object-contain"
-                    onError={(e) => { (e.target as HTMLImageElement).src = "https://via.placeholder.com/300x200?text=Image+Not+Found"; }}
+                    onError={(e) => handleImageError(e, 300, 200, "Image Not Found")}
                   />
                   <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/0 transition-all group-hover:bg-black/20">
                     <div className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 opacity-0 shadow-sm transition-all group-hover:opacity-100">
@@ -309,7 +307,7 @@ export default function AgentDetail() {
                     src={resolveImageUrl(nrcBack) ?? ""}
                     alt="NRC Back"
                     className="max-h-[250px] w-auto rounded object-contain"
-                    onError={(e) => { (e.target as HTMLImageElement).src = "https://via.placeholder.com/300x200?text=Image+Not+Found"; }}
+                    onError={(e) => handleImageError(e, 300, 200, "Image Not Found")}
                   />
                   <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/0 transition-all group-hover:bg-black/20">
                     <div className="flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 opacity-0 shadow-sm transition-all group-hover:opacity-100">
@@ -401,9 +399,7 @@ export default function AgentDetail() {
               src={previewImage.src}
               alt={previewImage.label}
               className="max-h-[80vh] max-w-full rounded-2xl object-contain shadow-2xl"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = "https://via.placeholder.com/600x400?text=Image+Not+Found";
-              }}
+              onError={(e) => handleImageError(e, 600, 400, "Image Not Found")}
             />
             <p className="mt-3 text-xs text-white/50">Click outside to close</p>
           </div>
