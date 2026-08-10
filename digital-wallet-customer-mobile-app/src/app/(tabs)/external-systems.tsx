@@ -17,6 +17,7 @@ import { useLanguage } from "../../providers/LanguageProvider";
 import { Feather } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import { ActiveExternalSystem, getActiveExternalSystems } from "../../services/externalSystems";
+import { resolveUrl } from "../../lib/utils";
 
 export default function ExternalSystemsScreen() {
   const { theme, colors } = useTheme();
@@ -76,7 +77,8 @@ export default function ExternalSystemsScreen() {
   };
 
   const renderItem = ({ item }: { item: ActiveExternalSystem }) => {
-    const hasLogo = Boolean(item.system_logo_url) && !imageErrorMap[item.id];
+    const logoUrl = resolveUrl(item.system_logo_url);
+    const hasLogo = Boolean(logoUrl) && !imageErrorMap[item.id];
 
     return (
       <View
@@ -98,7 +100,7 @@ export default function ExternalSystemsScreen() {
           {/* Logo */}
           {hasLogo ? (
             <Image
-              source={{ uri: item.system_logo_url! }}
+              source={{ uri: logoUrl! }}
               style={{
                 width: 52,
                 height: 52,

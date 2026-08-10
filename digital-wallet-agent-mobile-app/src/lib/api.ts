@@ -1,6 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 
-export const API_BASE = process.env.EXPO_PUBLIC_API_BASE;
+export const API_BASE = process.env.EXPO_PUBLIC_API_BASE ?? 'https://digital-wallet-backend-api.up.railway.app/api';
 export const ROLE_ID = Number(process.env.EXPO_PUBLIC_ROLE_ID ?? 3);
 
 export async function getAuthToken(): Promise<string | null> {

@@ -14,11 +14,18 @@ class UserResource extends JsonResource
         $formattedImages = $images->map(function ($image) {
             $imagePath = $image->image_path;
 
+            $imageUrl = null;
+            if ($imagePath) {
+                $imageUrl = (str_starts_with($imagePath, 'http://') || str_starts_with($imagePath, 'https://'))
+                    ? $imagePath
+                    : Storage::disk('image')->url($imagePath);
+            }
+
             return [
                 'id' => $image->id,
                 'image_type' => $image->image_type,
                 'image_path' => $imagePath,
-                'image_url' => $imagePath ? Storage::disk('image')->url($imagePath) : null,
+                'image_url' => $imageUrl,
                 'original_name' => $image->original_name,
                 'image_size' => $image->image_size,
             ];

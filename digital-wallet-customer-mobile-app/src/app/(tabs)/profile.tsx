@@ -20,6 +20,7 @@ import { useLanguage } from "../../providers/LanguageProvider";
 import { Feather } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import apiFetch from "../../lib/api";
+import { resolveImageUrl } from "../../lib/utils";
 import { logout } from "../../services/auth";
 import { useRouter, useFocusEffect } from "expo-router";
 import { LinearGradient } from 'expo-linear-gradient';
@@ -193,7 +194,7 @@ export default function ProfileScreen() {
     setEditStateRegion(profile?.state_region ?? "");
     setEditTownship(profile?.township ?? "");
     setEditProfileImageUri(
-      profile?.images?.find(img => img.image_type === 'profile_image')?.image_url ?? null
+      resolveImageUrl(profile?.images?.find(img => img.image_type === 'profile_image')) ?? null
     );
     setEditProfileModal(true);
   };
@@ -209,8 +210,8 @@ export default function ProfileScreen() {
       });
       return;
     }
-    setNrcFrontUri(profile?.nrc_images?.find(img => img.image_type === 'nrc_front_image')?.image_url ?? null);
-    setNrcBackUri(profile?.nrc_images?.find(img => img.image_type === 'nrc_back_image')?.image_url ?? null);
+    setNrcFrontUri(resolveImageUrl(profile?.nrc_images?.find(img => img.image_type === 'nrc_front_image')) ?? null);
+    setNrcBackUri(resolveImageUrl(profile?.nrc_images?.find(img => img.image_type === 'nrc_back_image')) ?? null);
     setNrcModalVisible(true);
   };
 
@@ -469,7 +470,7 @@ export default function ProfileScreen() {
     );
   }
 
-  const avatarImage = profile?.images?.find(img => img.image_type === 'profile_image')?.image_url;
+  const avatarImage = resolveImageUrl(profile?.images?.find(img => img.image_type === 'profile_image'));
   const avatarLetter = profile?.full_name?.charAt(0)?.toUpperCase() ?? 'U';
 
   const nrcVerification = profile?.nrc_verification?.status ?? null;
@@ -482,8 +483,8 @@ export default function ProfileScreen() {
     ? nrcStatusConfig[nrcVerification] ?? { label: nrcVerification, color: colors.textSecondary }
     : { label: t('profile.nrc_status_not_submitted'), color: colors.textSecondary };
   const nrcRejectionReason = profile?.nrc_verification?.rejection_reason ?? null;
-  const nrcFrontImage = profile?.nrc_images?.find(img => img.image_type === 'nrc_front_image')?.image_url ?? null;
-  const nrcBackImage = profile?.nrc_images?.find(img => img.image_type === 'nrc_back_image')?.image_url ?? null;
+  const nrcFrontImage = resolveImageUrl(profile?.nrc_images?.find(img => img.image_type === 'nrc_front_image')) ?? null;
+  const nrcBackImage = resolveImageUrl(profile?.nrc_images?.find(img => img.image_type === 'nrc_back_image')) ?? null;
 
   const InfoCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <View style={{

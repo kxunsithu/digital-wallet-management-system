@@ -24,6 +24,7 @@ import {
   updateProfile,
   uploadProfilePicture,
 } from "@/services/profile.service";
+import { resolveImageUrl, handleImageError } from "@/lib/utils";
 
 type ProfileImage = {
   image_type?: string;
@@ -44,9 +45,7 @@ type ProfileData = {
 
 const getStorageUrl = (path?: string | null) => {
   if (!path) return null;
-  if (path.startsWith("http")) return path;
-  const base = import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "") ?? "";
-  return `${base}/storage/${path}`;
+  return resolveImageUrl({ image_url: path, image_path: path });
 };
 
 const syncSessionCookie = (profile: ProfileData) => {
@@ -413,6 +412,7 @@ export default function ProfilePage() {
                             <img
                               src={imageUrl}
                               alt={label}
+                              onError={handleImageError}
                               className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
                             />
                           </div>
@@ -456,6 +456,7 @@ export default function ProfilePage() {
                       <img
                         src={lightboxImage.url}
                         alt={lightboxImage.label}
+                        onError={handleImageError}
                         className="h-auto w-full object-contain"
                       />
                     </div>

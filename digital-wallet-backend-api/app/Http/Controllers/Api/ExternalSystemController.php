@@ -193,9 +193,13 @@ class ExternalSystemController extends Controller
     private function formatSystem(ExternalSystem $system): array
     {
         $data = $system->toArray();
-        $data['system_logo_url'] = $system->system_logo
-            ? Storage::disk('image')->url($system->system_logo)
-            : null;
+        if ($system->system_logo) {
+            $data['system_logo_url'] = (str_starts_with($system->system_logo, 'http://') || str_starts_with($system->system_logo, 'https://'))
+                ? $system->system_logo
+                : Storage::disk('image')->url($system->system_logo);
+        } else {
+            $data['system_logo_url'] = null;
+        }
         return $data;
     }
 

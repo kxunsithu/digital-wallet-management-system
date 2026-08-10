@@ -12,12 +12,33 @@ type ImageLike = {
 
 export function resolveImageUrl(image?: ImageLike | null): string | null {
   if (!image) return null;
-  if (image.image_url) return image.image_url;
-  if (image.image_path) {
-    const base = import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "");
-    return base ? `${base}/storage/${image.image_path}` : null;
+
+  const rawUrl = image.image_url;
+  const rawPath = image.image_path;
+
+  let url: string | null = null;
+
+  if (rawUrl) {
+    if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+      url = rawUrl;
+    } else {
+      const base = import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "").replace(/\/$/, "");
+      url = base ? `${base}/storage/${rawUrl.replace(/^\//, "")}` : rawUrl;
+    }
+  } else if (rawPath) {
+    if (rawPath.startsWith("http://") || rawPath.startsWith("https://")) {
+      url = rawPath;
+    } else {
+      const base = import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "").replace(/\/$/, "");
+      url = base ? `${base}/storage/${rawPath.replace(/^\//, "")}` : rawPath;
+    }
   }
-  return null;
+
+  if (url && import.meta.env.VITE_API_URL?.startsWith("https://") && url.startsWith("http://")) {
+    url = url.replace(/^http:\/\//, "https://");
+  }
+
+  return url;
 }
 
 export function getPlaceholderImage(width = 300, height = 200, text = "Image Not Found"): string {

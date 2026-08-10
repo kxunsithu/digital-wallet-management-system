@@ -18,6 +18,7 @@ import {
   updateExternalSystem,
   AgentExternalSystem,
 } from "../services/externalSystems";
+import { resolveUrl } from "../lib/utils";
 
 export default function ExternalSystemsScreen() {
   const router = useRouter();
@@ -321,9 +322,9 @@ export default function ExternalSystemsScreen() {
                 <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                   {/* Logo + Name */}
                   <View style={{ flex: 1, flexDirection: "row", alignItems: "center", marginRight: 12 }}>
-                    {system.system_logo_url ? (
+                    {resolveUrl(system.system_logo_url) ? (
                       <Image
-                        source={{ uri: system.system_logo_url }}
+                        source={{ uri: resolveUrl(system.system_logo_url)! }}
                         style={{
                           width: 44, height: 44, borderRadius: 10, marginRight: 12,
                           borderWidth: 1, borderColor: colors.border,
@@ -564,7 +565,7 @@ export default function ExternalSystemsScreen() {
               {/* Logo Picker — shows existing logo if any */}
               <LogoPicker
                 uri={editLogoUri}
-                existingUrl={editTarget?.system_logo_url}
+                existingUrl={resolveUrl(editTarget?.system_logo_url)}
                 onPick={() => pickLogo(setEditLogoUri)}
               />
 
