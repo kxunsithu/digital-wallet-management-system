@@ -233,7 +233,7 @@
             @endif
         </div>
 
-        <form method="POST" action="{{ route('external-payments.pay', $payment->reference) }}" autocomplete="off">
+        <form method="POST" action="" autocomplete="off">
             @csrf
             <div class="field">
                 <label for="otp">One-Time Password (OTP)</label>
