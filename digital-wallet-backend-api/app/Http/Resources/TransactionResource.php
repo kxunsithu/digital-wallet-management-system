@@ -31,8 +31,8 @@ class TransactionResource extends JsonResource
             'status' => $this->status,
             'pin_verified' => (bool) $this->pin_verified,
             'description' => $this->description,
-            'created_at' => $this->created_at ? (string) $this->created_at : null,
-            'updated_at' => $this->updated_at ? (string) $this->updated_at : null,
+            'created_at' => optional($this->created_at)?->toISOString(),
+            'updated_at' => optional($this->updated_at)?->toISOString(),
         ];
     }
 }
