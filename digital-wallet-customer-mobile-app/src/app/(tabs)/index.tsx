@@ -5,6 +5,8 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
+  Linking,
   Modal,
   RefreshControl,
   ScrollView,
@@ -15,9 +17,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import apiFetch, { getAuthToken } from "../../lib/api";
+import { resolveUrl } from "../../lib/utils";
 import { useTheme } from "../../providers/ThemeProvider";
 import { useLanguage } from "../../providers/LanguageProvider";
 import { logout } from "../../services/auth";
+import { ActiveExternalSystem, getActiveExternalSystems } from "../../services/externalSystems";
 import {
   addMoneyReceivedNotification,
   AppNotification,
@@ -109,6 +113,8 @@ export default function DashboardScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const profileRef = useRef<UserProfile | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [topServices, setTopServices] = useState<ActiveExternalSystem[]>([]);
+  const [serviceLogoErrors, setServiceLogoErrors] = useState<Record<number, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showBalance, setShowBalance] = useState(true);
@@ -175,6 +181,14 @@ export default function DashboardScreen() {
       const txRes = await apiFetch("/transactions?per_page=5");
       if (txRes.status === 200) {
         setTransactions(txRes.body.data || []);
+      }
+
+      // Fetch top 3 services (only on first load / refresh to avoid spam)
+      try {
+        const services = await getActiveExternalSystems();
+        setTopServices(services.slice(0, 3));
+      } catch (_) {
+        // silent
       }
     } catch (e) {
       // silent background poll failure
@@ -527,7 +541,103 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Recent Activity removed per user request */}
+        {/* ── Top Services ── */}
+        <View style={{ paddingHorizontal: 24, marginTop: 28 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+              {t('nav.services')}
+            </Text>
+            <TouchableOpacity
+              onPress={() => router.push('/(tabs)/external-systems' as any)}
+              activeOpacity={0.7}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
+            >
+              <Text style={{ fontSize: 12, fontWeight: '700', color: colors.primary }}>
+                See All
+              </Text>
+              <Feather name="chevron-right" size={14} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+
+          {topServices.length === 0 ? (
+            <View style={{
+              padding: 20, borderRadius: 20,
+              backgroundColor: colors.surface,
+              borderWidth: 1, borderColor: colors.border,
+              alignItems: 'center',
+            }}>
+              <Feather name="grid" size={22} color={colors.textSecondary} />
+              <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 8 }}>No services available</Text>
+            </View>
+          ) : (
+            <View style={{ gap: 10 }}>
+              {topServices.map((item) => {
+                const logoUrl = resolveUrl(item.system_logo_url);
+                const hasLogo = Boolean(logoUrl) && !serviceLogoErrors[item.id];
+                return (
+                  <TouchableOpacity
+                    key={item.id}
+                    activeOpacity={0.75}
+                    onPress={() => item.system_link && Linking.openURL(item.system_link).catch(() => {})}
+                    style={{
+                      flexDirection: 'row', alignItems: 'center',
+                      padding: 14, borderRadius: 18,
+                      backgroundColor: colors.surface,
+                      borderWidth: 1, borderColor: colors.border,
+                    }}
+                  >
+                    {/* Logo / Fallback */}
+                    {hasLogo ? (
+                      <Image
+                        source={{ uri: logoUrl! }}
+                        style={{
+                          width: 46, height: 46, borderRadius: 13,
+                          marginRight: 14,
+                          borderWidth: 1, borderColor: colors.border,
+                          backgroundColor: isDark ? colors.background : '#F8FAFC',
+                        }}
+                        resizeMode="cover"
+                        onError={() => setServiceLogoErrors(prev => ({ ...prev, [item.id]: true }))}
+                      />
+                    ) : (
+                      <View style={{
+                        width: 46, height: 46, borderRadius: 13,
+                        marginRight: 14,
+                        backgroundColor: `${colors.primary}18`,
+                        borderWidth: 1, borderColor: `${colors.primary}33`,
+                        alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <Feather name="grid" size={20} color={colors.primary} />
+                      </View>
+                    )}
+
+                    {/* Info */}
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '800', color: colors.text }} numberOfLines={1}>
+                        {item.name}
+                      </Text>
+                      {item.user?.full_name ? (
+                        <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 2 }} numberOfLines={1}>
+                          {item.user.full_name}
+                        </Text>
+                      ) : null}
+                    </View>
+
+                    {/* Arrow / Link badge */}
+                    <View style={{
+                      width: 32, height: 32, borderRadius: 10,
+                      backgroundColor: `${colors.primary}14`,
+                      alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Feather name="external-link" size={14} color={colors.primary} />
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </View>
+
       </ScrollView>
 
 

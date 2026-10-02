@@ -1,40 +1,42 @@
 // app/(tabs)/_layout.tsx
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../providers/ThemeProvider';
 
 function TabIcon({
   name,
+  label,
   focused,
   isDark,
   primaryColor,
 }: {
   name: string;
+  label: string;
   focused: boolean;
   isDark: boolean;
   primaryColor: string;
 }) {
+  const activeColor = primaryColor;
+  const inactiveColor = isDark ? 'rgba(255,255,255,0.38)' : 'rgba(0,0,0,0.30)';
+
   return (
     <View style={styles.iconBox}>
-      {focused && (
-        <View
-          style={[
-            styles.activeCircle,
-          ]}
-        />
-      )}
       <Ionicons
         name={name as any}
-        size={22}
-        color={
-          focused
-            ? primaryColor
-            : isDark
-              ? 'rgba(255,255,255,0.30)'
-              : '#ADADAD'
-        }
+        size={23}
+        color={focused ? activeColor : inactiveColor}
       />
+      <Text
+        style={[
+          styles.label,
+          { color: focused ? activeColor : inactiveColor },
+          focused && styles.labelActive,
+        ]}
+        numberOfLines={1}
+      >
+        {label}
+      </Text>
     </View>
   );
 }
@@ -43,30 +45,23 @@ export default function TabLayout() {
   const { theme, colors } = useTheme();
   const isDark = theme === 'dark';
 
+  const tabBarBg = isDark ? colors.surface : '#FFFFFF';
+  const borderColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          position: 'absolute',
-          bottom: Platform.OS === 'ios' ? 36 : 22,
-          left: 20,
-          right: 20,
-          borderRadius: 40,
-          height: 64,
-          borderTopWidth: 0,
-          borderWidth: 0,
-          backgroundColor: isDark ? '#1C1F1B' : '#FFFFFF',
-          overflow: 'hidden',
-          shadowColor: isDark ? '#000' : '#B0B8C1',
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: isDark ? 0.55 : 0.35,
-          shadowRadius: 20,
-          elevation: 16,
-          paddingBottom: 0,
+          height: Platform.OS === 'ios' ? 82 : 66,
+          backgroundColor: tabBarBg,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: borderColor,
           paddingTop: 0,
-          marginHorizontal: 10,
+          paddingBottom: Platform.OS === 'ios' ? 20 : 6,
+          elevation: 0,
+          shadowOpacity: 0,
         },
         tabBarIconStyle: {
           flex: 1,
@@ -78,7 +73,6 @@ export default function TabLayout() {
         tabBarItemStyle: {
           justifyContent: 'center',
           alignItems: 'center',
-          height: 64,
           paddingTop: 0,
           paddingBottom: 0,
         },
@@ -91,6 +85,7 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <TabIcon
               name={focused ? 'home' : 'home-outline'}
+              label="Home"
               focused={focused}
               isDark={isDark}
               primaryColor={colors.primary}
@@ -106,6 +101,7 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <TabIcon
               name={focused ? 'document-text' : 'document-text-outline'}
+              label="History"
               focused={focused}
               isDark={isDark}
               primaryColor={colors.primary}
@@ -120,7 +116,8 @@ export default function TabLayout() {
           title: 'Partner Services',
           tabBarIcon: ({ focused }) => (
             <TabIcon
-              name={focused ? 'grid' : 'grid-outline'}
+              name={focused ? 'storefront' : 'storefront-outline'}
+              label="Services"
               focused={focused}
               isDark={isDark}
               primaryColor={colors.primary}
@@ -136,6 +133,7 @@ export default function TabLayout() {
           tabBarIcon: ({ focused }) => (
             <TabIcon
               name={focused ? 'person' : 'person-outline'}
+              label="Profile"
               focused={focused}
               isDark={isDark}
               primaryColor={colors.primary}
@@ -149,15 +147,19 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   iconBox: {
-    width: 32,
-    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: 6,
+    gap: 2,
+    minWidth: 60,
   },
-  activeCircle: {
-    position: 'absolute',
-    width: 32,
-    height: 32,
-    borderRadius: 22,
+  label: {
+    fontSize: 10,
+    fontWeight: '500',
+    letterSpacing: 0.2,
   },
+  labelActive: {
+    fontWeight: '700',
+  },
+
 });
