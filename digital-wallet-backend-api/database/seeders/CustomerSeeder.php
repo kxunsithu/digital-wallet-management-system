@@ -79,6 +79,16 @@ class CustomerSeeder extends Seeder
                 'custom_limit_override' => 15000000.00,
                 'referrer_phone' => '09944076002',
             ],
+            [
+                'full_name' => 'Seed Customer',
+                'phone_number' => '09794125460',
+                'nrc_number' => '12/YAMANA(N)000001',
+                'state_region' => 'Yangon Region',
+                'township' => 'Mayangone',
+                'referral_code' => 'ref_seed_customer',
+                'kyc_status' => 'verified',
+                'custom_limit_override' => null,
+            ],
         ];
 
         foreach ($customersData as $data) {

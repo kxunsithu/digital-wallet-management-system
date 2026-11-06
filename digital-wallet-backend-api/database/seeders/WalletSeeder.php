@@ -50,16 +50,30 @@ class WalletSeeder extends Seeder
             } elseif ($user->role_id == $agentRoleId) {
                 $balance = 1500000;
             } elseif ($user->role_id == $customerRoleId) {
-                $balance = 250000;
+                $balance = $user->phone_number === '09794125460' ? 500000 : 250000;
             }
 
-            $this->ensureWalletForUser($user, $balance, $status);
+            $this->ensureWalletForUser(
+                $user,
+                $balance,
+                $status,
+                $user->phone_number === '09794125460'
+            );
         }
     }
 
-    protected function ensureWalletForUser(User $user, float $balance, string $status): void
+    protected function ensureWalletForUser(User $user, float $balance, string $status, bool $updateExisting = false): void
     {
-        if (Wallet::where('user_id', $user->id)->exists()) {
+        $wallet = Wallet::where('user_id', $user->id)->first();
+
+        if ($wallet) {
+            if ($updateExisting) {
+                $wallet->update([
+                    'balance' => $balance,
+                    'status' => $status,
+                ]);
+            }
+
             return;
         }
 
